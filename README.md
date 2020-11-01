@@ -11,6 +11,10 @@ If you wish to try it out, here is the QR code to download the application.
 
 There is also a medium post about the project, feel free to check it out here. (yet to be published and link added here)
 
+## Demo
+[![Usage within the App](https://img.youtube.com/vi/NXv3JpmwA8Y/0.jpg)](https://www.youtube.com/watch?v=NXv3JpmwA8Y)
+[![Usage within TikTok](https://img.youtube.com/vi/jxaxffE8c4c/0.jpg)](https://www.youtube.com/watch?v=jxaxffE8c4c)
+
 Here is another Secret Video QR code just for the curious minded
 
 ![QR Code for Secret](secret_video_qr_code.png)
