@@ -1,0 +1,180 @@
+<?xml version="1.0" encoding="utf-8"?>
+<MotionScene xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:motion="http://schemas.android.com/apk/res-auto">
+
+    <Transition
+        motion:constraintSetEnd="@+id/end"
+        motion:constraintSetStart="@+id/start"
+        motion:motionInterpolator="easeInOut">
+        <OnSwipe
+            motion:dragDirection="dragUp"
+            motion:touchAnchorId="@+id/recycler" />
+
+        <KeyFrameSet>
+            <KeyAttribute
+                android:alpha="0"
+                motion:framePosition="40"
+                motion:motionTarget="@id/title" />
+            <KeyAttribute
+                android:translationX="@dimen/default_padding"
+                motion:framePosition="40"
+                motion:motionTarget="@id/save_cta" />
+            <KeyPosition
+                motion:framePosition="40"
+                motion:motionTarget="@id/save_cta"
+                motion:percentY="0.2" />
+            <KeyPosition
+                motion:framePosition="50"
+                motion:motionTarget="@id/toolbar_background"
+                motion:percentHeight="0.2"
+                motion:percentY="0.2" />
+            <KeyPosition
+                motion:framePosition="50"
+                motion:motionTarget="@id/recycler"
+                motion:percentY="0.2" />
+            <KeyPosition
+                motion:framePosition="70"
+                motion:motionTarget="@id/download_url_input_layout"
+                motion:percentWidth="1"
+                motion:percentX="1" />
+        </KeyFrameSet>
+    </Transition>
+
+    <ConstraintSet android:id="@id/start">
+
+        <Constraint
+            android:id="@+id/toolbar_background"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:elevation="@dimen/default_toolbar_elevation"
+            motion:layout_constraintBottom_toBottomOf="@id/toolbar_bottom_space"
+            motion:layout_constraintEnd_toEndOf="parent"
+            motion:layout_constraintStart_toStartOf="parent"
+            motion:layout_constraintTop_toTopOf="parent" />
+
+        <Constraint
+            android:id="@+id/toolbar_top_space"
+            android:layout_width="0dp"
+            android:layout_height="@dimen/medium_padding"
+            motion:layout_constraintStart_toStartOf="parent"
+            motion:layout_constraintTop_toTopOf="parent" />
+
+        <Constraint
+            android:id="@+id/title"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/activity_horizontal_margin"
+            android:layout_marginEnd="@dimen/activity_horizontal_margin"
+            android:alpha="1"
+            android:translationZ="@dimen/default_toolbar_elevation"
+            motion:layout_constraintEnd_toEndOf="parent"
+            motion:layout_constraintStart_toStartOf="parent"
+            motion:layout_constraintTop_toBottomOf="@id/toolbar_top_space" />
+
+        <Constraint
+            android:id="@+id/download_url_input_layout"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/medium_padding"
+            android:translationZ="@dimen/default_toolbar_elevation"
+            motion:layout_constraintEnd_toEndOf="@id/title"
+            motion:layout_constraintStart_toStartOf="@id/title"
+            motion:layout_constraintTop_toBottomOf="@id/title" />
+
+        <Constraint
+            android:id="@id/save_cta"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/medium_padding"
+            android:translationZ="@dimen/default_toolbar_elevation"
+            motion:layout_constraintEnd_toEndOf="@id/download_url_input_layout"
+            motion:layout_constraintTop_toBottomOf="@id/download_url_input_layout"
+            motion:pathMotionArc="startHorizontal" />
+
+        <Constraint
+            android:id="@+id/toolbar_bottom_space"
+            android:layout_width="0dp"
+            android:layout_height="@dimen/medium_padding"
+            motion:layout_constraintStart_toStartOf="parent"
+            motion:layout_constraintTop_toBottomOf="@id/save_cta" />
+
+        <Constraint
+            android:id="@+id/recycler"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            motion:layout_constraintEnd_toEndOf="parent"
+            motion:layout_constraintBottom_toBottomOf="parent"
+            motion:layout_constraintStart_toStartOf="parent"
+            motion:layout_constraintTop_toBottomOf="@id/toolbar_background" />
+
+    </ConstraintSet>
+    <ConstraintSet android:id="@+id/end">
+
+        <Constraint
+            android:id="@+id/toolbar_background"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:elevation="@dimen/default_toolbar_elevation"
+            motion:layout_constraintBottom_toBottomOf="@id/toolbar_bottom_space"
+            motion:layout_constraintEnd_toEndOf="parent"
+            motion:layout_constraintStart_toStartOf="parent"
+            motion:layout_constraintTop_toTopOf="parent" />
+
+        <Constraint
+            android:id="@+id/toolbar_top_space"
+            android:layout_width="0dp"
+            android:layout_height="@dimen/medium_padding"
+            motion:layout_constraintStart_toStartOf="parent"
+            motion:layout_constraintTop_toTopOf="parent" />
+
+        <Constraint
+            android:id="@+id/title"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/activity_horizontal_margin"
+            android:layout_marginEnd="@dimen/activity_horizontal_margin"
+            android:alpha="0"
+            android:translationZ="@dimen/default_toolbar_elevation"
+            motion:layout_constraintBottom_toTopOf="parent"
+            motion:layout_constraintEnd_toEndOf="parent"
+            motion:layout_constraintStart_toStartOf="parent" />
+
+        <Constraint
+            android:id="@+id/download_url_input_layout"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/medium_padding"
+            android:layout_marginEnd="@dimen/medium_padding"
+            android:translationZ="@dimen/default_toolbar_elevation"
+            motion:layout_constraintEnd_toStartOf="@id/save_cta"
+            motion:layout_constraintStart_toStartOf="@id/title"
+            motion:layout_constraintTop_toBottomOf="@id/toolbar_top_space" />
+
+        <Constraint
+            android:id="@id/save_cta"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/medium_padding"
+            android:layout_marginEnd="@dimen/activity_horizontal_margin"
+            android:translationZ="@dimen/default_toolbar_elevation"
+            motion:layout_constraintEnd_toEndOf="parent"
+            motion:layout_constraintTop_toBottomOf="@id/download_url_input_layout"
+            motion:layout_constraintTop_toTopOf="@id/download_url_input_layout" />
+
+        <Constraint
+            android:id="@+id/toolbar_bottom_space"
+            android:layout_width="0dp"
+            android:layout_height="@dimen/default_padding"
+            motion:layout_constraintStart_toStartOf="parent"
+            motion:layout_constraintTop_toBottomOf="@id/download_url_input_layout" />
+
+        <Constraint
+            android:id="@+id/recycler"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            motion:layout_constraintEnd_toEndOf="parent"
+            motion:layout_constraintBottom_toBottomOf="parent"
+            motion:layout_constraintStart_toStartOf="parent"
+            motion:layout_constraintTop_toBottomOf="@id/toolbar_background" />
+    </ConstraintSet>
+</MotionScene>

@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <dimen name="activity_horizontal_margin">24dp</dimen>
+    <dimen name="default_padding">16dp</dimen>
+    <dimen name="medium_padding">8dp</dimen>
+    <dimen name="card_elevation">2dp</dimen>
+    <dimen name="card_corner_radius">4dp</dimen>
+    <dimen name="default_toolbar_elevation">4dp</dimen>
+    <dimen name="image_indicator">64dp</dimen>
+    <dimen name="fab_padding">88dp</dimen>
+</resources>

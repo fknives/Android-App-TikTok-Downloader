@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.motion.widget.MotionLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    app:layoutDescription="@xml/queue_motion_description">
+
+    <View
+        android:id="@+id/toolbar_background"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:background="?attr/colorSurface"
+        android:elevation="@dimen/default_toolbar_elevation"
+        app:layout_constraintBottom_toBottomOf="@id/toolbar_bottom_space"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <Space
+        android:id="@+id/toolbar_top_space"
+        android:layout_width="0dp"
+        android:layout_height="@dimen/medium_padding"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <TextView
+        android:id="@+id/title"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/activity_horizontal_margin"
+        android:layout_marginEnd="@dimen/activity_horizontal_margin"
+        android:text="@string/copy_the_link_from_tiktok_here_to_download_it"
+        android:textAppearance="?attr/textAppearanceSubtitle1"
+        android:translationZ="@dimen/default_toolbar_elevation"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/toolbar_top_space" />
+
+    <com.google.android.material.textfield.TextInputLayout
+        android:id="@+id/download_url_input_layout"
+        android:theme="@style/Theme.TikTokDownloader.TextInputLayout"
+        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.Dense"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/medium_padding"
+        android:imeOptions="actionSend"
+        android:hint="@string/tik_tok_link"
+        android:translationZ="@dimen/default_toolbar_elevation"
+        app:layout_constraintEnd_toEndOf="@id/title"
+        app:layout_constraintStart_toStartOf="@id/title"
+        app:layout_constraintTop_toBottomOf="@id/title">
+
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/download_url_input"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:inputType="textUri"
+            android:singleLine="true" />
+    </com.google.android.material.textfield.TextInputLayout>
+
+    <Button
+        android:id="@+id/save_cta"
+        style="?attr/materialButtonOutlinedStyle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/medium_padding"
+        android:enabled="false"
+        android:text="@string/start"
+        android:translationZ="@dimen/default_toolbar_elevation"
+        app:layout_constraintEnd_toEndOf="@id/download_url_input_layout"
+        app:layout_constraintTop_toBottomOf="@id/download_url_input_layout" />
+
+    <Space
+        android:id="@+id/toolbar_bottom_space"
+        android:layout_width="0dp"
+        android:layout_height="@dimen/medium_padding"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/save_cta" />
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/recycler"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:background="?attr/colorSurface"
+        android:paddingBottom="@dimen/fab_padding"
+        android:clipToPadding="false"
+        android:orientation="vertical"
+        android:paddingStart="@dimen/activity_horizontal_margin"
+        android:paddingEnd="@dimen/activity_horizontal_margin"
+        app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/toolbar_background" />
+
+</androidx.constraintlayout.motion.widget.MotionLayout>
