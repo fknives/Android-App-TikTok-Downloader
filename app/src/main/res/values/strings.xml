@@ -30,7 +30,11 @@
         \n- Copy the link from TikTok into the input field.
         \n- Press start.
         \n- If error happens retry with the refresh button.
-        \n\n<b>Note</b>: Clicking on video will open the Gallery app.</string>
+        \n\n<b>Note</b>:
+        \n- Clicking on video will open the Gallery app.
+        \n- Clicking on a video URL will open in TikTok.
+        \n- Swiping away a video will remove it from the list.
+        \n- When not loading, Pending videos can be reordered by dragging.</string>
     <string name="how_to_use_from_tiktok">How To Use From TikTok</string>
     <string name="how_to_use_from_tiktok_description">- In TikTok press share.
         \n- Select Other.
