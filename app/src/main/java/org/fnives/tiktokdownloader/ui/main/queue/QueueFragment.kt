@@ -9,7 +9,7 @@ import android.widget.EditText
 import androidx.core.net.toUri
 import androidx.core.widget.doAfterTextChanged
 import androidx.fragment.app.Fragment
-import androidx.lifecycle.Observer
+import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.RecyclerView
 import org.fnives.tiktokdownloader.R
 import org.fnives.tiktokdownloader.data.model.VideoState
@@ -22,41 +22,59 @@ class QueueFragment : Fragment(R.layout.fragment_queue) {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         val recycler = view.findViewById<RecyclerView>(R.id.recycler)
-        val adapter = QueueItemAdapter(
-            itemClicked = viewModel::onItemClicked,
-            urlClicked = viewModel::onUrlClicked
-        )
-        recycler.adapter = adapter
+        recyclerViewSetup(recycler)
+        navigationSetup()
+
         val saveUrlCta = view.findViewById<Button>(R.id.save_cta)
         val input = view.findViewById<EditText>(R.id.download_url_input)
         input.doAfterTextChanged {
             saveUrlCta.isEnabled = it?.isNotBlank() == true
         }
         saveUrlCta.setOnClickListener {
-            recycler.smoothScrollToPosition(0)
             viewModel.onSaveClicked(input.text?.toString().orEmpty())
             input.setText("")
         }
+    }
 
-        viewModel.navigationEvent.observe(viewLifecycleOwner, Observer {
+    private fun navigationSetup() {
+        viewModel.navigationEvent.observe(viewLifecycleOwner) {
             val intent = when (val data = it.item) {
                 is QueueViewModel.NavigationEvent.OpenBrowser -> {
                     createBrowserIntent(data.url)
                 }
                 is QueueViewModel.NavigationEvent.OpenGallery ->
                     createGalleryIntent(data.uri)
-                null -> return@Observer
+                null -> return@observe
             }
             startActivity(intent)
-        })
+        }
+    }
 
-        viewModel.downloads.observe(viewLifecycleOwner, { videoStates ->
+    private fun recyclerViewSetup(recycler: RecyclerView) {
+        val adapter = QueueItemAdapter(
+            itemClicked = viewModel::onItemClicked,
+            urlClicked = viewModel::onUrlClicked
+        )
+        recycler.adapter = adapter
+
+        val callback = VideoStateItemTouchHelper(
+            whichItem = { adapter.currentList.getOrNull(it.bindingAdapterPosition) },
+            onDeleteElement = viewModel::onElementDeleted,
+            onUIMoveElement = adapter::swap,
+            onMoveElement = viewModel::onElementMoved
+        )
+        val touchHelper = ItemTouchHelper(callback)
+        touchHelper.attachToRecyclerView(recycler)
+
+        viewModel.downloads.observe(viewLifecycleOwner) { videoStates ->
+            callback.dragEnabled = videoStates.none { it is VideoState.InProcess }
+
             adapter.submitList(videoStates, Runnable {
                 val indexToScrollTo = videoStates.indexOfFirst { it is VideoState.InProcess }
                     .takeIf { it != -1 } ?: return@Runnable
                 recycler.smoothScrollToPosition(indexToScrollTo)
             })
-        })
+        }
     }
 
     companion object {

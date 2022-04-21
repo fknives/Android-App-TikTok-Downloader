@@ -3,6 +3,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    xmlns:tools="http://schemas.android.com/tools"
     app:layoutDescription="@xml/queue_motion_description">
 
     <View
@@ -91,6 +92,8 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
+        tools:itemCount="3"
+        tools:listitem="@layout/item_downloaded"
         app:layout_constraintTop_toBottomOf="@id/toolbar_background" />
 
 </androidx.constraintlayout.motion.widget.MotionLayout>

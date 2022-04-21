@@ -36,6 +36,7 @@ android {
     buildTypes {
         debug {
             versionNameSuffix "-dev"
+            applicationIdSuffix ".debug"
             debuggable true
             shrinkResources false
             minifyEnabled false

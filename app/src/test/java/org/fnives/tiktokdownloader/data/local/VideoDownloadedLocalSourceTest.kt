@@ -29,6 +29,7 @@ import org.mockito.kotlin.whenever
 import java.io.InputStream
 
 
+@Suppress("TestFunctionName")
 @Timeout(value = 2)
 class VideoDownloadedLocalSourceTest {
 
@@ -194,6 +195,50 @@ class VideoDownloadedLocalSourceTest {
 
             Assertions.assertEquals(expected, actual.await())
         }
+
+    @Test
+    fun GIVEN_two_videos_WHEN_deleting_THEN_observer_is_updated() = runBlocking {
+        val videoInSavingIntoFile1 = VideoInSavingIntoFile(
+            id = "id1",
+            url = "alma1",
+            contentType = VideoInSavingIntoFile.ContentType("a1", "b1"),
+            byteStream = FalseInputStream()
+        )
+        val videoInSavingIntoFile2 = VideoInSavingIntoFile(
+            id = "id2",
+            url = "alma2",
+            contentType = VideoInSavingIntoFile.ContentType("a2", "b2"),
+            byteStream = FalseInputStream()
+        )
+        whenever(mockVerifyFileForUriExists.invoke(anyOrNull())).doReturn(true)
+        whenever(mockSaveVideoFile.invoke(anyOrNull(), anyOrNull(), anyOrNull())).then {
+            "uri: " + (it.arguments[1] as String)
+        }
+        val expectedModel1 = VideoDownloaded(id = "id1", url = "alma1", uri = "uri: id1.b1")
+        val expectedModel2 = VideoDownloaded(id = "id2", url = "alma2", uri = "uri: id2.b2")
+        val expected = listOf(
+            emptyList(),
+            listOf(expectedModel1),
+            listOf(expectedModel2, expectedModel1),
+            listOf(expectedModel2),
+            emptyList(),
+        )
+        val actual = async(coroutineContext) { sut.savedVideos.take(expected.size).toList() }
+
+        yield()
+        sut.saveVideo(videoInSavingIntoFile1)
+        delay(100)
+        yield()
+        sut.saveVideo(videoInSavingIntoFile2)
+        yield()
+
+        sut.removeVideo(expectedModel1)
+        yield()
+        sut.removeVideo(expectedModel2)
+        yield()
+
+        Assertions.assertIterableEquals(expected, actual.await())
+    }
 
     class FalseInputStream : InputStream() {
         override fun read(): Int = 0

@@ -24,6 +24,8 @@ class ViewModelModule(private val useCaseModule: UseCaseModule) {
         get() = QueueViewModel(
             useCaseModule.stateOfVideosObservableUseCase,
             useCaseModule.addVideoToQueueUseCase,
-            useCaseModule.videoDownloadingProcessorUseCase
+            useCaseModule.removeVideoFromQueueUseCase,
+            useCaseModule.videoDownloadingProcessorUseCase,
+            useCaseModule.moveVideoInQueueUseCase
         )
 }

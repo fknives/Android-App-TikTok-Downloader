@@ -2,9 +2,13 @@ package org.fnives.tiktokdownloader.ui.main.queue
 
 import com.jraska.livedata.test
 import kotlinx.coroutines.flow.MutableSharedFlow
+import org.fnives.tiktokdownloader.data.model.VideoDownloaded
 import org.fnives.tiktokdownloader.data.model.VideoInPending
+import org.fnives.tiktokdownloader.data.model.VideoInProgress
 import org.fnives.tiktokdownloader.data.model.VideoState
 import org.fnives.tiktokdownloader.data.usecase.AddVideoToQueueUseCase
+import org.fnives.tiktokdownloader.data.usecase.MoveVideoInQueueUseCase
+import org.fnives.tiktokdownloader.data.usecase.RemoveVideoFromQueueUseCase
 import org.fnives.tiktokdownloader.data.usecase.StateOfVideosObservableUseCase
 import org.fnives.tiktokdownloader.data.usecase.VideoDownloadingProcessorUseCase
 import org.fnives.tiktokdownloader.helper.junit.rule.InstantExecutorExtension
@@ -28,7 +32,9 @@ class QueueViewModelTest {
     private lateinit var stateOfVideosFlow: MutableSharedFlow<List<VideoState>>
     private lateinit var mockStateOfVideosObservableUseCase: StateOfVideosObservableUseCase
     private lateinit var mockAddVideoToQueueUseCase: AddVideoToQueueUseCase
+    private lateinit var mockRemoveVideoFromQueueUseCase: RemoveVideoFromQueueUseCase
     private lateinit var mockVideoDownloadingProcessorUseCase: VideoDownloadingProcessorUseCase
+    private lateinit var mockMoveVideoInQueueUseCase: MoveVideoInQueueUseCase
     private lateinit var sut: QueueViewModel
 
     @BeforeEach
@@ -37,8 +43,16 @@ class QueueViewModelTest {
         mockStateOfVideosObservableUseCase = mock()
         whenever(mockStateOfVideosObservableUseCase.invoke()).doReturn(stateOfVideosFlow)
         mockAddVideoToQueueUseCase = mock()
+        mockRemoveVideoFromQueueUseCase = mock()
         mockVideoDownloadingProcessorUseCase = mock()
-        sut = QueueViewModel(mockStateOfVideosObservableUseCase, mockAddVideoToQueueUseCase, mockVideoDownloadingProcessorUseCase)
+        mockMoveVideoInQueueUseCase = mock()
+        sut = QueueViewModel(
+            mockStateOfVideosObservableUseCase,
+            mockAddVideoToQueueUseCase,
+            mockRemoveVideoFromQueueUseCase,
+            mockVideoDownloadingProcessorUseCase,
+            mockMoveVideoInQueueUseCase
+        )
     }
 
     @Test
@@ -48,6 +62,8 @@ class QueueViewModelTest {
         verifyNoMoreInteractions(mockStateOfVideosObservableUseCase)
         verifyNoInteractions(mockAddVideoToQueueUseCase)
         verifyNoInteractions(mockVideoDownloadingProcessorUseCase)
+        verifyNoInteractions(mockRemoveVideoFromQueueUseCase)
+        verifyNoInteractions(mockMoveVideoInQueueUseCase)
     }
 
     @Test
@@ -60,6 +76,8 @@ class QueueViewModelTest {
         verifyNoMoreInteractions(mockStateOfVideosObservableUseCase)
         verifyNoInteractions(mockAddVideoToQueueUseCase)
         verifyNoInteractions(mockVideoDownloadingProcessorUseCase)
+        verifyNoInteractions(mockRemoveVideoFromQueueUseCase)
+        verifyNoInteractions(mockMoveVideoInQueueUseCase)
     }
 
     @Test
@@ -77,6 +95,8 @@ class QueueViewModelTest {
         verifyNoMoreInteractions(mockStateOfVideosObservableUseCase)
         verifyNoInteractions(mockAddVideoToQueueUseCase)
         verifyNoInteractions(mockVideoDownloadingProcessorUseCase)
+        verifyNoInteractions(mockRemoveVideoFromQueueUseCase)
+        verifyNoInteractions(mockMoveVideoInQueueUseCase)
     }
 
     @Test
@@ -89,6 +109,8 @@ class QueueViewModelTest {
         verifyNoMoreInteractions(mockAddVideoToQueueUseCase)
         verify(mockVideoDownloadingProcessorUseCase, times(1)).fetchVideoInState()
         verifyNoMoreInteractions(mockVideoDownloadingProcessorUseCase)
+        verifyNoInteractions(mockRemoveVideoFromQueueUseCase)
+        verifyNoInteractions(mockMoveVideoInQueueUseCase)
     }
 
     @Test
@@ -103,6 +125,8 @@ class QueueViewModelTest {
         verifyNoMoreInteractions(mockAddVideoToQueueUseCase)
         verify(mockVideoDownloadingProcessorUseCase, times(2)).fetchVideoInState()
         verifyNoMoreInteractions(mockVideoDownloadingProcessorUseCase)
+        verifyNoInteractions(mockRemoveVideoFromQueueUseCase)
+        verifyNoInteractions(mockMoveVideoInQueueUseCase)
     }
 
     @Test
@@ -124,5 +148,87 @@ class QueueViewModelTest {
         sut.navigationEvent.test()
             .assertHistorySize(1)
             .assertValue(Event(QueueViewModel.NavigationEvent.OpenGallery("alma.com")))
+    }
+
+    @Test
+    fun GIVEN_initialized_WHEN_inProgress_onElementDeleted_THEN_remove_called() {
+        val arg = VideoState.InProcess(VideoInProgress("1","2"))
+        sut.onElementDeleted(arg)
+
+        verify(mockStateOfVideosObservableUseCase, times(1)).invoke()
+        verifyNoMoreInteractions(mockStateOfVideosObservableUseCase)
+        verifyNoInteractions(mockAddVideoToQueueUseCase)
+        verifyNoInteractions(mockVideoDownloadingProcessorUseCase)
+        verify(mockRemoveVideoFromQueueUseCase, times(1)).invoke(arg)
+        verifyNoMoreInteractions(mockRemoveVideoFromQueueUseCase)
+        verifyNoInteractions(mockMoveVideoInQueueUseCase)
+    }
+
+    @Test
+    fun GIVEN_initialized_WHEN_pending_onElementDeleted_THEN_remove_called() {
+        val arg = VideoState.InPending(VideoInPending("1","2"))
+        sut.onElementDeleted(arg)
+
+        verify(mockStateOfVideosObservableUseCase, times(1)).invoke()
+        verifyNoMoreInteractions(mockStateOfVideosObservableUseCase)
+        verifyNoInteractions(mockAddVideoToQueueUseCase)
+        verifyNoInteractions(mockVideoDownloadingProcessorUseCase)
+        verify(mockRemoveVideoFromQueueUseCase, times(1)).invoke(arg)
+        verifyNoMoreInteractions(mockRemoveVideoFromQueueUseCase)
+        verifyNoInteractions(mockMoveVideoInQueueUseCase)
+    }
+
+    @Test
+    fun GIVEN_initialized_WHEN_download_onElementDeleted_THEN_remove_called() {
+        val arg = VideoState.Downloaded(VideoDownloaded("1","2","3"))
+        sut.onElementDeleted(arg)
+
+        verify(mockStateOfVideosObservableUseCase, times(1)).invoke()
+        verifyNoMoreInteractions(mockStateOfVideosObservableUseCase)
+        verifyNoInteractions(mockAddVideoToQueueUseCase)
+        verifyNoInteractions(mockVideoDownloadingProcessorUseCase)
+        verify(mockRemoveVideoFromQueueUseCase, times(1)).invoke(arg)
+        verifyNoMoreInteractions(mockRemoveVideoFromQueueUseCase)
+        verifyNoInteractions(mockMoveVideoInQueueUseCase)
+    }
+
+    @Test
+    fun GIVEN_initialized_WHEN_in_progress_moved_THEN_nothing_changes() {
+        val arg = VideoState.InProcess(VideoInProgress("1","2"))
+        sut.onElementMoved(arg, 100)
+
+        verify(mockStateOfVideosObservableUseCase, times(1)).invoke()
+        verifyNoMoreInteractions(mockStateOfVideosObservableUseCase)
+        verifyNoInteractions(mockAddVideoToQueueUseCase)
+        verifyNoInteractions(mockVideoDownloadingProcessorUseCase)
+        verifyNoInteractions(mockRemoveVideoFromQueueUseCase)
+        verifyNoInteractions(mockMoveVideoInQueueUseCase)
+    }
+
+    @Test
+    fun GIVEN_initialized_WHEN_done_moved_THEN_nothing_changes() {
+        val arg = VideoState.Downloaded(VideoDownloaded("1","2","3"))
+        sut.onElementMoved(arg, 100)
+
+        verify(mockStateOfVideosObservableUseCase, times(1)).invoke()
+        verifyNoMoreInteractions(mockStateOfVideosObservableUseCase)
+        verifyNoInteractions(mockAddVideoToQueueUseCase)
+        verifyNoInteractions(mockVideoDownloadingProcessorUseCase)
+        verifyNoInteractions(mockRemoveVideoFromQueueUseCase)
+        verifyNoInteractions(mockMoveVideoInQueueUseCase)
+    }
+
+    @Test
+    fun GIVEN_initialized_WHEN_pending_moved_THEN_nothing_changes() {
+        val arg = VideoState.InPending(VideoInPending("1","2"))
+        sut.onElementMoved(arg, 100)
+
+        verify(mockStateOfVideosObservableUseCase, times(1)).invoke()
+        verifyNoMoreInteractions(mockStateOfVideosObservableUseCase)
+        verifyNoInteractions(mockAddVideoToQueueUseCase)
+        verifyNoInteractions(mockVideoDownloadingProcessorUseCase)
+        verifyNoInteractions(mockRemoveVideoFromQueueUseCase)
+        verify(mockMoveVideoInQueueUseCase, times(1)).invoke(arg.videoInPending, 100)
+        verifyNoMoreInteractions(mockMoveVideoInQueueUseCase)
     }
 }

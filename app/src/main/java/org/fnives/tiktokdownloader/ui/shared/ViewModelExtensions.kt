@@ -1,12 +1,12 @@
 package org.fnives.tiktokdownloader.ui.shared
 
-import androidx.fragment.app.Fragment
-import androidx.lifecycle.*
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
-import kotlin.properties.ReadOnlyProperty
 
 fun <T> CoroutineScope.asLiveData(flow: Flow<T>): LiveData<T> {
     val liveData = MutableLiveData<T>()

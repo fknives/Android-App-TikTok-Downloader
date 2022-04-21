@@ -17,7 +17,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.Timeout
 
-
+@Suppress("TestFunctionName")
 @Timeout(value = 2)
 class VideoInPendingLocalSourceTest {
 
@@ -76,11 +76,10 @@ class VideoInPendingLocalSourceTest {
         }
 
     @Test
-    fun GIVEN_observing_PendingVideos_WHEN_2_video_marked_as_pending_THEN_both_of_them_are_sent_out_in_correct_reverse_order() =
-        runBlocking<Unit> {
+    fun GIVEN_observing_PendingVideos_WHEN_2_video_marked_as_pending_THEN_both_of_them_are_sent_out_in_correct_order() = runBlocking<Unit> {
             val videoInPending1 = VideoInPending("id1", "alma1")
             val videoInPending2 = VideoInPending("id2", "alma2")
-            val expected = listOf(emptyList(), listOf(videoInPending1), listOf(videoInPending2, videoInPending1))
+            val expected = listOf(emptyList(), listOf(videoInPending1), listOf(videoInPending1, videoInPending2))
 
             val actual = async(coroutineContext) {
                 sut.pendingVideos.take(3).toList()
@@ -94,4 +93,92 @@ class VideoInPendingLocalSourceTest {
             Assertions.assertEquals(expected, actual.await())
         }
 
+    @Test
+    fun GIVEN_2_videos_WHEN_moving_first_one_down_by_one_THEN_it_is_moved_properly() = runBlocking<Unit> {
+        val videoInPending1 = VideoInPending("id1", "alma1")
+        val videoInPending2 = VideoInPending("id2", "alma2")
+
+        val expected = listOf(videoInPending2, videoInPending1)
+
+        yield()
+        sut.saveUrlIntoQueue(videoInPending1)
+        delay(10)
+        sut.saveUrlIntoQueue(videoInPending2)
+        delay(10)
+
+        sut.moveBy(videoInPending1, 1)
+
+        Assertions.assertEquals(expected, sut.pendingVideos.first())
+    }
+
+    @Test
+    fun GIVEN_2_videos_WHEN_moving_second_one_up_by_one_THEN_it_is_moved_properly() = runBlocking<Unit> {
+        val videoInPending1 = VideoInPending("id1", "alma1")
+        val videoInPending2 = VideoInPending("id2", "alma2")
+
+        val expected = listOf(videoInPending2, videoInPending1)
+
+        yield()
+        sut.saveUrlIntoQueue(videoInPending1)
+        delay(10)
+        sut.saveUrlIntoQueue(videoInPending2)
+        delay(10)
+
+        sut.moveBy(videoInPending2, -1)
+
+        Assertions.assertEquals(expected, sut.pendingVideos.first())
+    }
+
+    @Test
+    fun GIVEN_3_videos_WHEN_moving_first_moving_around_is_moved_properly() = runBlocking<Unit> {
+        val videoInPending1 = VideoInPending("id1", "alma1")
+        val videoInPending2 = VideoInPending("id2", "alma2")
+        val videoInPending3 = VideoInPending("id3", "alma3")
+
+        val expected = listOf(
+            listOf(videoInPending1, videoInPending2, videoInPending3), // start
+            listOf(videoInPending2, videoInPending1, videoInPending3), // down 1
+            listOf(videoInPending2, videoInPending3, videoInPending1), // down 1
+            listOf(videoInPending2, videoInPending1, videoInPending3), // ++up 1
+            listOf(videoInPending1, videoInPending2, videoInPending3), // ++up 1
+            listOf(videoInPending2, videoInPending3, videoInPending1), // down 2
+            listOf(videoInPending2, videoInPending1, videoInPending3), // ++up 1
+            listOf(videoInPending1, videoInPending2, videoInPending3), // ++up 1
+            listOf(videoInPending2, videoInPending3, videoInPending1), // down 2
+            listOf(videoInPending1, videoInPending2, videoInPending3), // ++up 1
+        )
+
+        yield()
+        sut.saveUrlIntoQueue(videoInPending1)
+        delay(10)
+        sut.saveUrlIntoQueue(videoInPending2)
+        delay(10)
+        sut.saveUrlIntoQueue(videoInPending3)
+
+        val actual = async(coroutineContext) {
+            sut.pendingVideos.take(expected.size).toList()
+        }
+        yield()
+
+        sut.moveBy(videoInPending1, 1)
+        yield()
+        sut.moveBy(videoInPending1, 1)
+        yield()
+        sut.moveBy(videoInPending1, -1)
+        yield()
+        sut.moveBy(videoInPending1, -1)
+        yield()
+        sut.moveBy(videoInPending1, 2)
+        yield()
+        sut.moveBy(videoInPending1, -1)
+        yield()
+        sut.moveBy(videoInPending1, -1)
+        yield()
+        sut.moveBy(videoInPending1, 2)
+        yield()
+        sut.moveBy(videoInPending1, -2)
+        yield()
+
+        Assertions.assertIterableEquals(expected, actual.await())
+    }
 }
