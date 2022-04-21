@@ -2,7 +2,7 @@ name: Verify Download Method still works
 
 on:
   schedule:
-    - cron: '5 13 21 * *'
+    - cron: '20 13 21 * *'
 
 env:
   GITHUB_USERNAME: "fknives"
