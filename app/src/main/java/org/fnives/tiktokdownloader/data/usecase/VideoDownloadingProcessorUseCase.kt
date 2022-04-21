@@ -43,7 +43,7 @@ class VideoDownloadingProcessorUseCase(
 
     private val fetch = MutableStateFlow(ProcessingState.RUNNING)
     private val _processState by lazy {
-        combineIntoPair(fetch, videoInPendingLocalSource.observeLastPendingVideo())
+        combineIntoPair(fetch, videoInPendingLocalSource.observeFirstPendingVideo())
             .filter { it.first == ProcessingState.RUNNING }
             .map { it.second }
             .debounce(WORK_FLOW_DEBOUNCE)
@@ -134,7 +134,7 @@ class VideoDownloadingProcessorUseCase(
         private fun <T, R> combineIntoPair(flow1: Flow<T>, flow2: Flow<R>): Flow<Pair<T, R>> =
             combine(flow1, flow2) { item1, item2 -> item1 to item2 }
 
-        private fun VideoInPendingLocalSource.observeLastPendingVideo(): Flow<VideoInPending?> =
-            pendingVideos.map { it.lastOrNull() }.distinctUntilChanged()
+        private fun VideoInPendingLocalSource.observeFirstPendingVideo(): Flow<VideoInPending?> =
+            pendingVideos.map { it.firstOrNull() }.distinctUntilChanged()
     }
 }

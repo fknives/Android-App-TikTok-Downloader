@@ -76,11 +76,11 @@ class VideoInPendingLocalSourceTest {
         }
 
     @Test
-    fun GIVEN_observing_PendingVideos_WHEN_2_video_marked_as_pending_THEN_both_of_them_are_sent_out_in_correct_reverse_order() =
+    fun GIVEN_observing_PendingVideos_WHEN_2_video_marked_as_pending_THEN_both_of_them_are_sent_out_in_correct_order() =
         runBlocking<Unit> {
             val videoInPending1 = VideoInPending("id1", "alma1")
             val videoInPending2 = VideoInPending("id2", "alma2")
-            val expected = listOf(emptyList(), listOf(videoInPending1), listOf(videoInPending2, videoInPending1))
+            val expected = listOf(emptyList(), listOf(videoInPending1), listOf(videoInPending1, videoInPending2))
 
             val actual = async(coroutineContext) {
                 sut.pendingVideos.take(3).toList()

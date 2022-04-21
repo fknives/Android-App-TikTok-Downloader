@@ -38,25 +38,25 @@ class QueueFragment : Fragment(R.layout.fragment_queue) {
             input.setText("")
         }
 
-        viewModel.navigationEvent.observe(viewLifecycleOwner, Observer {
+        viewModel.navigationEvent.observe(viewLifecycleOwner) {
             val intent = when (val data = it.item) {
                 is QueueViewModel.NavigationEvent.OpenBrowser -> {
                     createBrowserIntent(data.url)
                 }
                 is QueueViewModel.NavigationEvent.OpenGallery ->
                     createGalleryIntent(data.uri)
-                null -> return@Observer
+                null -> return@observe
             }
             startActivity(intent)
-        })
+        }
 
-        viewModel.downloads.observe(viewLifecycleOwner, { videoStates ->
+        viewModel.downloads.observe(viewLifecycleOwner) { videoStates ->
             adapter.submitList(videoStates, Runnable {
                 val indexToScrollTo = videoStates.indexOfFirst { it is VideoState.InProcess }
                     .takeIf { it != -1 } ?: return@Runnable
                 recycler.smoothScrollToPosition(indexToScrollTo)
             })
-        })
+        }
     }
 
     companion object {

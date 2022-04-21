@@ -16,7 +16,7 @@ class VideoInPendingLocalSource(
         get() = sharedPreferencesManager.pendingVideosFlow
             .map { stringSet ->
                 stringSet.asSequence().map { timeThenUrl -> timeThenUrl.getTimeAndOriginal() }
-                    .sortedByDescending { it.first }
+                    .sortedBy { it.first }
                     .map { it.second }
                     .map { it.asVideoInPending() }
                     .toList()
