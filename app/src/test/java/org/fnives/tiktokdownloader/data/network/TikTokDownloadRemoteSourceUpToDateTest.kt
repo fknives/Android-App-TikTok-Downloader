@@ -29,6 +29,7 @@ class TikTokDownloadRemoteSourceUpToDateTest {
     }
 
     @Disabled("Can trigger captcha, so only run it separately")
+    @Timeout(value = 120)
     @Test
     fun GIVEN_actualVideo_WHEN_downloading_THEN_the_file_matching_with_the_previously_loaded_video() {
         val parameter = VideoInPending("123", SUBJECT_VIDEO_URL)

@@ -3,6 +3,7 @@ package org.fnives.tiktokdownloader.data.network
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
+import org.fnives.tiktokdownloader.Logger
 import org.fnives.tiktokdownloader.data.model.VideoInPending
 import org.fnives.tiktokdownloader.data.model.VideoInSavingIntoFile
 import org.fnives.tiktokdownloader.data.network.exceptions.CaptchaRequiredException
@@ -22,8 +23,10 @@ class TikTokDownloadRemoteSource(
         wrapIntoProperException {
             delay(delayBeforeRequest) // added just so captcha trigger may not happen
             val actualUrl = service.getContentActualUrlAndCookie(videoInPending.url)
+            Logger.logMessage("actualUrl found = ${actualUrl.url}")
             delay(delayBeforeRequest) // added just so captcha trigger may not happen
             val videoUrl = service.getVideoUrl(actualUrl.url)
+            Logger.logMessage("videoFileUrl found = ${videoUrl.videoFileUrl}")
             delay(delayBeforeRequest) // added just so captcha trigger may not happen
             val response = service.getVideo(videoUrl.videoFileUrl)
 
