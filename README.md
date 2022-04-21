@@ -1,5 +1,5 @@
-# TikTok-Downloader
-Simple Open Source App to Download TikTok Videos using share feature of the App.
+# TikTok-Downloader [![Verify Download Method still works](https://github.com/fknives/TikTok-Downloader/actions/workflows/up-to-date-jobs.yml/badge.svg?branch=develop)](https://github.com/fknives/TikTok-Downloader/actions/workflows/up-to-date-jobs.yml)
+Simple Open Source App to Download TikTok Videos using share feature of the App. 
 
 The idea is that some of the videos cannot be downloaded within the app, or one simply doesn't want tiktok grant access to external storage, but they can be downloaded from the Website. This small project automates that process, by levreging the share / other feature of the TikTok app.
 
