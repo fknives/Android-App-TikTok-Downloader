@@ -1,0 +1,32 @@
+name: Verify Download Method still works
+
+on:
+  schedule:
+    - cron: '0 20 21 * *'
+
+env:
+  GITHUB_USERNAME: "fknives"
+  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+jobs:
+  run-up-to-date-tests:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+      - name: Setup Java
+        uses: actions/setup-java@v2
+        with:
+          distribution: 'adopt'
+          java-version: '11'
+      - name: Run Up-To-Date Tests
+        run: ./gradlew :app:testDebugUnitTest --tests "org.fnives.uptodate.*"
+      - name: Upload Test Results
+        uses: actions/upload-artifact@v2
+        if: always()
+        with:
+          name: Test Results
+          path: ./**/build/reports/tests/**/index.html
+          retention-days: 1
