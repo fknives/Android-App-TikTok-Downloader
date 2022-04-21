@@ -8,6 +8,7 @@ import org.fnives.tiktokdownloader.data.local.persistent.getTimeAndOriginal
 import org.fnives.tiktokdownloader.data.local.persistent.joinNormalized
 import org.fnives.tiktokdownloader.data.local.persistent.separateIntoDenormalized
 import org.fnives.tiktokdownloader.data.model.VideoInPending
+import kotlin.math.abs
 
 class VideoInPendingLocalSource(
     private val sharedPreferencesManager: SharedPreferencesManager,
@@ -31,6 +32,27 @@ class VideoInPendingLocalSource(
         sharedPreferencesManager.pendingVideos = sharedPreferencesManager.pendingVideos
             .filterNot { it.getTimeAndOriginal().second.asVideoInPending() == videoInPending }
             .toSet()
+    }
+
+    fun moveBy(videoInPending: VideoInPending, positionDifference: Int) {
+        if (positionDifference == 0) return
+
+        val mutableOrdered = sharedPreferencesManager.pendingVideos
+            .map { it.getTimeAndOriginal() }
+            .sortedBy { it.first }
+            .toMutableList()
+
+        val index = mutableOrdered.indexOfFirst { it.second.asVideoInPending() == videoInPending }
+        val endTime = mutableOrdered[index + positionDifference].first
+
+        val direction = -positionDifference / abs(positionDifference)
+        val range = IntProgression.fromClosedRange(index + positionDifference, index - direction, direction)
+        range.forEach {
+            mutableOrdered[it] = mutableOrdered[it + direction].first to mutableOrdered[it].second
+        }
+        mutableOrdered[index] = endTime to mutableOrdered[index].second
+
+        sharedPreferencesManager.pendingVideos = mutableOrdered.map { it.second.addTimeAtStart(it.first) }.toSet()
     }
 
     companion object {

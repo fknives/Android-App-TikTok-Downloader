@@ -4,6 +4,8 @@ import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.ProgressBar
 import android.widget.TextView
+import androidx.cardview.widget.CardView
+import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.view.isInvisible
 import androidx.core.view.isVisible
 import androidx.recyclerview.widget.DiffUtil
@@ -53,12 +55,38 @@ class QueueItemAdapter(
         }
     }
 
-    class DownloadActionsViewHolder(parent: ViewGroup) :
+    fun swap(from: VideoState, to: VideoState) {
+        val mutable = currentList.toMutableList()
+        val fromIndex = currentList.indexOf(from)
+        val toIndex = currentList.indexOf(to)
+        mutable.removeAt(fromIndex)
+        mutable.add(fromIndex, to)
+        mutable.removeAt(toIndex)
+        mutable.add(toIndex, from)
+
+        submitList(mutable)
+    }
+
+    class DownloadActionsViewHolder(parent: ViewGroup) : MovingItemCallback,
         RecyclerView.ViewHolder(parent.inflate(R.layout.item_downloaded)) {
+        val cardView: CardView = itemView as CardView
+        val content: ConstraintLayout = itemView.findViewById(R.id.content)
         val urlView: TextView = itemView.findViewById(R.id.url)
         val statusView: TextView = itemView.findViewById(R.id.status)
         val thumbNailView: ImageView = itemView.findViewById(R.id.thumbnail)
         val progress: ProgressBar = itemView.findViewById(R.id.progress)
+
+        override fun onMovingEnd() {
+            cardView.isEnabled = false
+            cardView.isPressed = false
+            content.isPressed = false
+        }
+
+        override fun onMovingStart() {
+            cardView.isEnabled = true
+            cardView.isPressed = true
+            content.isPressed = true
+        }
     }
 
     class DiffUtilItemCallback : DiffUtil.ItemCallback<VideoState>() {

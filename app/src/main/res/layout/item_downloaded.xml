@@ -12,6 +12,7 @@
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
+        android:id="@+id/content"
         android:layout_height="wrap_content"
         android:background="?attr/selectableItemBackground"
         android:padding="@dimen/medium_padding">

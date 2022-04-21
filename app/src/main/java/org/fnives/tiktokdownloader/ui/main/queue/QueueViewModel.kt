@@ -5,7 +5,7 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import org.fnives.tiktokdownloader.data.model.VideoState
 import org.fnives.tiktokdownloader.data.usecase.AddVideoToQueueUseCase
-import org.fnives.tiktokdownloader.data.usecase.MoveVideoInQueue
+import org.fnives.tiktokdownloader.data.usecase.MoveVideoInQueueUseCase
 import org.fnives.tiktokdownloader.data.usecase.RemoveVideoFromQueueUseCase
 import org.fnives.tiktokdownloader.data.usecase.StateOfVideosObservableUseCase
 import org.fnives.tiktokdownloader.data.usecase.VideoDownloadingProcessorUseCase
@@ -17,7 +17,7 @@ class QueueViewModel(
     private val addVideoToQueueUseCase: AddVideoToQueueUseCase,
     private val removeVideoFromQueueUseCase: RemoveVideoFromQueueUseCase,
     private val videoDownloadingProcessorUseCase: VideoDownloadingProcessorUseCase,
-    private val moveVideoInQueue: MoveVideoInQueue
+    private val moveVideoInQueueUseCase: MoveVideoInQueueUseCase
 ) : ViewModel() {
 
     val downloads = asLiveData(stateOfVideosObservableUseCase())
@@ -38,17 +38,12 @@ class QueueViewModel(
     }
 
     fun onElementDeleted(videoState: VideoState) {
-        when (videoState) {
-            is VideoState.InPending -> removeVideoFromQueueUseCase(videoState.videoInPending)
-            is VideoState.Downloaded,
-            is VideoState.InProcess -> Unit
-        }
+        removeVideoFromQueueUseCase(videoState)
     }
 
-    fun onElementMoved(moved: VideoState, to: VideoState): Boolean {
+    fun onElementMoved(moved: VideoState, positionDifference: Int): Boolean {
         if (moved !is VideoState.InPending) return false
-        if (to !is VideoState.InPending) return false
-        moveVideoInQueue(moved.videoInPending, to.videoInPending)
+        moveVideoInQueueUseCase(moved.videoInPending, positionDifference)
         return true
     }
 

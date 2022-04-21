@@ -58,6 +58,12 @@ class VideoDownloadedLocalSource(
             .plus(videoDownloaded.asString().addTimeAtStart())
     }
 
+    fun removeVideo(videoDownloaded: VideoDownloaded) {
+        sharedPreferencesManagerImpl.downloadedVideos = sharedPreferencesManagerImpl.downloadedVideos
+            .filterNot { it.getTimeAndOriginal().second.asVideoDownloaded() == videoDownloaded }
+            .toSet()
+    }
+
     companion object {
 
         private fun VideoDownloaded.asString(): String =

@@ -8,17 +8,17 @@ import java.util.concurrent.TimeUnit
 
 class LocalSourceModule(private val androidFileManagementModule: AndroidFileManagementModule) {
 
-    val videoDownloadedLocalSource: VideoDownloadedLocalSource
-        get() = VideoDownloadedLocalSource(
+    val videoDownloadedLocalSource: VideoDownloadedLocalSource by lazy {
+        VideoDownloadedLocalSource(
             saveVideoFile = androidFileManagementModule.saveVideoFile,
             sharedPreferencesManagerImpl = androidFileManagementModule.sharedPreferencesManager,
             verifyFileForUriExists = androidFileManagementModule.verifyFileForUriExists
         )
+    }
 
-    val videoInPendingLocalSource: VideoInPendingLocalSource
-        get() = VideoInPendingLocalSource(
-            sharedPreferencesManager = androidFileManagementModule.sharedPreferencesManager
-        )
+    val videoInPendingLocalSource: VideoInPendingLocalSource by lazy {
+        VideoInPendingLocalSource(sharedPreferencesManager = androidFileManagementModule.sharedPreferencesManager)
+    }
 
     val videoInProgressLocalSource: VideoInProgressLocalSource by lazy { VideoInProgressLocalSource() }
 

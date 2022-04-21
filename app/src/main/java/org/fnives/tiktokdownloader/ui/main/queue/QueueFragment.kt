@@ -57,50 +57,24 @@ class QueueFragment : Fragment(R.layout.fragment_queue) {
         )
         recycler.adapter = adapter
 
-        val touchHelper = ItemTouchHelper(PendingItemTouchHelper(
+        val callback = VideoStateItemTouchHelper(
             whichItem = { adapter.currentList.getOrNull(it.bindingAdapterPosition) },
             onDeleteElement = viewModel::onElementDeleted,
-            onMovedElement = viewModel::onElementMoved
-        ))
+            onUIMoveElement = adapter::swap,
+            onMoveElement = viewModel::onElementMoved
+        )
+        val touchHelper = ItemTouchHelper(callback)
         touchHelper.attachToRecyclerView(recycler)
 
         viewModel.downloads.observe(viewLifecycleOwner) { videoStates ->
+            callback.dragEnabled = videoStates.none { it is VideoState.InProcess }
+
             adapter.submitList(videoStates, Runnable {
                 val indexToScrollTo = videoStates.indexOfFirst { it is VideoState.InProcess }
                     .takeIf { it != -1 } ?: return@Runnable
                 recycler.smoothScrollToPosition(indexToScrollTo)
             })
         }
-    }
-
-    class PendingItemTouchHelper(
-        private val whichItem: (RecyclerView.ViewHolder) -> VideoState?,
-        private val onDeleteElement: (VideoState) -> Unit,
-        private val onMovedElement: (VideoState, VideoState) -> Boolean
-    ) : ItemTouchHelper.Callback() {
-        override fun getMovementFlags(recyclerView: RecyclerView, viewHolder: RecyclerView.ViewHolder): Int {
-            val item = whichItem(viewHolder) ?: return 0
-            when (item) {
-                is VideoState.InPending -> Unit
-                is VideoState.Downloaded,
-                is VideoState.InProcess -> return 0
-            }
-
-            val dragFlags = ItemTouchHelper.UP or ItemTouchHelper.DOWN
-            val swipeFlags = ItemTouchHelper.START or ItemTouchHelper.END
-            return makeMovementFlags(dragFlags, swipeFlags)
-        }
-
-        override fun onMove(recyclerView: RecyclerView, viewHolder: RecyclerView.ViewHolder, target: RecyclerView.ViewHolder): Boolean {
-            val dragged = whichItem(target) ?: return false
-            val movedTo = whichItem(viewHolder) ?: return false
-            return onMovedElement(dragged, movedTo)
-        }
-
-        override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
-            whichItem(viewHolder)?.let { onDeleteElement(it) }
-        }
-
     }
 
     companion object {

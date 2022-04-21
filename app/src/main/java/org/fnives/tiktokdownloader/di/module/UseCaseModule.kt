@@ -2,7 +2,7 @@ package org.fnives.tiktokdownloader.di.module
 
 import kotlinx.coroutines.Dispatchers
 import org.fnives.tiktokdownloader.data.usecase.AddVideoToQueueUseCase
-import org.fnives.tiktokdownloader.data.usecase.MoveVideoInQueue
+import org.fnives.tiktokdownloader.data.usecase.MoveVideoInQueueUseCase
 import org.fnives.tiktokdownloader.data.usecase.RemoveVideoFromQueueUseCase
 import org.fnives.tiktokdownloader.data.usecase.StateOfVideosObservableUseCase
 import org.fnives.tiktokdownloader.data.usecase.UrlVerificationUseCase
@@ -32,11 +32,12 @@ class UseCaseModule(
 
     val removeVideoFromQueueUseCase: RemoveVideoFromQueueUseCase
         get() = RemoveVideoFromQueueUseCase(
-            localSourceModule.videoInPendingLocalSource
+            localSourceModule.videoInPendingLocalSource,
+            localSourceModule.videoDownloadedLocalSource
         )
 
-    val moveVideoInQueue: MoveVideoInQueue
-        get() = MoveVideoInQueue(
+    val moveVideoInQueueUseCase: MoveVideoInQueueUseCase
+        get() = MoveVideoInQueueUseCase(
             localSourceModule.videoInPendingLocalSource
         )
 

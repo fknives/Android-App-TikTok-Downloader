@@ -12,8 +12,8 @@ fun List<String>.joinNormalized() : String =
 fun String.separateIntoDenormalized() : List<String> =
     split("$SEPARATOR$SEPARATOR").map { it.denormalize() }
 
-fun String.addTimeAtStart(index: Int = 0) =
-    "${System.currentTimeMillis() + index}$TIME_SEPARATOR$this"
+fun String.addTimeAtStart(time: Long = System.currentTimeMillis()) =
+    "${time}$TIME_SEPARATOR$this"
 
 fun String.getTimeAndOriginal(): Pair<Long, String> {
     val time = takeWhile { it != TIME_SEPARATOR }.toLong()
