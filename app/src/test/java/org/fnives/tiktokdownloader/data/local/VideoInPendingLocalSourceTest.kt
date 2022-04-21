@@ -15,8 +15,10 @@ import org.fnives.tiktokdownloader.data.model.VideoInPending
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.Timeout
 
-@Suppress("TestFunctionName")
+
+@Timeout(value = 2)
 class VideoInPendingLocalSourceTest {
 
     private lateinit var sut: VideoInPendingLocalSource

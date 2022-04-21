@@ -1,15 +1,9 @@
 package org.fnives.tiktokdownloader.data.local
 
-import com.nhaarman.mockitokotlin2.anyOrNull
-import com.nhaarman.mockitokotlin2.doReturn
-import com.nhaarman.mockitokotlin2.mock
-import com.nhaarman.mockitokotlin2.verifyZeroInteractions
-import com.nhaarman.mockitokotlin2.whenever
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.async
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.take
 import kotlinx.coroutines.flow.toList
@@ -26,9 +20,16 @@ import org.fnives.tiktokdownloader.helper.mock.InMemorySharedPreferencesManager
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.Timeout
+import org.mockito.kotlin.anyOrNull
+import org.mockito.kotlin.doReturn
+import org.mockito.kotlin.mock
+import org.mockito.kotlin.verifyNoInteractions
+import org.mockito.kotlin.whenever
 import java.io.InputStream
 
-@Suppress("TestFunctionName")
+
+@Timeout(value = 2)
 class VideoDownloadedLocalSourceTest {
 
     private lateinit var sut: VideoDownloadedLocalSource
@@ -52,8 +53,8 @@ class VideoDownloadedLocalSourceTest {
     @Test
     fun GIVEN_observing_saved_videos_WHEN_initialized_THEN_emptylist_is_emitted() = runBlocking<Unit> {
         Assertions.assertEquals(emptyList<VideoDownloaded>(), sut.savedVideos.first())
-        verifyZeroInteractions(mockSaveVideoFile)
-        verifyZeroInteractions(mockVerifyFileForUriExists)
+        verifyNoInteractions(mockSaveVideoFile)
+        verifyNoInteractions(mockVerifyFileForUriExists)
     }
 
     @Test

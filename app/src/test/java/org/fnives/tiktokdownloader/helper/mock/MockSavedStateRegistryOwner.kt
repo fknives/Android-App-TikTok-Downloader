@@ -3,7 +3,7 @@ package org.fnives.tiktokdownloader.helper.mock
 import androidx.lifecycle.Lifecycle
 import androidx.savedstate.SavedStateRegistry
 import androidx.savedstate.SavedStateRegistryOwner
-import com.nhaarman.mockitokotlin2.mock
+import org.mockito.kotlin.mock
 
 class MockSavedStateRegistryOwner(
     private val lifecycle: Lifecycle = MockLifecycle(),

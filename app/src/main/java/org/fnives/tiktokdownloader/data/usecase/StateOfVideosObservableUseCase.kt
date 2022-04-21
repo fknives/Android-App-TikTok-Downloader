@@ -1,7 +1,7 @@
 package org.fnives.tiktokdownloader.data.usecase
 
 import kotlinx.coroutines.CoroutineDispatcher
-import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.debounce
@@ -16,6 +16,7 @@ import org.fnives.tiktokdownloader.data.model.VideoInPending
 import org.fnives.tiktokdownloader.data.model.VideoInProgress
 import org.fnives.tiktokdownloader.data.model.VideoState
 
+@OptIn(FlowPreview::class)
 class StateOfVideosObservableUseCase(
     videoInProgressLocalSource: VideoInProgressLocalSource,
     videoInPendingLocalSource: VideoInPendingLocalSource,

@@ -1,20 +1,22 @@
 package org.fnives.tiktokdownloader.data.local
 
-import com.nhaarman.mockitokotlin2.spy
 import org.fnives.tiktokdownloader.data.local.persistent.SharedPreferencesManager
 import org.fnives.tiktokdownloader.helper.mock.InMemorySharedPreferencesManager
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.Timeout
+import org.mockito.kotlin.spy
 
 @Suppress("TestFunctionName")
+@Timeout(value = 2)
 class CaptchaTimeoutLocalSourceTest {
 
     private lateinit var mockSharedPreferencesManager: SharedPreferencesManager
     private lateinit var sut: CaptchaTimeoutLocalSource
 
     @BeforeEach
-    fun setup(){
+    fun setup() {
         mockSharedPreferencesManager = spy(InMemorySharedPreferencesManager())
         sut = CaptchaTimeoutLocalSource(mockSharedPreferencesManager, 60)
     }

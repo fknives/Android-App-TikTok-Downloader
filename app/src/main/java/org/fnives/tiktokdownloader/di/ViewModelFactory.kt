@@ -15,6 +15,7 @@ class ViewModelFactory(
     private val viewModelModule: ViewModelModule,
 ) : AbstractSavedStateViewModelFactory(savedStateRegistryOwner, defaultArgs) {
 
+    @Suppress("UNCHECKED_CAST")
     override fun <T : ViewModel?> create(key: String, modelClass: Class<T>, handle: SavedStateHandle): T {
         val viewModel = when (modelClass) {
             MainViewModel::class.java -> viewModelModule.mainViewModel(handle)

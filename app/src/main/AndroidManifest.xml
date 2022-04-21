@@ -13,19 +13,23 @@
     <application
         android:name=".App"
         android:allowBackup="true"
+        android:fullBackupContent="false"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
-        android:fullBackupContent="false"
         android:supportsRtl="true"
         android:theme="@style/Theme.TikTokDownloader">
-        <activity android:name=".ui.main.MainActivity">
+        <activity
+            android:name=".ui.main.MainActivity"
+            android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".ui.service.DownloadIntentReceiverActivity"
+        <activity
+            android:name=".ui.service.DownloadIntentReceiverActivity"
+            android:exported="true"
             android:theme="@style/NoDisplayTheme">
             <intent-filter>
                 <action android:name="android.intent.action.SEND" />
@@ -35,6 +39,7 @@
                 <data android:mimeType="message/*" />
             </intent-filter>
         </activity>
+
         <service android:name=".ui.service.QueueService" />
     </application>
 

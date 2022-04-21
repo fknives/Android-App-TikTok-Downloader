@@ -9,6 +9,7 @@ import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.Timeout
 import java.io.File
 
 /**
@@ -16,7 +17,8 @@ import java.io.File
  * Since the website may change anytime without any notice, this test verifies with actual request going out.
  * However this makes the test shaky, because if the device has no proper connection it may fail.
  */
-@Suppress("TestFunctionName")
+
+@Timeout(value = 2)
 class TikTokDownloadRemoteSourceUpToDateTest {
 
     private lateinit var sut: TikTokDownloadRemoteSource

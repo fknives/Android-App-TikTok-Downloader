@@ -43,7 +43,6 @@
                     android:layout_height="wrap_content"
                     android:layout_marginTop="@dimen/default_padding"
                     app:autoPlay="false"
-                    app:showFullScreenButton="false"
                     app:enableAutomaticInitialization="true"
                     app:handleNetworkEvents="true"
                     app:videoId="NXv3JpmwA8Y" />
@@ -82,7 +81,6 @@
                     android:layout_height="wrap_content"
                     android:layout_marginTop="@dimen/default_padding"
                     app:autoPlay="false"
-                    app:showFullScreenButton="false"
                     app:enableAutomaticInitialization="true"
                     app:handleNetworkEvents="true"
                     app:videoId="jxaxffE8c4c" />

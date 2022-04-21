@@ -1,16 +1,7 @@
 package org.fnives.tiktokdownloader.ui.service
 
 import com.jraska.livedata.test
-import com.nhaarman.mockitokotlin2.anyOrNull
-import com.nhaarman.mockitokotlin2.doReturn
-import com.nhaarman.mockitokotlin2.mock
-import com.nhaarman.mockitokotlin2.times
-import com.nhaarman.mockitokotlin2.verify
-import com.nhaarman.mockitokotlin2.verifyNoMoreInteractions
-import com.nhaarman.mockitokotlin2.verifyZeroInteractions
-import com.nhaarman.mockitokotlin2.whenever
-import kotlinx.coroutines.channels.ConflatedBroadcastChannel
-import kotlinx.coroutines.flow.asFlow
+import kotlinx.coroutines.flow.MutableSharedFlow
 import org.fnives.tiktokdownloader.R
 import org.fnives.tiktokdownloader.data.model.ProcessState
 import org.fnives.tiktokdownloader.data.model.VideoDownloaded
@@ -25,22 +16,30 @@ import org.junit.jupiter.api.extension.ExtendWith
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.MethodSource
+import org.mockito.kotlin.anyOrNull
+import org.mockito.kotlin.doReturn
+import org.mockito.kotlin.mock
+import org.mockito.kotlin.times
+import org.mockito.kotlin.verify
+import org.mockito.kotlin.verifyNoInteractions
+import org.mockito.kotlin.verifyNoMoreInteractions
+import org.mockito.kotlin.whenever
 import java.util.stream.Stream
 
 @Suppress("TestFunctionName")
 @ExtendWith(InstantExecutorExtension::class, MainDispatcherExtension::class)
 class QueueServiceViewModelTest {
 
-    private lateinit var videoDownloadingProcessorChannel: ConflatedBroadcastChannel<ProcessState>
+    private lateinit var videoDownloadingProcessorFlow: MutableSharedFlow<ProcessState>
     private lateinit var mockVideoDownloadingProcessorUseCase: VideoDownloadingProcessorUseCase
     private lateinit var mockAddVideoToQueueUseCase: AddVideoToQueueUseCase
     private lateinit var sut: QueueServiceViewModel
 
     @BeforeEach
     fun setup() {
-        videoDownloadingProcessorChannel = ConflatedBroadcastChannel()
+        videoDownloadingProcessorFlow = MutableSharedFlow(replay = 1)
         mockVideoDownloadingProcessorUseCase = mock()
-        whenever(mockVideoDownloadingProcessorUseCase.processState).doReturn(videoDownloadingProcessorChannel.asFlow())
+        whenever(mockVideoDownloadingProcessorUseCase.processState).doReturn(videoDownloadingProcessorFlow)
         mockAddVideoToQueueUseCase = mock()
         sut = QueueServiceViewModel(mockAddVideoToQueueUseCase, mockVideoDownloadingProcessorUseCase)
     }
@@ -64,7 +63,7 @@ class QueueServiceViewModelTest {
 
         verify(mockAddVideoToQueueUseCase, times(1)).invoke("url.com")
         verifyNoMoreInteractions(mockAddVideoToQueueUseCase)
-        verifyZeroInteractions(mockVideoDownloadingProcessorUseCase)
+        verifyNoInteractions(mockVideoDownloadingProcessorUseCase)
     }
 
     @Test
@@ -89,7 +88,7 @@ class QueueServiceViewModelTest {
     ) {
         whenever(mockAddVideoToQueueUseCase.invoke(anyOrNull())).doReturn(true)
         sut.onUrlReceived("")
-        videoDownloadingProcessorChannel.offer(processState)
+        videoDownloadingProcessorFlow.tryEmit(processState)
 
         sut.notificationState.test()
             .assertHistorySize(1)
@@ -101,7 +100,7 @@ class QueueServiceViewModelTest {
         sut.onClear()
 
         sut.onUrlReceived("alma")
-        videoDownloadingProcessorChannel.offer(ProcessState.UnknownError)
+        videoDownloadingProcessorFlow.tryEmit(ProcessState.UnknownError)
 
         sut.notificationState.test().assertNoValue()
     }

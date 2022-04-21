@@ -6,7 +6,6 @@ import android.os.Bundle
 import android.view.MenuItem
 import android.view.animation.AccelerateDecelerateInterpolator
 import android.view.animation.OvershootInterpolator
-import androidx.activity.viewModels
 import androidx.annotation.StringRes
 import androidx.appcompat.app.AppCompatActivity
 import androidx.coordinatorlayout.widget.CoordinatorLayout
@@ -43,28 +42,28 @@ class MainActivity : AppCompatActivity() {
             animateFabClicked(downloadFab)
             viewModel.onFetchDownloadClicked()
         }
-        viewModel.refreshActionVisibility.observe(this, {
+        viewModel.refreshActionVisibility.observe(this) {
             animateFabVisibility(downloadFab, it == true)
-        })
-        viewModel.errorMessage.observe(this, {
+        }
+        viewModel.errorMessage.observe(this) {
             val stringRes = it?.item?.stringRes ?: return@observe
             Snackbar.make(snackBarAnchor, stringRes, Snackbar.LENGTH_SHORT).show()
-        })
+        }
     }
 
     private fun setupBottomNavigationView(bottomNavigationView: BottomNavigationView, savedInstanceState: Bundle?) {
-        bottomNavigationView.setOnNavigationItemSelectedListener(BottomNavigationView.OnNavigationItemSelectedListener { item ->
+        bottomNavigationView.setOnItemSelectedListener { item ->
             val fragment = when (item.itemId) {
                 R.id.help_menu_item -> HelpFragment.newInstance()
                 R.id.queue_menu_item -> QueueFragment.newInstance()
-                else -> return@OnNavigationItemSelectedListener false
+                else -> return@setOnItemSelectedListener false
             }
             item.toScreen()?.let(viewModel::onScreenSelected)
             supportFragmentManager.beginTransaction()
                 .replace(R.id.fragment_holder, fragment)
                 .commit()
-            return@OnNavigationItemSelectedListener true
-        })
+            return@setOnItemSelectedListener true
+        }
         if (savedInstanceState == null) {
             bottomNavigationView.selectedItemId = R.id.queue_menu_item
         }
