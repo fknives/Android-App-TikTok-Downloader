@@ -1,16 +1,19 @@
 package org.fnives.tiktokdownloader.ui.main.queue
 
+import android.content.ActivityNotFoundException
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
 import android.view.View
 import android.widget.Button
 import android.widget.EditText
+import androidx.coordinatorlayout.widget.CoordinatorLayout
 import androidx.core.net.toUri
 import androidx.core.widget.doAfterTextChanged
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.RecyclerView
+import com.google.android.material.snackbar.Snackbar
 import org.fnives.tiktokdownloader.R
 import org.fnives.tiktokdownloader.data.model.VideoState
 import org.fnives.tiktokdownloader.di.provideViewModels
@@ -46,7 +49,12 @@ class QueueFragment : Fragment(R.layout.fragment_queue) {
                     createGalleryIntent(data.uri)
                 null -> return@observe
             }
-            startActivity(intent)
+            try {
+                startActivity(intent)
+            } catch(activityNotFoundException: ActivityNotFoundException) {
+                val anchor = activity?.findViewById<CoordinatorLayout>(R.id.snack_bar_anchor) ?: return@observe
+                Snackbar.make(anchor, R.string.could_not_open, Snackbar.LENGTH_SHORT).show()
+            }
         }
     }
 

@@ -9,6 +9,8 @@ import android.view.animation.OvershootInterpolator
 import androidx.annotation.StringRes
 import androidx.appcompat.app.AppCompatActivity
 import androidx.coordinatorlayout.widget.CoordinatorLayout
+import androidx.core.view.doOnPreDraw
+import androidx.core.view.isVisible
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.google.android.material.snackbar.Snackbar
@@ -114,14 +116,18 @@ class MainActivity : AppCompatActivity() {
         private fun animateFabVisibility(downloadFab: FloatingActionButton, visible: Boolean) {
             val scale = if (visible) 1f else 0f
             val translation = if (visible) 0f else downloadFab.height * 2 / 3f
+            downloadFab.isVisible = true
             downloadFab.clearAnimation()
-            downloadFab.animate()
-                .scaleX(scale)
-                .scaleY(scale)
-                .setDuration(FAB_VISIBILITY_ANIMATION_DURATION)
-                .setInterpolator(fabVisibilityInterpolator)
-                .translationY(translation)
-                .start()
+            downloadFab.doOnPreDraw {
+                downloadFab.animate()
+                    .scaleX(scale)
+                    .scaleY(scale)
+                    .setDuration(FAB_VISIBILITY_ANIMATION_DURATION)
+                    .setInterpolator(fabVisibilityInterpolator)
+                    .translationY(translation)
+                    .withEndAction { downloadFab.isVisible = visible }
+                    .start()
+            }
         }
     }
 }
