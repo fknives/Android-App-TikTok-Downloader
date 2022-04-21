@@ -3,6 +3,7 @@ package org.fnives.tiktokdownloader.ui.service
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
+import android.app.PendingIntent.FLAG_IMMUTABLE
 import android.app.PendingIntent.FLAG_UPDATE_CURRENT
 import android.app.Service
 import android.content.Context
@@ -126,7 +127,7 @@ class QueueService : Service() {
                 context,
                 NOTIFICATION_PENDING_INTENT_REQUEST_CODE,
                 MainActivity.buildIntent(context),
-                FLAG_UPDATE_CURRENT
+                FLAG_UPDATE_CURRENT or FLAG_IMMUTABLE,
             )
     }
 
