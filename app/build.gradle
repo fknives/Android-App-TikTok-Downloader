@@ -3,15 +3,23 @@ plugins {
     id "kotlin-android"
     id "kotlin-kapt"
 }
-apply from: 'signing.config.gradle'
+try {
+    apply from: 'signing.config.gradle'
+} catch (Throwable ignored) {
+    println "Warning: No Signing Config found"
+    ext.KEY_ALIAS = ""
+    ext.KEY_PASSWORD = ""
+    ext.STORE_PASSWORD = ""
+    ext.KEYSTORE_FILE = ""
+}
 
 android {
-    compileSdk 31
+    compileSdkVersion 31
 
     defaultConfig {
         applicationId "org.fnives.tiktokdownloader"
-        minSdk 23
-        targetSdk 31
+        minSdkVersion 23
+        targetSdkVersion 31
         versionCode 1
         versionName "1.0.0"
 

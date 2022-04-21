@@ -1,8 +1,9 @@
-package org.fnives.tiktokdownloader.data.network
+package org.fnives.uptodate
 
 import kotlinx.coroutines.runBlocking
 import org.apache.commons.io.FileUtils
 import org.fnives.tiktokdownloader.data.model.VideoInPending
+import org.fnives.tiktokdownloader.data.network.TikTokDownloadRemoteSource
 import org.fnives.tiktokdownloader.di.module.NetworkModule
 import org.fnives.tiktokdownloader.helper.getResourceFile
 import org.junit.jupiter.api.Assertions
@@ -28,7 +29,7 @@ class TikTokDownloadRemoteSourceUpToDateTest {
         sut = NetworkModule(1).tikTokDownloadRemoteSource
     }
 
-    @Disabled("Can trigger captcha, so only run it separately")
+    //@Disabled("Can trigger captcha, so only run it separately")
     @Timeout(value = 120)
     @Test
     fun GIVEN_actualVideo_WHEN_downloading_THEN_the_file_matching_with_the_previously_loaded_video() {
