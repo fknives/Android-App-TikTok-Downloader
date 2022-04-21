@@ -75,7 +75,7 @@ class QueueService : Service() {
                     .setSmallIcon(R.drawable.ic_download)
                     .setContentIntent(buildMainPendingIntent(this))
                     .setAutoCancel(true)
-                    .setNotificationSilent()
+                    .setSilent(true)
                     .build()
             NotificationState.Finish -> {
                 stopSelf()

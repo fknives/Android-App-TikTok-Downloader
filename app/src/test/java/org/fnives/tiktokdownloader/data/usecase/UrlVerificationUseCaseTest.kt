@@ -3,8 +3,10 @@ package org.fnives.tiktokdownloader.data.usecase
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.Timeout
 
-@Suppress("TestFunctionName")
+
+@Timeout(value = 2)
 class UrlVerificationUseCaseTest {
 
     private lateinit var sut: UrlVerificationUseCase

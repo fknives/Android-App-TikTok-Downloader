@@ -2,6 +2,7 @@ package org.fnives.tiktokdownloader.data.usecase
 
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -30,6 +31,7 @@ import org.fnives.tiktokdownloader.data.network.exceptions.CaptchaRequiredExcept
 import org.fnives.tiktokdownloader.data.network.exceptions.NetworkException
 import org.fnives.tiktokdownloader.data.network.exceptions.ParsingException
 
+@OptIn(FlowPreview::class)
 class VideoDownloadingProcessorUseCase(
     private val tikTokDownloadRemoteSource: TikTokDownloadRemoteSource,
     private val videoInProgressLocalSource: VideoInProgressLocalSource,

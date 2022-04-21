@@ -5,6 +5,6 @@ import org.fnives.tiktokdownloader.data.network.parsing.response.VideoResponse
 
 class VideoResponseConverter : ParsingExceptionThrowingConverter<VideoResponse>() {
 
-    override fun convertSafely(value: ResponseBody): VideoResponse? =
-        VideoResponse(value.contentType(), value.byteStream())
+    override fun convertSafely(responseBody: ResponseBody): VideoResponse? =
+        VideoResponse(responseBody.contentType(), responseBody.byteStream())
 }

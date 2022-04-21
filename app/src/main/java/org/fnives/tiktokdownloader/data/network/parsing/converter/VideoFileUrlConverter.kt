@@ -1,9 +1,9 @@
 package org.fnives.tiktokdownloader.data.network.parsing.converter
 
 import okhttp3.ResponseBody
+import org.fnives.tiktokdownloader.Logger
 import org.fnives.tiktokdownloader.data.network.exceptions.CaptchaRequiredException
 import org.fnives.tiktokdownloader.data.network.parsing.response.VideoFileUrl
-import kotlin.jvm.Throws
 
 class VideoFileUrlConverter(
     private val throwIfIsCaptchaResponse: ThrowIfIsCaptchaResponse
@@ -12,8 +12,8 @@ class VideoFileUrlConverter(
     @Throws(IllegalArgumentException::class, IndexOutOfBoundsException::class, CaptchaRequiredException::class)
     override fun convertSafely(responseBody: ResponseBody): VideoFileUrl? {
         val html = responseBody.string().also(throwIfIsCaptchaResponse::invoke)
-        val url = tryToParseDownloadLink(html)
-            ?: tryToParseVideoSrc(html)
+        val url = tryToParseDownloadLink(html).also { Logger.logMessage("parsed download link = $it") }
+            ?: tryToParseVideoSrc(html).also { Logger.logMessage("parsed video src = $it") }
             ?: throw IllegalArgumentException("Couldn't parse url from HTML: $html")
 
         return VideoFileUrl(url)
@@ -26,7 +26,7 @@ class VideoFileUrlConverter(
                 html.split("\"playAddr\"")[1]
                     .dropWhile { it != '\"' }.drop(1)
                     .takeWhile { it != '\"' }
-                    .replace("\\u0026", "&")
+                    .urlCharacterReplacements()
             } else {
                 null
             }
@@ -39,10 +39,19 @@ class VideoFileUrlConverter(
                     .dropWhile { it != '=' }
                     .dropWhile { it != '\"' }.drop(1)
                     .takeWhile { it != '\"' }
-                    .replace("\\u0026", "&")
+                    .urlCharacterReplacements()
             } else {
                 null
             }
 
+        private val replacements = mutableMapOf(
+            "\\u002F" to "/",
+            "\\u0026" to "&"
+        )
+
+        private fun String.urlCharacterReplacements(): String =
+            replacements.entries.fold(this) { result, toReplaceEntry ->
+                result.replace(toReplaceEntry.key, toReplaceEntry.value)
+            }
     }
 }

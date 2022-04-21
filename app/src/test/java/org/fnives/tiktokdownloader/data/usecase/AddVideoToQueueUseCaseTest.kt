@@ -1,20 +1,22 @@
 package org.fnives.tiktokdownloader.data.usecase
 
-import com.nhaarman.mockitokotlin2.anyOrNull
-import com.nhaarman.mockitokotlin2.doReturn
-import com.nhaarman.mockitokotlin2.mock
-import com.nhaarman.mockitokotlin2.times
-import com.nhaarman.mockitokotlin2.verify
-import com.nhaarman.mockitokotlin2.verifyNoMoreInteractions
-import com.nhaarman.mockitokotlin2.verifyZeroInteractions
-import com.nhaarman.mockitokotlin2.whenever
 import org.fnives.tiktokdownloader.data.local.VideoInPendingLocalSource
 import org.fnives.tiktokdownloader.data.model.VideoInPending
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.Timeout
+import org.mockito.kotlin.anyOrNull
+import org.mockito.kotlin.doReturn
+import org.mockito.kotlin.mock
+import org.mockito.kotlin.times
+import org.mockito.kotlin.verify
+import org.mockito.kotlin.verifyNoInteractions
+import org.mockito.kotlin.verifyNoMoreInteractions
+import org.mockito.kotlin.whenever
 
 @Suppress("TestFunctionName")
+@Timeout(value = 2)
 class AddVideoToQueueUseCaseTest {
 
     private lateinit var sut: AddVideoToQueueUseCase
@@ -30,8 +32,8 @@ class AddVideoToQueueUseCaseTest {
 
     @Test
     fun GIVEN_no_action_THEN_the_local_source_and_verifier_is_not_touched() {
-        verifyZeroInteractions(mockUrlVerificationUseCase)
-        verifyZeroInteractions(mockVideoInPendingLocalSource)
+        verifyNoInteractions(mockUrlVerificationUseCase)
+        verifyNoInteractions(mockVideoInPendingLocalSource)
     }
 
     @Test
@@ -83,6 +85,6 @@ class AddVideoToQueueUseCaseTest {
         Assertions.assertFalse(actual, "Url is Saved while it should NOT be")
         verify(mockUrlVerificationUseCase, times(1)).invoke(expectedUrl)
         verifyNoMoreInteractions(mockUrlVerificationUseCase)
-        verifyZeroInteractions(mockVideoInPendingLocalSource)
+        verifyNoInteractions(mockVideoInPendingLocalSource)
     }
 }

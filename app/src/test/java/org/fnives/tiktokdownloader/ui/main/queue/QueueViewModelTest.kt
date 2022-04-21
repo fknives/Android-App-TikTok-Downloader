@@ -1,15 +1,7 @@
 package org.fnives.tiktokdownloader.ui.main.queue
 
 import com.jraska.livedata.test
-import com.nhaarman.mockitokotlin2.doReturn
-import com.nhaarman.mockitokotlin2.mock
-import com.nhaarman.mockitokotlin2.times
-import com.nhaarman.mockitokotlin2.verify
-import com.nhaarman.mockitokotlin2.verifyNoMoreInteractions
-import com.nhaarman.mockitokotlin2.verifyZeroInteractions
-import com.nhaarman.mockitokotlin2.whenever
-import kotlinx.coroutines.channels.ConflatedBroadcastChannel
-import kotlinx.coroutines.flow.asFlow
+import kotlinx.coroutines.flow.MutableSharedFlow
 import org.fnives.tiktokdownloader.data.model.VideoInPending
 import org.fnives.tiktokdownloader.data.model.VideoState
 import org.fnives.tiktokdownloader.data.usecase.AddVideoToQueueUseCase
@@ -21,13 +13,19 @@ import org.fnives.tiktokdownloader.ui.shared.Event
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
-import kotlin.math.exp
+import org.mockito.kotlin.doReturn
+import org.mockito.kotlin.mock
+import org.mockito.kotlin.times
+import org.mockito.kotlin.verify
+import org.mockito.kotlin.verifyNoInteractions
+import org.mockito.kotlin.verifyNoMoreInteractions
+import org.mockito.kotlin.whenever
 
 @Suppress("TestFunctionName")
 @ExtendWith(InstantExecutorExtension::class, MainDispatcherExtension::class)
 class QueueViewModelTest {
 
-    private lateinit var stateOfVideosConflatedBroadcastChannel: ConflatedBroadcastChannel<List<VideoState>>
+    private lateinit var stateOfVideosFlow: MutableSharedFlow<List<VideoState>>
     private lateinit var mockStateOfVideosObservableUseCase: StateOfVideosObservableUseCase
     private lateinit var mockAddVideoToQueueUseCase: AddVideoToQueueUseCase
     private lateinit var mockVideoDownloadingProcessorUseCase: VideoDownloadingProcessorUseCase
@@ -35,9 +33,9 @@ class QueueViewModelTest {
 
     @BeforeEach
     fun setup() {
-        stateOfVideosConflatedBroadcastChannel = ConflatedBroadcastChannel()
+        stateOfVideosFlow = MutableSharedFlow(replay = 1)
         mockStateOfVideosObservableUseCase = mock()
-        whenever(mockStateOfVideosObservableUseCase.invoke()).doReturn(stateOfVideosConflatedBroadcastChannel.asFlow())
+        whenever(mockStateOfVideosObservableUseCase.invoke()).doReturn(stateOfVideosFlow)
         mockAddVideoToQueueUseCase = mock()
         mockVideoDownloadingProcessorUseCase = mock()
         sut = QueueViewModel(mockStateOfVideosObservableUseCase, mockAddVideoToQueueUseCase, mockVideoDownloadingProcessorUseCase)
@@ -48,37 +46,37 @@ class QueueViewModelTest {
         sut.downloads.test().assertNoValue()
         verify(mockStateOfVideosObservableUseCase, times(1)).invoke()
         verifyNoMoreInteractions(mockStateOfVideosObservableUseCase)
-        verifyZeroInteractions(mockAddVideoToQueueUseCase)
-        verifyZeroInteractions(mockVideoDownloadingProcessorUseCase)
+        verifyNoInteractions(mockAddVideoToQueueUseCase)
+        verifyNoInteractions(mockVideoDownloadingProcessorUseCase)
     }
 
     @Test
     fun GIVEN_initialized_AND_observing_WHEN_emitting_a_emptyList_THEN_it_is_sent_out() {
         val expected = listOf<VideoState>()
-        stateOfVideosConflatedBroadcastChannel.offer(expected)
+        stateOfVideosFlow.tryEmit(expected)
 
         sut.downloads.test().assertValue(expected)
         verify(mockStateOfVideosObservableUseCase, times(1)).invoke()
         verifyNoMoreInteractions(mockStateOfVideosObservableUseCase)
-        verifyZeroInteractions(mockAddVideoToQueueUseCase)
-        verifyZeroInteractions(mockVideoDownloadingProcessorUseCase)
+        verifyNoInteractions(mockAddVideoToQueueUseCase)
+        verifyNoInteractions(mockVideoDownloadingProcessorUseCase)
     }
 
     @Test
     fun GIVEN_initialized_AND_observing_WHEN_emitting_two_list_THEN_both_are_sent_out_in_order() {
-        val expected1 = listOf(VideoState.InPending(VideoInPending("a1","b1")))
-        val expected2 = listOf(VideoState.InPending(VideoInPending("a2","b2")))
+        val expected1 = listOf(VideoState.InPending(VideoInPending("a1", "b1")))
+        val expected2 = listOf(VideoState.InPending(VideoInPending("a2", "b2")))
         val testObserver = sut.downloads.test()
 
-        stateOfVideosConflatedBroadcastChannel.offer(expected1)
-        stateOfVideosConflatedBroadcastChannel.offer(expected2)
+        stateOfVideosFlow.tryEmit(expected1)
+        stateOfVideosFlow.tryEmit(expected2)
 
         testObserver.assertHistorySize(2).assertHasValue()
             .assertValueHistory(expected1, expected2)
         verify(mockStateOfVideosObservableUseCase, times(1)).invoke()
         verifyNoMoreInteractions(mockStateOfVideosObservableUseCase)
-        verifyZeroInteractions(mockAddVideoToQueueUseCase)
-        verifyZeroInteractions(mockVideoDownloadingProcessorUseCase)
+        verifyNoInteractions(mockAddVideoToQueueUseCase)
+        verifyNoInteractions(mockVideoDownloadingProcessorUseCase)
     }
 
     @Test

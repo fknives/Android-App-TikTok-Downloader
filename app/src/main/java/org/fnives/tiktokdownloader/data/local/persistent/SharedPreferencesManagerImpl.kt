@@ -39,10 +39,10 @@ class SharedPreferencesManagerImpl private constructor(private val sharedPrefere
         override fun getValue(thisRef: SharedPreferencesManagerImpl, property: KProperty<*>): Flow<Set<String>> =
             callbackFlow {
                 val listener = SharedPreferences.OnSharedPreferenceChangeListener { _, _ ->
-                    offer(thisRef.getValues())
+                    trySend(thisRef.getValues())
                 }
                 thisRef.sharedPreferences.registerOnSharedPreferenceChangeListener(listener)
-                offer(thisRef.getValues())
+                trySend(thisRef.getValues())
 
                 awaitClose {
                     thisRef.sharedPreferences.unregisterOnSharedPreferenceChangeListener(listener)

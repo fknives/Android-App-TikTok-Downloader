@@ -2,14 +2,7 @@ package org.fnives.tiktokdownloader.ui.main
 
 import androidx.lifecycle.SavedStateHandle
 import com.jraska.livedata.test
-import com.nhaarman.mockitokotlin2.doReturn
-import com.nhaarman.mockitokotlin2.mock
-import com.nhaarman.mockitokotlin2.times
-import com.nhaarman.mockitokotlin2.verify
-import com.nhaarman.mockitokotlin2.verifyNoMoreInteractions
-import com.nhaarman.mockitokotlin2.whenever
-import kotlinx.coroutines.channels.ConflatedBroadcastChannel
-import kotlinx.coroutines.flow.asFlow
+import kotlinx.coroutines.flow.MutableSharedFlow
 import org.fnives.tiktokdownloader.data.model.ProcessState
 import org.fnives.tiktokdownloader.data.model.VideoDownloaded
 import org.fnives.tiktokdownloader.data.model.VideoInPending
@@ -24,23 +17,29 @@ import org.junit.jupiter.api.extension.ExtendWith
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.MethodSource
+import org.mockito.kotlin.doReturn
+import org.mockito.kotlin.mock
+import org.mockito.kotlin.times
+import org.mockito.kotlin.verify
+import org.mockito.kotlin.verifyNoMoreInteractions
+import org.mockito.kotlin.whenever
 import java.util.stream.Stream
 
 @Suppress("TestFunctionName")
 @ExtendWith(InstantExecutorExtension::class, MainDispatcherExtension::class)
 class MainViewModelTest {
 
-    private lateinit var conflatedBroadcastChannel: ConflatedBroadcastChannel<ProcessState>
+    private lateinit var processStateFlow: MutableSharedFlow<ProcessState>
     private lateinit var mockVideoDownloadingProcessorUseCase: VideoDownloadingProcessorUseCase
     private lateinit var mockAddVideoToQueueUseCase: AddVideoToQueueUseCase
     private lateinit var sut: MainViewModel
 
     @BeforeEach
     fun setup() {
-        conflatedBroadcastChannel = ConflatedBroadcastChannel()
+        processStateFlow = MutableSharedFlow(replay = 1)
         mockVideoDownloadingProcessorUseCase = mock()
         mockAddVideoToQueueUseCase = mock()
-        whenever(mockVideoDownloadingProcessorUseCase.processState).doReturn(conflatedBroadcastChannel.asFlow())
+        whenever(mockVideoDownloadingProcessorUseCase.processState).doReturn(processStateFlow)
         sut = MainViewModel(mockVideoDownloadingProcessorUseCase, mockAddVideoToQueueUseCase, SavedStateHandle())
     }
 
@@ -95,7 +94,7 @@ class MainViewModelTest {
 
         val testObserver = sut.refreshActionVisibility.test()
 
-        conflatedBroadcastChannel.offer(processState)
+        processStateFlow.tryEmit(processState)
 
         testObserver.assertHistorySize(2).assertValueHistory(false, expected)
         verify(mockVideoDownloadingProcessorUseCase, times(1)).processState
@@ -114,7 +113,7 @@ class MainViewModelTest {
 
         val testObserver = sut.errorMessage.test()
 
-        conflatedBroadcastChannel.offer(processState)
+        processStateFlow.tryEmit(processState)
 
         testObserver.assertHistorySize(2).assertValueHistory(null, expected?.let(::Event))
         verify(mockVideoDownloadingProcessorUseCase, times(1)).processState

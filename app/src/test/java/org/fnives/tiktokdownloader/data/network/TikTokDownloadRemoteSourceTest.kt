@@ -14,12 +14,14 @@ import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.Timeout
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.MethodSource
 import java.util.stream.Stream
 
-@Suppress("TestFunctionName")
+
+@Timeout(value = 2)
 class TikTokDownloadRemoteSourceTest {
 
     private lateinit var mockWebServer: MockWebServer
@@ -126,13 +128,18 @@ class TikTokDownloadRemoteSourceTest {
         mockWebServer.enqueue(MockResponse().setResponseCode(200).setHeader("Content-Type", "video/mp4").setBody("banan"))
         val videoInPending = VideoInPending("alma", TEST_URL)
 
-
         val response = sut.getVideo(videoInPending)
         Assertions.assertEquals(expectedId, response.id)
         Assertions.assertEquals(expectedUrl, response.url)
         Assertions.assertEquals(expectedContentType, response.contentType)
         Assertions.assertEquals("banan", response.byteStream.reader().readText())
+
+        mockWebServer.takeRequest()
+        mockWebServer.takeRequest()
+        val videoRequest = mockWebServer.takeRequest()
+        Assertions.assertEquals("http://localhost:8080/?a=a&b=b&c=c", videoRequest.requestUrl?.toUri()?.toString())
     }
+
 
     @Test
     fun GIVEN_proper_responses_as_variant2_THEN_parsed_properly() = runBlocking<Unit> {
@@ -152,6 +159,10 @@ class TikTokDownloadRemoteSourceTest {
         Assertions.assertEquals(expectedUrl, response.url)
         Assertions.assertEquals(expectedContentType, response.contentType)
         Assertions.assertEquals("a-banan", response.byteStream.reader().readText())
+        mockWebServer.takeRequest()
+        mockWebServer.takeRequest()
+        val videoRequest = mockWebServer.takeRequest()
+        Assertions.assertEquals("http://localhost:8080/?a=a&b=b&c=c", videoRequest.requestUrl?.toUri()?.toString())
     }
 
     @Test
@@ -257,31 +268,34 @@ class TikTokDownloadRemoteSourceTest {
         private const val MAIN_PAGE_VARIANT_2_RESPONSE = "response/main_page_v1.html"
         private const val PORT = 8080
         private const val TEST_URL = "http://127.0.0.1:$PORT"
+        private const val SHORTENED_TEST_URL = "http://127.0.0.1:$PORT"
+        private const val VIDEO_FILE_TEST_URL = "http:\\u002F/127.0.0.1:$PORT?a=a\\u0026b=b&c=c"
+        private const val CAPTCHA_TEST_URL = "http://127.0.0.1:$PORT"
 
         private fun Any.readResourceFileShortenedUrlResponse() =
             readResourceFile(SHORTENED_URL_RESPONSE)
-                .replace("https://www.tiktok.com/@ieclauuu/video/6887614455967010049", TEST_URL)
+                .replace("https://www.tiktok.com/@ieclauuu/video/6887614455967010049", SHORTENED_TEST_URL)
 
         private fun Any.readResourceFileMainPageVariant1Response() =
             readResourceFile(MAIN_PAGE_VARIANT_1_RESPONSE)
                 .replace(
                     "https://v16-web.tiktok.com/video/tos/alisg/tos-alisg-pve-0037c001/9ddfc12f43b04f6596f9953c9a9ca072/?a=1988\\u0026br=1534\\u0026bt=767\\u0026cr=0\\u0026cs=0\\u0026cv=1\\u0026dr=0\\u0026ds=3\\u0026er=\\u0026expire=1603682739\\u0026l=20201025212533010189074225590A080D\\u0026lr=tiktok_m\\u0026mime_type=video_mp4\\u0026policy=2\\u0026qs=0\\u0026rc=amlxbmV1O291eDMzMzczM0ApZDRoZDQ3Nzw1N2U5Nzs3O2dicW1vL2AxZV5fLS1iMTRzczA2Y2NgYTQ2LmE1Y2E0My46Yw%3D%3D\\u0026signature=cce079fd02e4dde94c1c93cfdbd1d100\\u0026tk=tt_webid_v2\\u0026vl=\\u0026vr=",
-                    TEST_URL
+                    VIDEO_FILE_TEST_URL
                 )
 
         private fun Any.readResourceFileMainPageVariant2Response() =
             readResourceFile(MAIN_PAGE_VARIANT_2_RESPONSE)
                 .replace(
                     "https://v16-web.tiktok.com/video/tos/alisg/tos-alisg-pve-0037c001/9ddfc12f43b04f6596f9953c9a9ca072/?a=1988\\u0026br=1534\\u0026bt=767\\u0026cr=0\\u0026cs=0\\u0026cv=1\\u0026dr=0\\u0026ds=3\\u0026er=\\u0026expire=1603682739\\u0026l=20201025212533010189074225590A080D\\u0026lr=tiktok_m\\u0026mime_type=video_mp4\\u0026policy=2\\u0026qs=0\\u0026rc=amlxbmV1O291eDMzMzczM0ApZDRoZDQ3Nzw1N2U5Nzs3O2dicW1vL2AxZV5fLS1iMTRzczA2Y2NgYTQ2LmE1Y2E0My46Yw%3D%3D\\u0026signature=cce079fd02e4dde94c1c93cfdbd1d100\\u0026tk=tt_webid_v2\\u0026vl=\\u0026vr=",
-                    TEST_URL
+                    VIDEO_FILE_TEST_URL
                 )
         private fun Any.readCaptchaOneResponse() =
             readResourceFile(CAPTCHA_REQUIRED_RESPONSE_ONE)
-                .replace("https://www.tiktok.com/@ieclauuu/video/6887614455967010049", TEST_URL)
+                .replace("https://www.tiktok.com/@ieclauuu/video/6887614455967010049", CAPTCHA_TEST_URL)
 
         private fun Any.readCaptchaTwoResponse() =
             readResourceFile(CAPTCHA_REQUIRED_RESPONSE_TWO)
-                .replace("https://www.tiktok.com/@ieclauuu/video/6887614455967010049", TEST_URL)
+                .replace("https://www.tiktok.com/@ieclauuu/video/6887614455967010049", CAPTCHA_TEST_URL)
 
         @JvmStatic
         private fun captchaResponses() = Stream.of(

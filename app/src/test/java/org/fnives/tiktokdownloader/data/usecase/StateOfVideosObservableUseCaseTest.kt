@@ -1,19 +1,15 @@
 package org.fnives.tiktokdownloader.data.usecase
 
-import com.nhaarman.mockitokotlin2.doReturn
-import com.nhaarman.mockitokotlin2.mock
-import com.nhaarman.mockitokotlin2.times
-import com.nhaarman.mockitokotlin2.verify
-import com.nhaarman.mockitokotlin2.verifyNoMoreInteractions
-import com.nhaarman.mockitokotlin2.verifyZeroInteractions
-import com.nhaarman.mockitokotlin2.whenever
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.take
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.test.TestCoroutineDispatcher
+import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.TestDispatcher
+
 import org.fnives.tiktokdownloader.data.local.VideoDownloadedLocalSource
 import org.fnives.tiktokdownloader.data.local.VideoInPendingLocalSource
 import org.fnives.tiktokdownloader.data.local.VideoInProgressLocalSource
@@ -21,14 +17,26 @@ import org.fnives.tiktokdownloader.data.model.VideoDownloaded
 import org.fnives.tiktokdownloader.data.model.VideoInPending
 import org.fnives.tiktokdownloader.data.model.VideoInProgress
 import org.fnives.tiktokdownloader.data.model.VideoState
+import org.fnives.tiktokdownloader.helper.advanceTimeBy
+import org.fnives.tiktokdownloader.helper.advanceUntilIdle
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.Timeout
+import org.mockito.kotlin.doReturn
+import org.mockito.kotlin.mock
+import org.mockito.kotlin.times
+import org.mockito.kotlin.verify
+import org.mockito.kotlin.verifyNoInteractions
+import org.mockito.kotlin.verifyNoMoreInteractions
+import org.mockito.kotlin.whenever
 
 @Suppress("TestFunctionName")
+@OptIn(ExperimentalCoroutinesApi::class)
+@Timeout(value = 2)
 class StateOfVideosObservableUseCaseTest {
 
-    private lateinit var testDispatcher: TestCoroutineDispatcher
+    private lateinit var testDispatcher: TestDispatcher
     private lateinit var mockVideoInProgressLocalSource: VideoInProgressLocalSource
     private lateinit var mockVideoInPendingLocalSource: VideoInPendingLocalSource
     private lateinit var mockVideoDownloadedLocalSource: VideoDownloadedLocalSource
@@ -48,7 +56,7 @@ class StateOfVideosObservableUseCaseTest {
         whenever(mockVideoInProgressLocalSource.videoInProcessFlow).doReturn(videoInProgressMutableFlow)
         whenever(mockVideoInPendingLocalSource.pendingVideos).doReturn(videoInPendingMutableFlow)
         whenever(mockVideoDownloadedLocalSource.savedVideos).doReturn(videoDownloadedMutableFlow)
-        testDispatcher = TestCoroutineDispatcher()
+        testDispatcher = StandardTestDispatcher()
         sut = StateOfVideosObservableUseCase(
             videoInProgressLocalSource = mockVideoInProgressLocalSource,
             videoInPendingLocalSource = mockVideoInPendingLocalSource,
@@ -59,13 +67,13 @@ class StateOfVideosObservableUseCaseTest {
 
     @Test
     fun WHEN_no_invoke_is_called_THEN_no_dependency_is_called() {
-        verifyZeroInteractions(mockVideoDownloadedLocalSource)
-        verifyZeroInteractions(mockVideoInPendingLocalSource)
-        verifyZeroInteractions(mockVideoInProgressLocalSource)
+        verifyNoInteractions(mockVideoDownloadedLocalSource)
+        verifyNoInteractions(mockVideoInPendingLocalSource)
+        verifyNoInteractions(mockVideoInProgressLocalSource)
     }
 
     @Test
-    fun GIVEN_no_inProgress_AND_empty_pending_AND_empty_saved_THEN_emptyList_is_emitted() = runBlocking(testDispatcher) {
+    fun GIVEN_no_inProgress_AND_empty_pending_AND_empty_saved_THEN_emptyList_is_emitted() = runBlocking {
         videoInProgressMutableFlow.value = null
         videoInPendingMutableFlow.value = emptyList()
         videoDownloadedMutableFlow.value = emptyList()
@@ -83,7 +91,7 @@ class StateOfVideosObservableUseCaseTest {
     }
 
     @Test
-    fun GIVEN_inProgress_AND_empty_pending_AND_empty_saved_THEN_inProgress_is_emitted() = runBlocking(testDispatcher) {
+    fun GIVEN_inProgress_AND_empty_pending_AND_empty_saved_THEN_inProgress_is_emitted() = runBlocking {
         val videoInProgress = VideoInProgress("alma", "url")
         val expected = listOf<VideoState>(VideoState.InProcess(videoInProgress))
         val expectedList = listOf(emptyList(), expected)
@@ -109,7 +117,7 @@ class StateOfVideosObservableUseCaseTest {
     }
 
     @Test
-    fun GIVEN_inProgress_AND_pendingWithSameId_AND_empty_saved_THEN_inProgress_is_emitted() = runBlocking(testDispatcher) {
+    fun GIVEN_inProgress_AND_pendingWithSameId_AND_empty_saved_THEN_inProgress_is_emitted() = runBlocking {
         val videoInProgress = VideoInProgress("alma", "url")
         val videoInPending = VideoInPending(id = videoInProgress.id, url = videoInProgress.url)
         val expected = listOf<VideoState>(VideoState.InProcess(videoInProgress))
@@ -130,7 +138,7 @@ class StateOfVideosObservableUseCaseTest {
     }
 
     @Test
-    fun GIVEN_in_pending_AND_nothing_inprogress_AND_empty_saved_THEN_inPending_is_emitted() = runBlocking(testDispatcher) {
+    fun GIVEN_in_pending_AND_nothing_inprogress_AND_empty_saved_THEN_inPending_is_emitted() = runBlocking {
         val videoInPending = VideoInPending(id = "alma", url = "url")
         val expected = listOf<VideoState>(VideoState.InPending(videoInPending))
         val expectedList = listOf(emptyList(), expected)
@@ -151,7 +159,7 @@ class StateOfVideosObservableUseCaseTest {
 
     @Test
     fun GIVEN_inProgress_AND_pendingWithSameId_AND_savedWithSameId_THEN_inProgress_And_saved_is_emitted() =
-        runBlocking(testDispatcher) {
+        runBlocking {
             val videoInProgress = VideoInProgress("alma", "url")
             val videoInPending = VideoInPending(id = videoInProgress.id, url = videoInProgress.url)
             val videoDownloaded = VideoDownloaded(id = videoInProgress.id, url = videoInProgress.url, uri = "uri")
@@ -173,7 +181,7 @@ class StateOfVideosObservableUseCaseTest {
         }
 
     @Test
-    fun GIVEN_new_item_faster_than_debounce_THEN_only_the_last_items_are_emitted() = runBlocking(testDispatcher) {
+    fun GIVEN_new_item_faster_than_debounce_THEN_only_the_last_items_are_emitted() = runBlocking {
         val videoInProgress = VideoInProgress("alma", "url")
         val expected = listOf(VideoState.InProcess(videoInProgress))
         val expectedList = listOf(expected)
@@ -194,7 +202,7 @@ class StateOfVideosObservableUseCaseTest {
     }
 
     @Test
-    fun GIVEN_new_item_slower_than_debounce_THEN_both_list_is_emitted() = runBlocking(testDispatcher) {
+    fun GIVEN_new_item_slower_than_debounce_THEN_both_list_is_emitted() = runBlocking {
         val videoInProgress = VideoInProgress("alma", "url")
         val expected = listOf(VideoState.InProcess(videoInProgress))
         val expectedList = listOf(emptyList(), expected)
@@ -215,7 +223,7 @@ class StateOfVideosObservableUseCaseTest {
     }
 
     @Test
-    fun GIVEN_processing_LATER_pendingWithSameId_THEN_no_new_emition_happens() = runBlocking(testDispatcher) {
+    fun GIVEN_processing_LATER_pendingWithSameId_THEN_no_new_emition_happens() = runBlocking {
         val videoInProgress = VideoInProgress("alma", "url")
         val videoInPendingSameAsProgress = VideoInPending(id = videoInProgress.id, url = videoInProgress.url)
         val videoInPendingOther = VideoInPending(id = "alma2", url = "url2")

@@ -1,21 +1,15 @@
 package org.fnives.tiktokdownloader.data.usecase
 
-import com.nhaarman.mockitokotlin2.anyOrNull
-import com.nhaarman.mockitokotlin2.doReturn
-import com.nhaarman.mockitokotlin2.mock
-import com.nhaarman.mockitokotlin2.times
-import com.nhaarman.mockitokotlin2.verify
-import com.nhaarman.mockitokotlin2.verifyNoMoreInteractions
-import com.nhaarman.mockitokotlin2.verifyZeroInteractions
-import com.nhaarman.mockitokotlin2.whenever
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.async
 import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.take
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.test.TestCoroutineDispatcher
-import kotlinx.coroutines.test.runBlockingTest
+import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.TestDispatcher
+import kotlinx.coroutines.test.runTest
 import org.fnives.tiktokdownloader.data.local.CaptchaTimeoutLocalSource
 import org.fnives.tiktokdownloader.data.local.VideoDownloadedLocalSource
 import org.fnives.tiktokdownloader.data.local.VideoInPendingLocalSource
@@ -30,15 +24,27 @@ import org.fnives.tiktokdownloader.data.network.TikTokDownloadRemoteSource
 import org.fnives.tiktokdownloader.data.network.exceptions.CaptchaRequiredException
 import org.fnives.tiktokdownloader.data.network.exceptions.NetworkException
 import org.fnives.tiktokdownloader.data.network.exceptions.ParsingException
+import org.fnives.tiktokdownloader.helper.advanceTimeBy
+import org.fnives.tiktokdownloader.helper.advanceUntilIdle
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.mockito.kotlin.anyOrNull
+import org.mockito.kotlin.doReturn
+import org.mockito.kotlin.mock
+import org.mockito.kotlin.times
+import org.mockito.kotlin.verify
+import org.mockito.kotlin.verifyNoInteractions
+import org.mockito.kotlin.verifyNoMoreInteractions
+import org.mockito.kotlin.whenever
 import java.io.InputStream
 
 @Suppress("TestFunctionName")
+@OptIn(ExperimentalCoroutinesApi::class)
+//@Timeout(value = 2)
 class VideoDownloadingProcessorUseCaseTest {
 
-    private lateinit var testDispatcher: TestCoroutineDispatcher
+    private lateinit var testDispatcher: TestDispatcher
     private lateinit var mockVideoInProgressLocalSource: VideoInProgressLocalSource
     private lateinit var mockVideoInPendingLocalSource: VideoInPendingLocalSource
     private lateinit var mockVideoDownloadedLocalSource: VideoDownloadedLocalSource
@@ -62,7 +68,7 @@ class VideoDownloadingProcessorUseCaseTest {
         whenever(mockVideoInProgressLocalSource.videoInProcessFlow).doReturn(videoInProgressMutableFlow)
         whenever(mockVideoInPendingLocalSource.pendingVideos).doReturn(videoInPendingMutableFlow)
         whenever(mockVideoDownloadedLocalSource.savedVideos).doReturn(videoDownloadedMutableFlow)
-        testDispatcher = TestCoroutineDispatcher()
+        testDispatcher = StandardTestDispatcher()
         sut = VideoDownloadingProcessorUseCase(
             videoInProgressLocalSource = mockVideoInProgressLocalSource,
             videoInPendingLocalSource = mockVideoInPendingLocalSource,
@@ -75,24 +81,24 @@ class VideoDownloadingProcessorUseCaseTest {
 
     @Test
     fun WHEN_no_method_invoked_THEN_no_interaction_with_dependencies() {
-        verifyZeroInteractions(mockVideoInProgressLocalSource)
-        verifyZeroInteractions(mockVideoInPendingLocalSource)
-        verifyZeroInteractions(mockVideoDownloadedLocalSource)
-        verifyZeroInteractions(mockTikTokDownloadRemoteSource)
+        verifyNoInteractions(mockVideoInProgressLocalSource)
+        verifyNoInteractions(mockVideoInPendingLocalSource)
+        verifyNoInteractions(mockVideoDownloadedLocalSource)
+        verifyNoInteractions(mockTikTokDownloadRemoteSource)
     }
 
     @Test
     fun GIVEN_not_observing_WHEN_fetching_THEN_nothing_happens() {
         sut.fetchVideoInState()
 
-        verifyZeroInteractions(mockVideoInProgressLocalSource)
-        verifyZeroInteractions(mockVideoInPendingLocalSource)
-        verifyZeroInteractions(mockVideoDownloadedLocalSource)
-        verifyZeroInteractions(mockTikTokDownloadRemoteSource)
+        verifyNoInteractions(mockVideoInProgressLocalSource)
+        verifyNoInteractions(mockVideoInPendingLocalSource)
+        verifyNoInteractions(mockVideoDownloadedLocalSource)
+        verifyNoInteractions(mockTikTokDownloadRemoteSource)
     }
 
     @Test
-    fun GIVEN_empty_pendingVideos_WHEN_observing_THEN_error_is_emited() = runBlocking(testDispatcher) {
+    fun GIVEN_empty_pendingVideos_WHEN_observing_THEN_error_is_emited() = runBlocking {
         videoInPendingMutableFlow.value = emptyList()
         val expected = ProcessState.Finished
         val expectedList = listOf(expected)
@@ -103,13 +109,12 @@ class VideoDownloadingProcessorUseCaseTest {
         Assertions.assertEquals(expectedList, resultList.await())
         verify(mockVideoInPendingLocalSource, times(1)).pendingVideos
         verifyNoMoreInteractions(mockVideoInPendingLocalSource)
-        verifyZeroInteractions(mockVideoInPendingLocalSource)
-        verifyZeroInteractions(mockVideoDownloadedLocalSource)
-        verifyZeroInteractions(mockTikTokDownloadRemoteSource)
+        verifyNoInteractions(mockVideoDownloadedLocalSource)
+        verifyNoInteractions(mockTikTokDownloadRemoteSource)
     }
 
     @Test
-    fun GIVEN_one_pending_video_AND_network_error_WHEN_observing_THEN_error_is_emited() = runBlocking(testDispatcher) {
+    fun GIVEN_one_pending_video_AND_network_error_WHEN_observing_THEN_error_is_emited() = runBlocking {
         val videoInPending = VideoInPending("alma", "banan")
         videoInPendingMutableFlow.value = listOf(videoInPending)
         whenever(mockTikTokDownloadRemoteSource.getVideo(videoInPending)).then { throw NetworkException() }
@@ -126,11 +131,10 @@ class VideoDownloadingProcessorUseCaseTest {
         verify(mockVideoDownloadedLocalSource, times(1)).savedVideos
         verifyNoMoreInteractions(mockTikTokDownloadRemoteSource)
         verifyNoMoreInteractions(mockVideoDownloadedLocalSource)
-        verifyZeroInteractions(mockVideoInPendingLocalSource)
     }
 
     @Test
-    fun GIVEN_one_pending_video_AND_parsing_error_WHEN_observing_THEN_parsingError_is_emited() = runBlocking(testDispatcher) {
+    fun GIVEN_one_pending_video_AND_parsing_error_WHEN_observing_THEN_parsingError_is_emited() = runBlocking {
         val videoInPending = VideoInPending("alma", "banan")
         videoInPendingMutableFlow.value = listOf(videoInPending)
         whenever(mockTikTokDownloadRemoteSource.getVideo(videoInPending)).then { throw ParsingException() }
@@ -144,7 +148,7 @@ class VideoDownloadingProcessorUseCaseTest {
     }
 
     @Test
-    fun GIVEN_one_pending_video_AND_unexpected_error_WHEN_observing_THEN_unknown_error_is_emitted() = runBlockingTest(testDispatcher) {
+    fun GIVEN_one_pending_video_AND_unexpected_error_WHEN_observing_THEN_unknown_error_is_emitted() = runTest(testDispatcher) {
         val videoInPending = VideoInPending("alma", "banan")
         videoInPendingMutableFlow.value = listOf(videoInPending)
         whenever(mockTikTokDownloadRemoteSource.getVideo(videoInPending)).then { throw Throwable() }
@@ -158,7 +162,7 @@ class VideoDownloadingProcessorUseCaseTest {
     }
 
     @Test
-    fun GIVEN_one_pending_video_AND_network_errors_WHILE_observing_WHEN_fetching_THEN_it_retries() = runBlocking<Unit>(testDispatcher) {
+    fun GIVEN_one_pending_video_AND_network_errors_WHILE_observing_WHEN_fetching_THEN_it_retries() = runBlocking<Unit> {
         val videoInPending = VideoInPending("alma", "banan")
         videoInPendingMutableFlow.value = listOf(videoInPending)
         var specificException = true
@@ -177,7 +181,7 @@ class VideoDownloadingProcessorUseCaseTest {
     }
 
     @Test
-    fun GIVEN_one_pending_video_AND_parsing_errors_WHILE_observing_WHEN_fetching_THEN_it_retries() = runBlocking<Unit>(testDispatcher) {
+    fun GIVEN_one_pending_video_AND_parsing_errors_WHILE_observing_WHEN_fetching_THEN_it_retries() = runBlocking<Unit> {
         val videoInPending = VideoInPending("alma", "banan")
         videoInPendingMutableFlow.value = listOf(videoInPending)
         var specificException = true
@@ -196,7 +200,7 @@ class VideoDownloadingProcessorUseCaseTest {
     }
 
     @Test
-    fun GIVEN_one_pending_video_AND_unknown_errors_WHILE_observing_WHEN_fetching_THEN_it_retries() = runBlocking<Unit>(testDispatcher) {
+    fun GIVEN_one_pending_video_AND_unknown_errors_WHILE_observing_WHEN_fetching_THEN_it_retries() = runBlocking<Unit> {
         val videoInPending = VideoInPending("alma", "banan")
         videoInPendingMutableFlow.value = listOf(videoInPending)
         var specificException = true
@@ -216,7 +220,7 @@ class VideoDownloadingProcessorUseCaseTest {
 
     // verify that fetching even while request is running doesn't matter, only after error is emitted
     @Test
-    fun GIVEN_one_pending_video_AND_delaying_until_fetch_WHILE_observing_WHEN_fetching_THEN_emition_happens_only_once()  = runBlocking<Unit>(testDispatcher) {
+    fun GIVEN_one_pending_video_AND_delaying_until_fetch_WHILE_observing_WHEN_fetching_THEN_emition_happens_only_once() = runBlocking<Unit> {
         val videoInPending = VideoInPending("alma", "banan")
         videoInPendingMutableFlow.value = listOf(videoInPending)
         var specificException = true
@@ -242,7 +246,7 @@ class VideoDownloadingProcessorUseCaseTest {
     }
 
     @Test
-    fun GIVEN_one_pending_video_AND_failing_request_WHEN_observing_THEN_video_is_marked_processing_then_unprocessing() = runBlocking<Unit>(testDispatcher) {
+    fun GIVEN_one_pending_video_AND_failing_request_WHEN_observing_THEN_video_is_marked_processing_then_unprocessing() = runBlocking<Unit> {
         val videoInPending = VideoInPending("alma", "banan")
         videoInPendingMutableFlow.value = listOf(videoInPending)
         whenever(mockTikTokDownloadRemoteSource.getVideo(videoInPending)).then {
@@ -261,10 +265,10 @@ class VideoDownloadingProcessorUseCaseTest {
     }
 
     @Test
-    fun GIVEN_one_pending_video_AND_successful_request_AND_storage_error_WHEN_observing_THEN_video_is_saved_called_and_error_is_propogated() = runBlocking(testDispatcher) {
+    fun GIVEN_one_pending_video_AND_successful_request_AND_storage_error_WHEN_observing_THEN_video_is_saved_called_and_error_is_propogated() = runBlocking {
         val videoInPending = VideoInPending("alma", "banan")
         videoInPendingMutableFlow.value = listOf(videoInPending)
-        val videoInSavingIntoFile = VideoInSavingIntoFile("x","u",VideoInSavingIntoFile.ContentType("a","b"), FalseInputStream())
+        val videoInSavingIntoFile = VideoInSavingIntoFile("x", "u", VideoInSavingIntoFile.ContentType("a", "b"), FalseInputStream())
         whenever(mockTikTokDownloadRemoteSource.getVideo(videoInPending)).doReturn(videoInSavingIntoFile)
         whenever(mockVideoDownloadedLocalSource.saveVideo(anyOrNull())).then {
             throw StorageException()
@@ -282,10 +286,10 @@ class VideoDownloadingProcessorUseCaseTest {
     }
 
     @Test
-    fun GIVEN_one_pending_video_AND_successful_request_AND_unexpected_error_WHEN_observing_THEN_video_is_saved_called_and_error_is_propogated() = runBlocking(testDispatcher) {
+    fun GIVEN_one_pending_video_AND_successful_request_AND_unexpected_error_WHEN_observing_THEN_video_is_saved_called_and_error_is_propogated() = runBlocking {
         val videoInPending = VideoInPending("alma", "banan")
         videoInPendingMutableFlow.value = listOf(videoInPending)
-        val videoInSavingIntoFile = VideoInSavingIntoFile("x","u",VideoInSavingIntoFile.ContentType("a","b"), FalseInputStream())
+        val videoInSavingIntoFile = VideoInSavingIntoFile("x", "u", VideoInSavingIntoFile.ContentType("a", "b"), FalseInputStream())
         whenever(mockTikTokDownloadRemoteSource.getVideo(videoInPending)).doReturn(videoInSavingIntoFile)
         whenever(mockVideoDownloadedLocalSource.saveVideo(anyOrNull())).then {
             throw Throwable()
@@ -303,11 +307,11 @@ class VideoDownloadingProcessorUseCaseTest {
     }
 
     @Test
-    fun GIVEN_one_pending_video_AND_successful_request_AND_successful_file_save_WHEN_observing_THEN_pending_is_removed() = runBlocking(testDispatcher) {
+    fun GIVEN_one_pending_video_AND_successful_request_AND_successful_file_save_WHEN_observing_THEN_pending_is_removed() = runBlocking {
         val videoInPending = VideoInPending("alma", "banan")
-        val videoDownloaded = VideoDownloaded("zz","yy","xx")
+        val videoDownloaded = VideoDownloaded("zz", "yy", "xx")
         videoInPendingMutableFlow.value = listOf(videoInPending)
-        val videoInSavingIntoFile = VideoInSavingIntoFile("x","u",VideoInSavingIntoFile.ContentType("a","b"), FalseInputStream())
+        val videoInSavingIntoFile = VideoInSavingIntoFile("x", "u", VideoInSavingIntoFile.ContentType("a", "b"), FalseInputStream())
         whenever(mockTikTokDownloadRemoteSource.getVideo(videoInPending)).doReturn(videoInSavingIntoFile)
         whenever(mockVideoDownloadedLocalSource.saveVideo(anyOrNull())).doReturn(videoDownloaded)
         val expectedList = listOf(
@@ -325,7 +329,7 @@ class VideoDownloadingProcessorUseCaseTest {
     }
 
     @Test
-    fun GIVEN_one_pending_video_AND_captcha_timeout_WHEN_observing_THEN_captcha_timeout_is_emited() = runBlocking(testDispatcher) {
+    fun GIVEN_one_pending_video_AND_captcha_timeout_WHEN_observing_THEN_captcha_timeout_is_emited() = runBlocking {
         val videoInPending = VideoInPending("alma", "banan")
         videoInPendingMutableFlow.value = listOf(videoInPending)
         whenever(mockCaptchaTimeoutLocalSource.isInCaptchaTimeout()).doReturn(true)
@@ -344,33 +348,34 @@ class VideoDownloadingProcessorUseCaseTest {
     }
 
     @Test
-    fun GIVEN_one_pending_video_AND_successful_request_AND_successful_file_save_WHEN_observing_with_2_THEN_pending_is_removed_AND_only_once_executed() = runBlocking(testDispatcher) {
-        val videoInPending = VideoInPending("alma", "banan")
-        val videoDownloaded = VideoDownloaded("zz","yy","xx")
-        videoInPendingMutableFlow.value = listOf(videoInPending)
-        val videoInSavingIntoFile = VideoInSavingIntoFile("x","u",VideoInSavingIntoFile.ContentType("a","b"), FalseInputStream())
-        whenever(mockTikTokDownloadRemoteSource.getVideo(videoInPending)).doReturn(videoInSavingIntoFile)
-        whenever(mockVideoDownloadedLocalSource.saveVideo(anyOrNull())).doReturn(videoDownloaded)
-        val expectedList = listOf(
-            ProcessState.Processing(videoInPending),
-            ProcessState.Processed(videoDownloaded)
-        )
+    fun GIVEN_one_pending_video_AND_successful_request_AND_successful_file_save_WHEN_observing_with_2_THEN_pending_is_removed_AND_only_once_executed() =
+        runBlocking {
+            val videoInPending = VideoInPending("alma", "banan")
+            val videoDownloaded = VideoDownloaded("zz", "yy", "xx")
+            videoInPendingMutableFlow.value = listOf(videoInPending)
+            val videoInSavingIntoFile = VideoInSavingIntoFile("x", "u", VideoInSavingIntoFile.ContentType("a", "b"), FalseInputStream())
+            whenever(mockTikTokDownloadRemoteSource.getVideo(videoInPending)).doReturn(videoInSavingIntoFile)
+            whenever(mockVideoDownloadedLocalSource.saveVideo(anyOrNull())).doReturn(videoDownloaded)
+            val expectedList = listOf(
+                ProcessState.Processing(videoInPending),
+                ProcessState.Processed(videoDownloaded)
+            )
 
-        val resultList1 = async(testDispatcher) { sut.processState.take(2).toList() }
-        val resultList2 = async(testDispatcher) { sut.processState.take(2).toList() }
-        testDispatcher.advanceUntilIdle()
+            val resultList1 = async(testDispatcher) { sut.processState.take(2).toList() }
+            val resultList2 = async(testDispatcher) { sut.processState.take(2).toList() }
+            testDispatcher.advanceUntilIdle()
 
-        Assertions.assertEquals(expectedList, resultList1.await())
-        Assertions.assertEquals(expectedList, resultList2.await())
-        verify(mockVideoInPendingLocalSource, times(1)).removeVideoFromQueue(videoInPending)
-        verify(mockVideoInPendingLocalSource, times(1)).pendingVideos
-        verifyNoMoreInteractions(mockVideoInPendingLocalSource)
-    }
+            Assertions.assertEquals(expectedList, resultList1.await())
+            Assertions.assertEquals(expectedList, resultList2.await())
+            verify(mockVideoInPendingLocalSource, times(1)).removeVideoFromQueue(videoInPending)
+            verify(mockVideoInPendingLocalSource, times(1)).pendingVideos
+            verifyNoMoreInteractions(mockVideoInPendingLocalSource)
+        }
 
     @Test
-    fun GIVEN_one_pending_video_BUT_already_downloaded_WHEN_observing_THEN_processed_is_emitted_but_no_request_call() = runBlocking(testDispatcher) {
+    fun GIVEN_one_pending_video_BUT_already_downloaded_WHEN_observing_THEN_processed_is_emitted_but_no_request_call() = runBlocking {
         val videoInPending = VideoInPending("alma", "banan")
-        val videoDownloaded = VideoDownloaded("alma","banan","xx")
+        val videoDownloaded = VideoDownloaded("alma", "banan", "xx")
         videoInPendingMutableFlow.value = listOf(videoInPending)
         videoDownloadedMutableFlow.value = listOf(videoDownloaded)
         val expectedList = listOf(
@@ -389,13 +394,13 @@ class VideoDownloadingProcessorUseCaseTest {
         verifyNoMoreInteractions(mockVideoInPendingLocalSource)
         verifyNoMoreInteractions(mockVideoDownloadedLocalSource)
         verifyNoMoreInteractions(mockVideoInProgressLocalSource)
-        verifyZeroInteractions(mockTikTokDownloadRemoteSource)
+        verifyNoInteractions(mockTikTokDownloadRemoteSource)
     }
 
     @Test
-    fun GIVEN_one_pending_video_BUT_already_downloaded_AND_captcha_timeout_WHEN_observing_THEN_processed_is_emitted_but_no_request_call() = runBlocking(testDispatcher) {
+    fun GIVEN_one_pending_video_BUT_already_downloaded_AND_captcha_timeout_WHEN_observing_THEN_processed_is_emitted_but_no_request_call() = runBlocking {
         val videoInPending = VideoInPending("alma", "banan")
-        val videoDownloaded = VideoDownloaded("alma","banan","xx")
+        val videoDownloaded = VideoDownloaded("alma", "banan", "xx")
         videoInPendingMutableFlow.value = listOf(videoInPending)
         videoDownloadedMutableFlow.value = listOf(videoDownloaded)
         whenever(mockCaptchaTimeoutLocalSource.isInCaptchaTimeout()).doReturn(true)
@@ -415,11 +420,11 @@ class VideoDownloadingProcessorUseCaseTest {
         verifyNoMoreInteractions(mockVideoInPendingLocalSource)
         verifyNoMoreInteractions(mockVideoDownloadedLocalSource)
         verifyNoMoreInteractions(mockVideoInProgressLocalSource)
-        verifyZeroInteractions(mockTikTokDownloadRemoteSource)
+        verifyNoInteractions(mockTikTokDownloadRemoteSource)
     }
 
     @Test
-    fun GIVEN_one_pending_video_BUT_CaptchaTimeoutException_WHEN_observing_THEN_its_saved_and_captchaError_emitted() = runBlocking(testDispatcher) {
+    fun GIVEN_one_pending_video_BUT_CaptchaTimeoutException_WHEN_observing_THEN_its_saved_and_captchaError_emitted() = runBlocking {
         val videoInPending = VideoInPending("alma", "banan")
         videoInPendingMutableFlow.value = listOf(videoInPending)
         videoDownloadedMutableFlow.value = listOf()
@@ -451,7 +456,7 @@ class VideoDownloadingProcessorUseCaseTest {
     }
 
     @Test
-    fun GIVEN_one_pending_video_AND_not_advancing_enough_WHILE_observing_WHEN_fetching_THEN_nothing_is_called()  = runBlocking<Unit>(testDispatcher) {
+    fun GIVEN_one_pending_video_AND_not_advancing_enough_WHILE_observing_WHEN_fetching_THEN_nothing_is_called() = runBlocking<Unit> {
         val videoInPending = VideoInPending("alma", "banan")
         videoInPendingMutableFlow.value = listOf(videoInPending)
         whenever(mockTikTokDownloadRemoteSource.getVideo(videoInPending)).then { throw NetworkException() }
@@ -459,21 +464,23 @@ class VideoDownloadingProcessorUseCaseTest {
         val resultList = async(testDispatcher) { sut.processState.take(2).toList() }
         testDispatcher.advanceTimeBy(199)
 
-        verifyZeroInteractions(mockTikTokDownloadRemoteSource)
+        verifyNoInteractions(mockTikTokDownloadRemoteSource)
+        testDispatcher.advanceUntilIdle()
         resultList.cancelAndJoin()
     }
 
     @Test
-    fun GIVEN_one_pending_video_AND_but_advancing_enough_WHILE_observing_WHEN_fetching_THEN_nothing_is_called()  = runBlocking<Unit>(testDispatcher) {
+    fun GIVEN_one_pending_video_AND_but_advancing_enough_WHILE_observing_WHEN_fetching_THEN_nothing_is_called() = runBlocking<Unit> {
         val videoInPending = VideoInPending("alma", "banan")
         videoInPendingMutableFlow.value = listOf(videoInPending)
         whenever(mockTikTokDownloadRemoteSource.getVideo(videoInPending)).then { throw NetworkException() }
 
         val resultList = async(testDispatcher) { sut.processState.take(2).toList() }
-        testDispatcher.advanceTimeBy(200)
+        testDispatcher.advanceTimeBy(201)
 
         verify(mockTikTokDownloadRemoteSource, times(1)).getVideo(videoInPending)
         verifyNoMoreInteractions(mockTikTokDownloadRemoteSource)
+        testDispatcher.advanceUntilIdle()
         resultList.cancelAndJoin()
     }
 
