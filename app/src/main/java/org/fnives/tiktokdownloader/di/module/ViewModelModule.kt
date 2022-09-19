@@ -3,6 +3,7 @@ package org.fnives.tiktokdownloader.di.module
 import androidx.lifecycle.SavedStateHandle
 import org.fnives.tiktokdownloader.ui.main.MainViewModel
 import org.fnives.tiktokdownloader.ui.main.queue.QueueViewModel
+import org.fnives.tiktokdownloader.ui.main.settings.SettingsViewModel
 import org.fnives.tiktokdownloader.ui.service.QueueServiceViewModel
 
 class ViewModelModule(private val useCaseModule: UseCaseModule) {
@@ -27,5 +28,11 @@ class ViewModelModule(private val useCaseModule: UseCaseModule) {
             useCaseModule.removeVideoFromQueueUseCase,
             useCaseModule.videoDownloadingProcessorUseCase,
             useCaseModule.moveVideoInQueueUseCase
+        )
+
+    val settignsViewModel: SettingsViewModel get() =
+        SettingsViewModel(
+            useCaseModule.observeUserPreferences,
+            useCaseModule.setUserPreferences
         )
 }

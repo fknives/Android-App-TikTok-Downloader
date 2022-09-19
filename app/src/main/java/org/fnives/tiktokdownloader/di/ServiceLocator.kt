@@ -25,6 +25,10 @@ object ServiceLocator {
     val permissionModule: PermissionModule
         get() = _permissionModule ?: throw IllegalStateException("$this.start has not been called!")
 
+    private var _useCaseModule: UseCaseModule? = null
+    val useCaseModule: UseCaseModule
+        get() = _useCaseModule ?: throw IllegalStateException("$this.start has not been called!")
+
     fun viewModelFactory(
         savedStateRegistryOwner: SavedStateRegistryOwner,
         defaultArgs: Bundle
@@ -36,9 +40,13 @@ object ServiceLocator {
 
     fun start(context: Context) {
         val androidFileManagementModule = AndroidFileManagementModule(context)
-        val localSourceModule = LocalSourceModule(androidFileManagementModule)
-        val networkModule = NetworkModule(DEFAULT_DELAY_BEFORE_REQUEST)
-        val useCaseModule = UseCaseModule(localSourceModule, networkModule)
+        val localSourceModule = LocalSourceModule(androidFileManagementModule = androidFileManagementModule)
+        val networkModule = NetworkModule(delayBeforeRequest = DEFAULT_DELAY_BEFORE_REQUEST)
+        val useCaseModule = UseCaseModule(
+            localSourceModule = localSourceModule,
+            networkModule = networkModule
+        )
+        _useCaseModule = useCaseModule
         _permissionModule = PermissionModule()
         _viewModelModule = ViewModelModule(useCaseModule)
     }

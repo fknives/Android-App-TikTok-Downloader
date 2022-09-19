@@ -9,13 +9,14 @@ import kotlin.properties.ReadOnlyProperty
 import kotlin.properties.ReadWriteProperty
 import kotlin.reflect.KProperty
 
-class SharedPreferencesManagerImpl private constructor(private val sharedPreferences: SharedPreferences) : SharedPreferencesManager {
+class SharedPreferencesManagerImpl private constructor(private val sharedPreferences: SharedPreferences) : SharedPreferencesManager, UserPreferencesStorage {
 
     override var captchaTimeoutUntil: Long by LongDelegate(CAPTCHA_TIMEOUT_KEY)
     override var pendingVideos: Set<String> by StringSetDelegate(PENDING_VIDEO_KEY)
     override val pendingVideosFlow by StringSetFlowDelegate(PENDING_VIDEO_KEY)
     override var downloadedVideos: Set<String> by StringSetDelegate(DOWNLOADED_VIDEO_KEY)
     override val downloadedVideosFlow by StringSetFlowDelegate(DOWNLOADED_VIDEO_KEY)
+    override var openAppToIntent: Boolean by BooleanDelegate(USER_PREFERENCE_ALWAYS_OPEN_APP)
 
     class LongDelegate(private val key: String) : ReadWriteProperty<SharedPreferencesManagerImpl, Long> {
         override fun setValue(thisRef: SharedPreferencesManagerImpl, property: KProperty<*>, value: Long) {
@@ -24,6 +25,15 @@ class SharedPreferencesManagerImpl private constructor(private val sharedPrefere
 
         override fun getValue(thisRef: SharedPreferencesManagerImpl, property: KProperty<*>): Long =
             thisRef.sharedPreferences.getLong(key, 0)
+    }
+
+    class BooleanDelegate(private val key: String) : ReadWriteProperty<SharedPreferencesManagerImpl, Boolean> {
+        override fun setValue(thisRef: SharedPreferencesManagerImpl, property: KProperty<*>, value: Boolean) {
+            thisRef.sharedPreferences.edit().putBoolean(key, value).apply()
+        }
+
+        override fun getValue(thisRef: SharedPreferencesManagerImpl, property: KProperty<*>): Boolean =
+            thisRef.sharedPreferences.getBoolean(key, false)
     }
 
     class StringSetDelegate(private val key: String) : ReadWriteProperty<SharedPreferencesManagerImpl, Set<String>> {
@@ -60,6 +70,7 @@ class SharedPreferencesManagerImpl private constructor(private val sharedPrefere
         private const val CAPTCHA_TIMEOUT_KEY = "CAPTCHA_TIMEOUT_KEY"
         private const val PENDING_VIDEO_KEY = "PENDING_VIDEO_KEY"
         private const val DOWNLOADED_VIDEO_KEY = "DOWNLOADED_VIDEO_KEY"
+        private const val USER_PREFERENCE_ALWAYS_OPEN_APP = "USER_PREFERENCE_ALWAYS_OPEN_APP"
 
         fun create(context: Context): SharedPreferencesManagerImpl =
             SharedPreferencesManagerImpl(

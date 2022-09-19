@@ -1,6 +1,7 @@
 package org.fnives.tiktokdownloader.di.module
 
 import org.fnives.tiktokdownloader.data.local.CaptchaTimeoutLocalSource
+import org.fnives.tiktokdownloader.data.local.UserPreferencesLocalSource
 import org.fnives.tiktokdownloader.data.local.VideoDownloadedLocalSource
 import org.fnives.tiktokdownloader.data.local.VideoInPendingLocalSource
 import org.fnives.tiktokdownloader.data.local.VideoInProgressLocalSource
@@ -21,6 +22,8 @@ class LocalSourceModule(private val androidFileManagementModule: AndroidFileMana
     }
 
     val videoInProgressLocalSource: VideoInProgressLocalSource by lazy { VideoInProgressLocalSource() }
+
+    val userPreferencesLocalSource: UserPreferencesLocalSource by lazy{ UserPreferencesLocalSource(androidFileManagementModule.userPreferencesStorage)}
 
     val captchaTimeoutLocalSource: CaptchaTimeoutLocalSource
         get() = CaptchaTimeoutLocalSource(

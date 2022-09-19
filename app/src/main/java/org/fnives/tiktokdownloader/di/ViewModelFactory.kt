@@ -8,6 +8,7 @@ import androidx.savedstate.SavedStateRegistryOwner
 import org.fnives.tiktokdownloader.di.module.ViewModelModule
 import org.fnives.tiktokdownloader.ui.main.MainViewModel
 import org.fnives.tiktokdownloader.ui.main.queue.QueueViewModel
+import org.fnives.tiktokdownloader.ui.main.settings.SettingsViewModel
 
 class ViewModelFactory(
     savedStateRegistryOwner: SavedStateRegistryOwner,
@@ -20,6 +21,7 @@ class ViewModelFactory(
         val viewModel = when (modelClass) {
             MainViewModel::class.java -> viewModelModule.mainViewModel(handle)
             QueueViewModel::class.java -> viewModelModule.queueViewModel
+            SettingsViewModel::class.java -> viewModelModule.settignsViewModel
             else -> throw IllegalArgumentException("Can't create viewModel for $modelClass ")
         }
         return viewModel as T

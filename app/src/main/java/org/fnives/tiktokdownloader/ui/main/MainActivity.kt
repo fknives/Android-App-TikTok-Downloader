@@ -19,6 +19,7 @@ import org.fnives.tiktokdownloader.di.ServiceLocator
 import org.fnives.tiktokdownloader.di.provideViewModels
 import org.fnives.tiktokdownloader.ui.main.help.HelpFragment
 import org.fnives.tiktokdownloader.ui.main.queue.QueueFragment
+import org.fnives.tiktokdownloader.ui.main.settings.SettingsFragment
 import org.fnives.tiktokdownloader.ui.permission.PermissionRequester
 import org.fnives.tiktokdownloader.ui.service.QueueService
 
@@ -57,6 +58,7 @@ class MainActivity : AppCompatActivity() {
         bottomNavigationView.setOnItemSelectedListener { item ->
             val fragment = when (item.itemId) {
                 R.id.help_menu_item -> HelpFragment.newInstance()
+                R.id.settings_menu_item -> SettingsFragment.newInstance()
                 R.id.queue_menu_item -> QueueFragment.newInstance()
                 else -> return@setOnItemSelectedListener false
             }

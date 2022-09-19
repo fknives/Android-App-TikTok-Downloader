@@ -1,9 +1,13 @@
 package org.fnives.tiktokdownloader.di.module
 
 import kotlinx.coroutines.Dispatchers
+import org.fnives.tiktokdownloader.data.local.persistent.UserPreferencesStorage
 import org.fnives.tiktokdownloader.data.usecase.AddVideoToQueueUseCase
+import org.fnives.tiktokdownloader.data.usecase.GetUserPreferences
+import org.fnives.tiktokdownloader.data.usecase.ObserveUserPreferences
 import org.fnives.tiktokdownloader.data.usecase.MoveVideoInQueueUseCase
 import org.fnives.tiktokdownloader.data.usecase.RemoveVideoFromQueueUseCase
+import org.fnives.tiktokdownloader.data.usecase.SetUserPreferences
 import org.fnives.tiktokdownloader.data.usecase.StateOfVideosObservableUseCase
 import org.fnives.tiktokdownloader.data.usecase.UrlVerificationUseCase
 import org.fnives.tiktokdownloader.data.usecase.VideoDownloadingProcessorUseCase
@@ -40,6 +44,10 @@ class UseCaseModule(
         get() = MoveVideoInQueueUseCase(
             localSourceModule.videoInPendingLocalSource
         )
+
+    val getUserPreferences: GetUserPreferences get() = GetUserPreferences(localSourceModule.userPreferencesLocalSource)
+    val observeUserPreferences: ObserveUserPreferences get() = ObserveUserPreferences(localSourceModule.userPreferencesLocalSource)
+    val setUserPreferences: SetUserPreferences get() = SetUserPreferences(localSourceModule.userPreferencesLocalSource)
 
     val videoDownloadingProcessorUseCase: VideoDownloadingProcessorUseCase by lazy {
         VideoDownloadingProcessorUseCase(

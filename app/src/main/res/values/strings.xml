@@ -47,4 +47,6 @@
     <string name="captcha_handling">It\'s possible if you try to download too many videos at the same time <b>captcha</b> will be triggered. Since we don\'t want to overload the server, in such case you will need to wait a couple hours to properly retry the download. If that still doesn\'t work you may need to verify a captcha on the same network.</string>
     <string name="link_to_repository">This is an open source project. You can see the repository clicking <u>here.</u></string>
     <string name="could_not_open">Couldn\'t open!</string>
+    <string name="settings">Settings</string>
+    <string name="user_preference_always_open_app">Always open app when sharing video</string>
 </resources>

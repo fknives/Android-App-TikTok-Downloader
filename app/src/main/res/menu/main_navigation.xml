@@ -7,6 +7,11 @@
         android:title="@string/queue" />
 
     <item
+        android:id="@+id/settings_menu_item"
+        android:icon="@drawable/ic_twotone_settings"
+        android:title="@string/settings" />
+
+    <item
         android:id="@+id/help_menu_item"
         android:icon="@drawable/ic_twotone_help"
         android:title="@string/help" />
