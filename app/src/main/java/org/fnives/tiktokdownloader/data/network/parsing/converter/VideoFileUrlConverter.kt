@@ -11,7 +11,12 @@ class VideoFileUrlConverter(
 
     @Throws(IllegalArgumentException::class, IndexOutOfBoundsException::class, CaptchaRequiredException::class)
     override fun convertSafely(responseBody: ResponseBody): VideoFileUrl? {
-        val html = responseBody.string().also(throwIfIsCaptchaResponse::invoke)
+        return convertSafely(responseBody.string())
+    }
+
+    @Throws(IllegalArgumentException::class, IndexOutOfBoundsException::class, CaptchaRequiredException::class)
+    fun convertSafely(responseBody: String): VideoFileUrl {
+        val html = responseBody.also(throwIfIsCaptchaResponse::invoke)
         val url = tryToParseDownloadLink(html).also { Logger.logMessage("parsed download link = $it") }
             ?: tryToParseVideoSrc(html).also { Logger.logMessage("parsed video src = $it") }
             ?: throw IllegalArgumentException("Couldn't parse url from HTML: $html")

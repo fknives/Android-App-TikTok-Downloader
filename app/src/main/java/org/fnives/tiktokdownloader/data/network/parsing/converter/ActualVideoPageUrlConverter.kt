@@ -10,10 +10,18 @@ class ActualVideoPageUrlConverter(
 ) : ParsingExceptionThrowingConverter<ActualVideoPageUrl>() {
 
     @Throws(IndexOutOfBoundsException::class, CaptchaRequiredException::class)
-    override fun convertSafely(responseBody: ResponseBody): ActualVideoPageUrl? =
-        responseBody.string()
-            .also(throwIfIsCaptchaResponse::invoke)
-            .split("rel=\"canonical\" href=\"")[1]
-            .split("\"")[0]
-            .let(::ActualVideoPageUrl)
+    override fun convertSafely(responseBody: ResponseBody): ActualVideoPageUrl? {
+        val responseBodyAsString =responseBody.string()
+        return try {
+            val actualVideoPageUrl = responseBodyAsString
+                .also(throwIfIsCaptchaResponse::invoke)
+                .split("rel=\"canonical\" href=\"")[1]
+                .split("\"")[0]
+
+            ActualVideoPageUrl(actualVideoPageUrl, responseBodyAsString)
+        } catch(_: Throwable) {
+            ActualVideoPageUrl(null, responseBodyAsString)
+        }
+
+    }
 }

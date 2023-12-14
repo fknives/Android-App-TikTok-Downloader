@@ -7,6 +7,7 @@ import org.fnives.tiktokdownloader.data.network.TikTokDownloadRemoteSource
 import org.fnives.tiktokdownloader.data.network.TikTokRetrofitService
 import org.fnives.tiktokdownloader.data.network.parsing.TikTokWebPageConverterFactory
 import org.fnives.tiktokdownloader.data.network.parsing.converter.ThrowIfIsCaptchaResponse
+import org.fnives.tiktokdownloader.data.network.parsing.converter.VideoFileUrlConverter
 import org.fnives.tiktokdownloader.data.network.session.CookieSavingInterceptor
 import org.fnives.tiktokdownloader.data.network.session.CookieStore
 import retrofit2.Converter
@@ -47,5 +48,5 @@ class NetworkModule(private val delayBeforeRequest: Long) {
         get() = retrofit.create(TikTokRetrofitService::class.java)
 
     val tikTokDownloadRemoteSource: TikTokDownloadRemoteSource
-        get() = TikTokDownloadRemoteSource(delayBeforeRequest, tikTokRetrofitService, cookieStore)
+        get() = TikTokDownloadRemoteSource(delayBeforeRequest, tikTokRetrofitService, cookieStore, VideoFileUrlConverter(throwIfIsCaptchaResponse))
 }
