@@ -10,7 +10,7 @@ class ActualVideoPageUrlConverter(
 ) : ParsingExceptionThrowingConverter<ActualVideoPageUrl>() {
 
     @Throws(IndexOutOfBoundsException::class, CaptchaRequiredException::class)
-    override fun convertSafely(responseBody: ResponseBody): ActualVideoPageUrl? {
+    override fun convertSafely(responseBody: ResponseBody): ActualVideoPageUrl {
         val responseBodyAsString =responseBody.string()
         return try {
             val actualVideoPageUrl = responseBodyAsString

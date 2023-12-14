@@ -3,6 +3,7 @@ package org.fnives.tiktokdownloader.data.network.parsing.converter
 import okhttp3.ResponseBody
 import org.fnives.tiktokdownloader.Logger
 import org.fnives.tiktokdownloader.data.network.exceptions.CaptchaRequiredException
+import org.fnives.tiktokdownloader.data.network.exceptions.ParsingException
 import org.fnives.tiktokdownloader.data.network.parsing.response.VideoFileUrl
 
 class VideoFileUrlConverter(
@@ -10,12 +11,17 @@ class VideoFileUrlConverter(
 ) : ParsingExceptionThrowingConverter<VideoFileUrl>() {
 
     @Throws(IllegalArgumentException::class, IndexOutOfBoundsException::class, CaptchaRequiredException::class)
-    override fun convertSafely(responseBody: ResponseBody): VideoFileUrl? {
-        return convertSafely(responseBody.string())
+    override fun convertSafely(responseBody: ResponseBody): VideoFileUrl {
+        return convert(responseBody.string())
+    }
+
+    @Throws(ParsingException::class, CaptchaRequiredException::class)
+    fun convertSafely(responseBody: String): VideoFileUrl {
+        return doActionSafely { convert(responseBody) }
     }
 
     @Throws(IllegalArgumentException::class, IndexOutOfBoundsException::class, CaptchaRequiredException::class)
-    fun convertSafely(responseBody: String): VideoFileUrl {
+    private fun convert(responseBody: String): VideoFileUrl {
         val html = responseBody.also(throwIfIsCaptchaResponse::invoke)
         val url = tryToParseDownloadLink(html).also { Logger.logMessage("parsed download link = $it") }
             ?: tryToParseVideoSrc(html).also { Logger.logMessage("parsed video src = $it") }
