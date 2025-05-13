@@ -2,6 +2,7 @@ package org.fnives.tiktokdownloader.data.usecase
 
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -30,6 +31,7 @@ import org.fnives.tiktokdownloader.data.network.TikTokDownloadRemoteSource
 import org.fnives.tiktokdownloader.data.network.exceptions.CaptchaRequiredException
 import org.fnives.tiktokdownloader.data.network.exceptions.NetworkException
 import org.fnives.tiktokdownloader.data.network.exceptions.ParsingException
+import org.fnives.tiktokdownloader.data.network.exceptions.VideoDeletedException
 
 @OptIn(FlowPreview::class)
 class VideoDownloadingProcessorUseCase(
@@ -42,6 +44,8 @@ class VideoDownloadingProcessorUseCase(
 ) {
 
     private val fetch = MutableStateFlow(ProcessingState.RUNNING)
+
+    @OptIn(ExperimentalCoroutinesApi::class)
     private val _processState by lazy {
         combineIntoPair(fetch, videoInPendingLocalSource.observeFirstPendingVideo())
             .filter { it.first == ProcessingState.RUNNING }
@@ -84,13 +88,17 @@ class VideoDownloadingProcessorUseCase(
                     videoInPendingLocalSource.removeVideoFromQueue(videoInPending)
                     alreadyDownloaded
                 }
+
                 captchaTimeoutLocalSource.isInCaptchaTimeout() -> {
-                    throw CaptchaRequiredException("In Captcha Timeout!")
+                    throw CaptchaRequiredException("In Captcha Timeout!", html = "")
                 }
+
                 else -> {
                     videoInProgressLocalSource.markVideoAsInProgress(videoInPending)
-                    val videoInSavingIntoFile: VideoInSavingIntoFile = tikTokDownloadRemoteSource.getVideo(videoInPending)
-                    val videoDownloaded: VideoDownloaded = videoDownloadedLocalSource.saveVideo(videoInSavingIntoFile)
+                    val videoInSavingIntoFile: VideoInSavingIntoFile =
+                        tikTokDownloadRemoteSource.getVideo(videoInPending)
+                    val videoDownloaded: VideoDownloaded =
+                        videoDownloadedLocalSource.saveVideo(videoInSavingIntoFile)
                     videoInPendingLocalSource.removeVideoFromQueue(videoInPending)
 
                     videoDownloaded
@@ -102,6 +110,8 @@ class VideoDownloadingProcessorUseCase(
             ProcessState.NetworkError
         } catch (parsingException: ParsingException) {
             ProcessState.ParsingError
+        } catch (videoDeletedException: VideoDeletedException) {
+            ProcessState.VideoDeletedError
         } catch (storageException: StorageException) {
             ProcessState.StorageError
         } catch (captchaRequiredException: CaptchaRequiredException) {
@@ -124,10 +134,12 @@ class VideoDownloadingProcessorUseCase(
             is ProcessState.Processing,
             is ProcessState.Processed,
             ProcessState.Finished -> false
+
             ProcessState.NetworkError,
             ProcessState.ParsingError,
             ProcessState.StorageError,
             ProcessState.UnknownError,
+            ProcessState.VideoDeletedError,
             ProcessState.CaptchaError -> true
         }
 

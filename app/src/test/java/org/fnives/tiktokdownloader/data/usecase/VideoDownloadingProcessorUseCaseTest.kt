@@ -117,7 +117,7 @@ class VideoDownloadingProcessorUseCaseTest {
     fun GIVEN_one_pending_video_AND_network_error_WHEN_observing_THEN_error_is_emited() = runBlocking {
         val videoInPending = VideoInPending("alma", "banan")
         videoInPendingMutableFlow.value = listOf(videoInPending)
-        whenever(mockTikTokDownloadRemoteSource.getVideo(videoInPending)).then { throw NetworkException() }
+        whenever(mockTikTokDownloadRemoteSource.getVideo(videoInPending)).then { throw NetworkException(html = "") }
         val expected = ProcessState.NetworkError
         val expectedList = listOf(ProcessState.Processing(videoInPending), expected)
 
@@ -137,7 +137,7 @@ class VideoDownloadingProcessorUseCaseTest {
     fun GIVEN_one_pending_video_AND_parsing_error_WHEN_observing_THEN_parsingError_is_emited() = runBlocking {
         val videoInPending = VideoInPending("alma", "banan")
         videoInPendingMutableFlow.value = listOf(videoInPending)
-        whenever(mockTikTokDownloadRemoteSource.getVideo(videoInPending)).then { throw ParsingException() }
+        whenever(mockTikTokDownloadRemoteSource.getVideo(videoInPending)).then { throw ParsingException(html = "") }
         val expected = ProcessState.ParsingError
         val expectedList = listOf(ProcessState.Processing(videoInPending), expected)
 
@@ -167,7 +167,7 @@ class VideoDownloadingProcessorUseCaseTest {
         videoInPendingMutableFlow.value = listOf(videoInPending)
         var specificException = true
         whenever(mockTikTokDownloadRemoteSource.getVideo(videoInPending)).then {
-            throw if (specificException) NetworkException().also { specificException = false } else Throwable()
+            throw if (specificException) NetworkException(html = "").also { specificException = false } else Throwable()
         }
         val inProgressItem = ProcessState.Processing(videoInPending)
         val expectedList = listOf(inProgressItem, ProcessState.NetworkError, inProgressItem, ProcessState.UnknownError)
@@ -186,7 +186,7 @@ class VideoDownloadingProcessorUseCaseTest {
         videoInPendingMutableFlow.value = listOf(videoInPending)
         var specificException = true
         whenever(mockTikTokDownloadRemoteSource.getVideo(videoInPending)).then {
-            throw if (specificException) ParsingException().also { specificException = false } else Throwable()
+            throw if (specificException) ParsingException(html = "").also { specificException = false } else Throwable()
         }
         val inProgressItem = ProcessState.Processing(videoInPending)
         val expectedList = listOf(inProgressItem, ProcessState.ParsingError, inProgressItem, ProcessState.UnknownError)
@@ -205,7 +205,7 @@ class VideoDownloadingProcessorUseCaseTest {
         videoInPendingMutableFlow.value = listOf(videoInPending)
         var specificException = true
         whenever(mockTikTokDownloadRemoteSource.getVideo(videoInPending)).then {
-            throw if (specificException) Throwable().also { specificException = false } else NetworkException()
+            throw if (specificException) Throwable().also { specificException = false } else NetworkException(html = "")
         }
         val inProgressItem = ProcessState.Processing(videoInPending)
         val expectedList = listOf(inProgressItem, ProcessState.UnknownError, inProgressItem, ProcessState.NetworkError)
@@ -229,7 +229,7 @@ class VideoDownloadingProcessorUseCaseTest {
                 sut.fetchVideoInState()
                 specificException = false
 
-                NetworkException()
+                NetworkException(html = "")
             } else {
                 Throwable()
             }
@@ -250,7 +250,7 @@ class VideoDownloadingProcessorUseCaseTest {
         val videoInPending = VideoInPending("alma", "banan")
         videoInPendingMutableFlow.value = listOf(videoInPending)
         whenever(mockTikTokDownloadRemoteSource.getVideo(videoInPending)).then {
-            throw NetworkException()
+            throw NetworkException(html = "")
         }
         val inProgressItem = ProcessState.Processing(videoInPending)
         val expectedList = listOf(inProgressItem, ProcessState.NetworkError)
@@ -433,7 +433,7 @@ class VideoDownloadingProcessorUseCaseTest {
             ProcessState.CaptchaError
         )
         whenever(mockTikTokDownloadRemoteSource.getVideo(videoInPending)).then {
-            throw CaptchaRequiredException()
+            throw CaptchaRequiredException(html = "")
         }
 
         val resultList = async(testDispatcher) { sut.processState.take(2).toList() }
@@ -459,7 +459,7 @@ class VideoDownloadingProcessorUseCaseTest {
     fun GIVEN_one_pending_video_AND_not_advancing_enough_WHILE_observing_WHEN_fetching_THEN_nothing_is_called() = runBlocking<Unit> {
         val videoInPending = VideoInPending("alma", "banan")
         videoInPendingMutableFlow.value = listOf(videoInPending)
-        whenever(mockTikTokDownloadRemoteSource.getVideo(videoInPending)).then { throw NetworkException() }
+        whenever(mockTikTokDownloadRemoteSource.getVideo(videoInPending)).then { throw NetworkException(html = "") }
 
         val resultList = async(testDispatcher) { sut.processState.take(2).toList() }
         testDispatcher.advanceTimeBy(199)
@@ -473,7 +473,7 @@ class VideoDownloadingProcessorUseCaseTest {
     fun GIVEN_one_pending_video_AND_but_advancing_enough_WHILE_observing_WHEN_fetching_THEN_nothing_is_called() = runBlocking<Unit> {
         val videoInPending = VideoInPending("alma", "banan")
         videoInPendingMutableFlow.value = listOf(videoInPending)
-        whenever(mockTikTokDownloadRemoteSource.getVideo(videoInPending)).then { throw NetworkException() }
+        whenever(mockTikTokDownloadRemoteSource.getVideo(videoInPending)).then { throw NetworkException(html = "") }
 
         val resultList = async(testDispatcher) { sut.processState.take(2).toList() }
         testDispatcher.advanceTimeBy(201)

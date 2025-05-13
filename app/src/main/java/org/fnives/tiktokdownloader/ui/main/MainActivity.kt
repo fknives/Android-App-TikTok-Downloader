@@ -104,6 +104,7 @@ class MainActivity : AppCompatActivity() {
                 MainViewModel.ErrorMessage.STORAGE -> R.string.storage_error
                 MainViewModel.ErrorMessage.CAPTCHA -> R.string.captcha_error
                 MainViewModel.ErrorMessage.UNKNOWN -> R.string.unexpected_error
+                MainViewModel.ErrorMessage.DELETED -> R.string.video_deleted_error
             }
 
         private fun animateFabClicked(downloadFab: FloatingActionButton) {

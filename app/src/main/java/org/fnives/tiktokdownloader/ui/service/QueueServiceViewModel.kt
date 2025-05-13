@@ -52,6 +52,8 @@ class QueueServiceViewModel(
                 ProcessState.Finished -> NotificationState.Finish
                 ProcessState.CaptchaError ->
                     NotificationState.Error(R.string.captcha_error)
+
+                ProcessState.VideoDeletedError -> NotificationState.Error(R.string.video_deleted_error)
             }
             _notificationState.postValue(value)
         }

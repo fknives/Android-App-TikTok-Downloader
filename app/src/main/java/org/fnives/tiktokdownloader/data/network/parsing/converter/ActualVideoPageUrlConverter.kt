@@ -6,7 +6,8 @@ import org.fnives.tiktokdownloader.data.network.parsing.response.ActualVideoPage
 import kotlin.jvm.Throws
 
 class ActualVideoPageUrlConverter(
-    private val throwIfIsCaptchaResponse: ThrowIfIsCaptchaResponse
+    private val throwIfIsCaptchaResponse: ThrowIfIsCaptchaResponse,
+    private val throwIfVideoIsDeletedResponse: ThrowIfVideoIsDeletedResponse
 ) : ParsingExceptionThrowingConverter<ActualVideoPageUrl>() {
 
     @Throws(IndexOutOfBoundsException::class, CaptchaRequiredException::class)
@@ -15,6 +16,7 @@ class ActualVideoPageUrlConverter(
         return try {
             val actualVideoPageUrl = responseBodyAsString
                 .also(throwIfIsCaptchaResponse::invoke)
+                .also(throwIfVideoIsDeletedResponse::invoke)
                 .split("rel=\"canonical\" href=\"")[1]
                 .split("\"")[0]
 

@@ -7,7 +7,8 @@ import org.fnives.tiktokdownloader.data.network.exceptions.ParsingException
 import org.fnives.tiktokdownloader.data.network.parsing.response.VideoFileUrl
 
 class VideoFileUrlConverter(
-    private val throwIfIsCaptchaResponse: ThrowIfIsCaptchaResponse
+    private val throwIfIsCaptchaResponse: ThrowIfIsCaptchaResponse,
+    private val throwIfVideoIsDeletedResponse: ThrowIfVideoIsDeletedResponse,
 ) : ParsingExceptionThrowingConverter<VideoFileUrl>() {
 
     @Throws(IllegalArgumentException::class, IndexOutOfBoundsException::class, CaptchaRequiredException::class)
@@ -23,6 +24,7 @@ class VideoFileUrlConverter(
     @Throws(IllegalArgumentException::class, IndexOutOfBoundsException::class, CaptchaRequiredException::class)
     private fun convert(responseBody: String): VideoFileUrl {
         val html = responseBody.also(throwIfIsCaptchaResponse::invoke)
+            .also(throwIfVideoIsDeletedResponse::invoke)
         val url = tryToParseDownloadLink(html).also { Logger.logMessage("parsed download link = $it") }
             ?: tryToParseVideoSrc(html).also { Logger.logMessage("parsed video src = $it") }
             ?: throw IllegalArgumentException("Couldn't parse url from HTML: $html")

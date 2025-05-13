@@ -4,6 +4,7 @@ import kotlinx.coroutines.runBlocking
 import org.apache.commons.io.FileUtils
 import org.fnives.tiktokdownloader.data.model.VideoInPending
 import org.fnives.tiktokdownloader.data.network.TikTokDownloadRemoteSource
+import org.fnives.tiktokdownloader.data.network.exceptions.VideoDeletedException
 import org.fnives.tiktokdownloader.di.module.NetworkModule
 import org.fnives.tiktokdownloader.helper.getResourceFile
 import org.junit.jupiter.api.Assertions
@@ -37,7 +38,7 @@ class TikTokDownloadRemoteSourceUpToDateTest {
         actualFile.delete()
         actualFile.createNewFile()
         actualFile.deleteOnExit()
-        val expectedFileOptions = EXPECTED_FILE_PATHS.map{getResourceFile(it)}
+        val expectedFileOptions = EXPECTED_FILE_PATHS.map { getResourceFile(it) }
         actualFile.writeText("")
 
         runBlocking { sut.getVideo(parameter).byteStream }.use { inputStream ->
@@ -45,15 +46,30 @@ class TikTokDownloadRemoteSourceUpToDateTest {
                 inputStream.copyTo(outputStream)
             }
         }
-        val doesAnyIsTheSameFile = expectedFileOptions.any { expectedFile->
+        val doesAnyIsTheSameFile = expectedFileOptions.any { expectedFile ->
             FileUtils.contentEquals(expectedFile, actualFile)
         }
-        Assertions.assertTrue(doesAnyIsTheSameFile, "The Downloaded file Is Not Matching the expected")
+        Assertions.assertTrue(
+            doesAnyIsTheSameFile,
+            "The Downloaded file Is Not Matching the expected"
+        )
+    }
+
+    @Timeout(value = 120)
+    @Test
+    fun GIVEN_deleted_WHEN_downloading_THEN_proper_exception_is_thrown() {
+        val parameter = VideoInPending("123", DELETED_VIDEO_URL)
+        Assertions.assertThrows(VideoDeletedException::class.java) {
+            runBlocking { sut.getVideo(parameter) }
+        }
     }
 
     companion object {
         private const val ACTUAL_FILE_PATH = "actual.mp4"
-        private val EXPECTED_FILE_PATHS = listOf("video/expected_option_1.mp4","video/expected_option_2.mp4")
+        private val EXPECTED_FILE_PATHS =
+            listOf("video/expected_option_1.mp4", "video/expected_option_2.mp4")
         private const val SUBJECT_VIDEO_URL = "https://vm.tiktok.com/ZSQG7SMf/"
+        private const val PRIVATE_VIDEO_URL = "https://vm.tiktok.com/ZNdM4EjTQ/"
+        private const val DELETED_VIDEO_URL = "https://vm.tiktok.com/ZNdMVM4WG/"
     }
 }

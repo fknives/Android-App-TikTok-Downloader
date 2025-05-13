@@ -19,6 +19,7 @@
     <string name="parsing_error">Parsing Error</string>
     <string name="storage_error">Failed to Store Video</string>
     <string name="unexpected_error">Unexpected Error</string>
+    <string name="video_deleted_error">Video seems to be Deleted</string>
     <string name="permission_request">Permission Needed</string>
     <string name="permission_rationale">External Storage permission is needed in order to save the video to your device</string>
     <string name="ok">OK</string>

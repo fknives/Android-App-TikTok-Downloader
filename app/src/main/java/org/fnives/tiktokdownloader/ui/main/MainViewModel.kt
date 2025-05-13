@@ -45,6 +45,7 @@ class MainViewModel(
                     ProcessState.StorageError -> ErrorMessage.STORAGE
                     ProcessState.CaptchaError -> ErrorMessage.CAPTCHA
                     ProcessState.UnknownError -> ErrorMessage.UNKNOWN
+                    ProcessState.VideoDeletedError -> ErrorMessage.DELETED
                 }
                 val refreshActionVisibility = when (it) {
                     is ProcessState.Processing,
@@ -54,6 +55,7 @@ class MainViewModel(
                     ProcessState.ParsingError,
                     ProcessState.StorageError,
                     ProcessState.UnknownError,
+                    ProcessState.VideoDeletedError,
                     ProcessState.CaptchaError -> true
                 }
                 _errorMessage.postValue(errorMessage?.let(::Event))
@@ -71,7 +73,7 @@ class MainViewModel(
     }
 
     enum class ErrorMessage {
-        NETWORK, PARSING, STORAGE, CAPTCHA, UNKNOWN
+        NETWORK, PARSING, STORAGE, CAPTCHA, UNKNOWN, DELETED
     }
 
     enum class Screen {

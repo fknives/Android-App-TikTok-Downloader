@@ -7,6 +7,7 @@ import org.fnives.tiktokdownloader.data.network.TikTokDownloadRemoteSource
 import org.fnives.tiktokdownloader.data.network.TikTokRetrofitService
 import org.fnives.tiktokdownloader.data.network.parsing.TikTokWebPageConverterFactory
 import org.fnives.tiktokdownloader.data.network.parsing.converter.ThrowIfIsCaptchaResponse
+import org.fnives.tiktokdownloader.data.network.parsing.converter.ThrowIfVideoIsDeletedResponse
 import org.fnives.tiktokdownloader.data.network.parsing.converter.VideoFileUrlConverter
 import org.fnives.tiktokdownloader.data.network.session.CookieSavingInterceptor
 import org.fnives.tiktokdownloader.data.network.session.CookieStore
@@ -18,8 +19,11 @@ class NetworkModule(private val delayBeforeRequest: Long) {
     private val throwIfIsCaptchaResponse: ThrowIfIsCaptchaResponse
         get() = ThrowIfIsCaptchaResponse()
 
+    private val throwIfVideoIsDeletedResponse: ThrowIfVideoIsDeletedResponse
+        get() = ThrowIfVideoIsDeletedResponse()
+
     private val tikTokConverterFactory: Converter.Factory
-        get() = TikTokWebPageConverterFactory(throwIfIsCaptchaResponse)
+        get() = TikTokWebPageConverterFactory(throwIfIsCaptchaResponse, throwIfVideoIsDeletedResponse)
 
     private val cookieSavingInterceptor: CookieSavingInterceptor by lazy { CookieSavingInterceptor() }
 
@@ -48,5 +52,5 @@ class NetworkModule(private val delayBeforeRequest: Long) {
         get() = retrofit.create(TikTokRetrofitService::class.java)
 
     val tikTokDownloadRemoteSource: TikTokDownloadRemoteSource
-        get() = TikTokDownloadRemoteSource(delayBeforeRequest, tikTokRetrofitService, cookieStore, VideoFileUrlConverter(throwIfIsCaptchaResponse))
+        get() = TikTokDownloadRemoteSource(delayBeforeRequest, tikTokRetrofitService, cookieStore, VideoFileUrlConverter(throwIfIsCaptchaResponse, throwIfVideoIsDeletedResponse))
 }
