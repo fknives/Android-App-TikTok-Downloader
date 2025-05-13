@@ -5,7 +5,6 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 import org.fnives.tiktokdownloader.data.model.ProcessState
 import org.fnives.tiktokdownloader.data.usecase.AddVideoToQueueUseCase
@@ -22,13 +21,15 @@ class MainViewModel(
 
     private val _refreshActionVisibility = MutableLiveData<Boolean>()
     private val currentScreen = MutableLiveData<Screen>()
-    val refreshActionVisibility: LiveData<Boolean?> = combineNullable(_refreshActionVisibility, currentScreen) { refreshVisibility, screen ->
-        refreshVisibility == true && screen == Screen.QUEUE
-    }
+    val refreshActionVisibility: LiveData<Boolean?> =
+        combineNullable(_refreshActionVisibility, currentScreen) { refreshVisibility, screen ->
+            refreshVisibility == true && screen == Screen.QUEUE
+        }
     private val _errorMessage = MutableLiveData<Event<ErrorMessage>>()
-    val errorMessage: LiveData<Event<ErrorMessage>?> = combineNullable(_errorMessage, currentScreen) { event, screen ->
-        event?.takeIf { screen == Screen.QUEUE }
-    }
+    val errorMessage: LiveData<Event<ErrorMessage>?> =
+        combineNullable(_errorMessage, currentScreen) { event, screen ->
+            event?.takeIf { screen == Screen.QUEUE }
+        }
 
     init {
         savedStateHandle.get<String>(INTENT_EXTRA_URL)?.let(addVideoToQueueUseCase::invoke)
@@ -40,22 +41,26 @@ class MainViewModel(
                     is ProcessState.Processing,
                     is ProcessState.Processed,
                     ProcessState.Finished -> null
+
                     ProcessState.NetworkError -> ErrorMessage.NETWORK
                     ProcessState.ParsingError -> ErrorMessage.PARSING
                     ProcessState.StorageError -> ErrorMessage.STORAGE
                     ProcessState.CaptchaError -> ErrorMessage.CAPTCHA
                     ProcessState.UnknownError -> ErrorMessage.UNKNOWN
                     ProcessState.VideoDeletedError -> ErrorMessage.DELETED
+                    ProcessState.VideoPrivateError -> ErrorMessage.PRIVATE
                 }
                 val refreshActionVisibility = when (it) {
                     is ProcessState.Processing,
                     is ProcessState.Processed,
                     ProcessState.Finished -> false
+
                     ProcessState.NetworkError,
                     ProcessState.ParsingError,
                     ProcessState.StorageError,
                     ProcessState.UnknownError,
                     ProcessState.VideoDeletedError,
+                    ProcessState.VideoPrivateError,
                     ProcessState.CaptchaError -> true
                 }
                 _errorMessage.postValue(errorMessage?.let(::Event))
@@ -73,7 +78,7 @@ class MainViewModel(
     }
 
     enum class ErrorMessage {
-        NETWORK, PARSING, STORAGE, CAPTCHA, UNKNOWN, DELETED
+        NETWORK, PARSING, STORAGE, CAPTCHA, UNKNOWN, DELETED, PRIVATE
     }
 
     enum class Screen {

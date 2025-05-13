@@ -7,6 +7,7 @@ sealed class ProcessState {
     data object NetworkError : ProcessState()
     data object ParsingError : ProcessState()
     data object VideoDeletedError : ProcessState()
+    data object VideoPrivateError : ProcessState()
     data object CaptchaError : ProcessState()
     data object UnknownError : ProcessState()
     data object StorageError : ProcessState()

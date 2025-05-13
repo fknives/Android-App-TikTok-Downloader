@@ -5,6 +5,7 @@ import org.apache.commons.io.FileUtils
 import org.fnives.tiktokdownloader.data.model.VideoInPending
 import org.fnives.tiktokdownloader.data.network.TikTokDownloadRemoteSource
 import org.fnives.tiktokdownloader.data.network.exceptions.VideoDeletedException
+import org.fnives.tiktokdownloader.data.network.exceptions.VideoPrivateException
 import org.fnives.tiktokdownloader.di.module.NetworkModule
 import org.fnives.tiktokdownloader.helper.getResourceFile
 import org.junit.jupiter.api.Assertions
@@ -60,6 +61,15 @@ class TikTokDownloadRemoteSourceUpToDateTest {
     fun GIVEN_deleted_WHEN_downloading_THEN_proper_exception_is_thrown() {
         val parameter = VideoInPending("123", DELETED_VIDEO_URL)
         Assertions.assertThrows(VideoDeletedException::class.java) {
+            runBlocking { sut.getVideo(parameter) }
+        }
+    }
+
+    @Timeout(value = 120)
+    @Test
+    fun GIVEN_private_WHEN_downloading_THEN_proper_exception_is_thrown() {
+        val parameter = VideoInPending("123", PRIVATE_VIDEO_URL)
+        Assertions.assertThrows(VideoPrivateException::class.java) {
             runBlocking { sut.getVideo(parameter) }
         }
     }

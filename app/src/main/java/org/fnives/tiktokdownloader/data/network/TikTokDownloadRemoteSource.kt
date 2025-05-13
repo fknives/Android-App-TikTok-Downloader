@@ -11,6 +11,7 @@ import org.fnives.tiktokdownloader.data.network.exceptions.HtmlException
 import org.fnives.tiktokdownloader.data.network.exceptions.NetworkException
 import org.fnives.tiktokdownloader.data.network.exceptions.ParsingException
 import org.fnives.tiktokdownloader.data.network.exceptions.VideoDeletedException
+import org.fnives.tiktokdownloader.data.network.exceptions.VideoPrivateException
 import org.fnives.tiktokdownloader.data.network.parsing.converter.VideoFileUrlConverter
 import org.fnives.tiktokdownloader.data.network.parsing.response.VideoFileUrl
 import org.fnives.tiktokdownloader.data.network.session.CookieStore
@@ -68,6 +69,8 @@ class TikTokDownloadRemoteSource(
             throw captchaRequiredException
         } catch (videoDeletedException: VideoDeletedException) {
             throw videoDeletedException
+        } catch (videoPrivateException: VideoPrivateException) {
+            throw videoPrivateException
         } catch (throwable: Throwable) {
             throw NetworkException(
                 cause = throwable,

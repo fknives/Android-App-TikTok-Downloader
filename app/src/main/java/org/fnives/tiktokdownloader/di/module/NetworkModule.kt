@@ -8,6 +8,7 @@ import org.fnives.tiktokdownloader.data.network.TikTokRetrofitService
 import org.fnives.tiktokdownloader.data.network.parsing.TikTokWebPageConverterFactory
 import org.fnives.tiktokdownloader.data.network.parsing.converter.ThrowIfIsCaptchaResponse
 import org.fnives.tiktokdownloader.data.network.parsing.converter.ThrowIfVideoIsDeletedResponse
+import org.fnives.tiktokdownloader.data.network.parsing.converter.ThrowIfVideoIsPrivateResponse
 import org.fnives.tiktokdownloader.data.network.parsing.converter.VideoFileUrlConverter
 import org.fnives.tiktokdownloader.data.network.session.CookieSavingInterceptor
 import org.fnives.tiktokdownloader.data.network.session.CookieStore
@@ -22,8 +23,15 @@ class NetworkModule(private val delayBeforeRequest: Long) {
     private val throwIfVideoIsDeletedResponse: ThrowIfVideoIsDeletedResponse
         get() = ThrowIfVideoIsDeletedResponse()
 
+    private val throwIfVideoIsPrivateResponse: ThrowIfVideoIsPrivateResponse
+        get() = ThrowIfVideoIsPrivateResponse()
+
     private val tikTokConverterFactory: Converter.Factory
-        get() = TikTokWebPageConverterFactory(throwIfIsCaptchaResponse, throwIfVideoIsDeletedResponse)
+        get() = TikTokWebPageConverterFactory(
+            throwIfIsCaptchaResponse,
+            throwIfVideoIsDeletedResponse,
+            throwIfVideoIsPrivateResponse
+        )
 
     private val cookieSavingInterceptor: CookieSavingInterceptor by lazy { CookieSavingInterceptor() }
 
@@ -34,7 +42,9 @@ class NetworkModule(private val delayBeforeRequest: Long) {
             .addInterceptor(cookieSavingInterceptor)
             .let {
                 if (BuildConfig.DEBUG) {
-                    it.addInterceptor(HttpLoggingInterceptor().apply { level = HttpLoggingInterceptor.Level.BODY })
+                    it.addInterceptor(HttpLoggingInterceptor().apply {
+                        level = HttpLoggingInterceptor.Level.BODY
+                    })
                 } else {
                     it
                 }
@@ -52,5 +62,14 @@ class NetworkModule(private val delayBeforeRequest: Long) {
         get() = retrofit.create(TikTokRetrofitService::class.java)
 
     val tikTokDownloadRemoteSource: TikTokDownloadRemoteSource
-        get() = TikTokDownloadRemoteSource(delayBeforeRequest, tikTokRetrofitService, cookieStore, VideoFileUrlConverter(throwIfIsCaptchaResponse, throwIfVideoIsDeletedResponse))
+        get() = TikTokDownloadRemoteSource(
+            delayBeforeRequest,
+            tikTokRetrofitService,
+            cookieStore,
+            VideoFileUrlConverter(
+                throwIfIsCaptchaResponse,
+                throwIfVideoIsDeletedResponse,
+                throwIfVideoIsPrivateResponse
+            )
+        )
 }

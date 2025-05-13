@@ -32,6 +32,7 @@ import org.fnives.tiktokdownloader.data.network.exceptions.CaptchaRequiredExcept
 import org.fnives.tiktokdownloader.data.network.exceptions.NetworkException
 import org.fnives.tiktokdownloader.data.network.exceptions.ParsingException
 import org.fnives.tiktokdownloader.data.network.exceptions.VideoDeletedException
+import org.fnives.tiktokdownloader.data.network.exceptions.VideoPrivateException
 
 @OptIn(FlowPreview::class)
 class VideoDownloadingProcessorUseCase(
@@ -112,6 +113,8 @@ class VideoDownloadingProcessorUseCase(
             ProcessState.ParsingError
         } catch (videoDeletedException: VideoDeletedException) {
             ProcessState.VideoDeletedError
+        } catch (videoPrivateException: VideoPrivateException) {
+            ProcessState.VideoPrivateError
         } catch (storageException: StorageException) {
             ProcessState.StorageError
         } catch (captchaRequiredException: CaptchaRequiredException) {
@@ -140,6 +143,7 @@ class VideoDownloadingProcessorUseCase(
             ProcessState.StorageError,
             ProcessState.UnknownError,
             ProcessState.VideoDeletedError,
+            ProcessState.VideoPrivateError,
             ProcessState.CaptchaError -> true
         }
 

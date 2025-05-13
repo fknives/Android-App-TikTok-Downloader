@@ -6,7 +6,7 @@ class ThrowIfVideoIsDeletedResponse {
 
     @Throws(VideoDeletedException::class)
     fun invoke(html: String) {
-        if (html.contains("\"statusMsg\":\"status_deleted\"")) {
+        if (html.contains("\"statusMsg\":\"status_deleted")) {
             throw VideoDeletedException(html = html)
         }
     }
