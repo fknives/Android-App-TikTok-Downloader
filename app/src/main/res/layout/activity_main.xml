@@ -8,6 +8,15 @@
     android:orientation="vertical"
     tools:context=".ui.main.MainActivity">
 
+    <!-- TODO -->
+    <View
+        android:id="@+id/status_bar_inset"
+        android:layout_width="0dp"
+        app:layout_constraintStart_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        android:layout_height="32dp"/>
+
     <FrameLayout
         android:id="@+id/fragment_holder"
         android:layout_width="0dp"
@@ -16,7 +25,7 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toBottomOf="@id/status_bar_inset" />
 
     <androidx.coordinatorlayout.widget.CoordinatorLayout
         android:id="@+id/snack_bar_anchor"

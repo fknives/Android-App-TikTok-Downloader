@@ -1,9 +1,7 @@
 package org.fnives.tiktokdownloader.di
 
 import android.content.Context
-import android.os.Bundle
 import androidx.lifecycle.ViewModelProvider
-import androidx.savedstate.SavedStateRegistryOwner
 import org.fnives.tiktokdownloader.di.module.AndroidFileManagementModule
 import org.fnives.tiktokdownloader.di.module.LocalSourceModule
 import org.fnives.tiktokdownloader.di.module.NetworkModule
@@ -29,18 +27,16 @@ object ServiceLocator {
     val useCaseModule: UseCaseModule
         get() = _useCaseModule ?: throw IllegalStateException("$this.start has not been called!")
 
-    fun viewModelFactory(
-        savedStateRegistryOwner: SavedStateRegistryOwner,
-        defaultArgs: Bundle
-    ): ViewModelProvider.Factory =
-        ViewModelFactory(savedStateRegistryOwner, defaultArgs, viewModelModule)
+    fun viewModelFactory(): ViewModelProvider.Factory =
+        ViewModelFactory(viewModelModule)
 
     val queueServiceViewModel: QueueServiceViewModel
         get() = viewModelModule.queueServiceViewModel
 
     fun start(context: Context) {
         val androidFileManagementModule = AndroidFileManagementModule(context)
-        val localSourceModule = LocalSourceModule(androidFileManagementModule = androidFileManagementModule)
+        val localSourceModule =
+            LocalSourceModule(androidFileManagementModule = androidFileManagementModule)
         val networkModule = NetworkModule(delayBeforeRequest = DEFAULT_DELAY_BEFORE_REQUEST)
         val useCaseModule = UseCaseModule(
             localSourceModule = localSourceModule,

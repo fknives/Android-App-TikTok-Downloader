@@ -6,11 +6,9 @@ import androidx.savedstate.SavedStateRegistryOwner
 import org.mockito.kotlin.mock
 
 class MockSavedStateRegistryOwner(
-    private val lifecycle: Lifecycle = MockLifecycle(),
+    override val lifecycle: Lifecycle = MockLifecycle(),
     private val mockSavedStateRegistry: SavedStateRegistry = mock()
 ) : SavedStateRegistryOwner {
 
-    override fun getLifecycle(): Lifecycle = lifecycle
-
-    override fun getSavedStateRegistry(): SavedStateRegistry = mockSavedStateRegistry
+    override val savedStateRegistry: SavedStateRegistry = mockSavedStateRegistry
 }

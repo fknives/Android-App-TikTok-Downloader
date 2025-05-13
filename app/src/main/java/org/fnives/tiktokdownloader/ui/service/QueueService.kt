@@ -1,5 +1,6 @@
 package org.fnives.tiktokdownloader.ui.service
 
+import android.annotation.SuppressLint
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
@@ -32,6 +33,7 @@ class QueueService : Service() {
         }
     }
 
+    @SuppressLint("ForegroundServiceType")
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         intent?.url?.let(viewModel::onUrlReceived)
         startForeground()
@@ -66,10 +68,16 @@ class QueueService : Service() {
         val (id, notification) = when (notificationState) {
             is NotificationState.Processing ->
                 SERVICE_NOTIFICATION_ID to NotificationCompat.Builder(this, CHANNEL_ID)
-                    .setContentTitle(getString(R.string.tik_tok_downloader_processing, notificationState.url))
+                    .setContentTitle(
+                        getString(
+                            R.string.tik_tok_downloader_processing,
+                            notificationState.url
+                        )
+                    )
                     .setSmallIcon(R.drawable.ic_download)
                     .setProgress(0, 10, true)
                     .build()
+
             is NotificationState.Error ->
                 NOTIFICATION_ID to NotificationCompat.Builder(this, CHANNEL_ID)
                     .setContentTitle(getString(notificationState.errorRes))
@@ -78,6 +86,7 @@ class QueueService : Service() {
                     .setAutoCancel(true)
                     .setSilent(true)
                     .build()
+
             NotificationState.Finish -> {
                 stopSelf()
                 return
@@ -100,7 +109,8 @@ class QueueService : Service() {
 
     private class ServiceLifecycle : LifecycleOwner {
         val lifecycleRegistry = LifecycleRegistry(this)
-        override fun getLifecycle(): Lifecycle = lifecycleRegistry
+        override val lifecycle: Lifecycle
+            get() = lifecycleRegistry
     }
 
     companion object {

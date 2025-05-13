@@ -1,28 +1,33 @@
 package org.fnives.tiktokdownloader.di
 
-import android.os.Bundle
-import androidx.lifecycle.AbstractSavedStateViewModelFactory
-import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
-import androidx.savedstate.SavedStateRegistryOwner
+import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.createSavedStateHandle
+import androidx.lifecycle.viewmodel.CreationExtras
 import org.fnives.tiktokdownloader.di.module.ViewModelModule
 import org.fnives.tiktokdownloader.ui.main.MainViewModel
 import org.fnives.tiktokdownloader.ui.main.queue.QueueViewModel
 import org.fnives.tiktokdownloader.ui.main.settings.SettingsViewModel
 
 class ViewModelFactory(
-    savedStateRegistryOwner: SavedStateRegistryOwner,
-    defaultArgs: Bundle,
     private val viewModelModule: ViewModelModule,
-) : AbstractSavedStateViewModelFactory(savedStateRegistryOwner, defaultArgs) {
+) : ViewModelProvider.Factory {
 
     @Suppress("UNCHECKED_CAST")
-    override fun <T : ViewModel?> create(key: String, modelClass: Class<T>, handle: SavedStateHandle): T {
+    override fun <T : ViewModel> create(modelClass: Class<T>): T {
         val viewModel = when (modelClass) {
-            MainViewModel::class.java -> viewModelModule.mainViewModel(handle)
             QueueViewModel::class.java -> viewModelModule.queueViewModel
             SettingsViewModel::class.java -> viewModelModule.settignsViewModel
             else -> throw IllegalArgumentException("Can't create viewModel for $modelClass ")
+        }
+        return viewModel as T
+    }
+
+    @Suppress("UNCHECKED_CAST")
+    override fun <T : ViewModel> create(modelClass: Class<T>, extras: CreationExtras): T {
+        val viewModel = when (modelClass) {
+            MainViewModel::class.java -> viewModelModule.mainViewModel(extras.createSavedStateHandle())
+            else -> create(modelClass)
         }
         return viewModel as T
     }
