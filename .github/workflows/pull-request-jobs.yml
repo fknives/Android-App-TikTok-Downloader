@@ -21,7 +21,7 @@ jobs:
         uses: actions/setup-java@v4
         with:
           distribution: 'adopt'
-          java-version: '11'
+          java-version: '17'
       - name: Run Unit Tests
         run: ./gradlew :app:testDebugUnitTest --tests "org.fnives.tiktokdownloader.*"
       - name: Upload Test Results
