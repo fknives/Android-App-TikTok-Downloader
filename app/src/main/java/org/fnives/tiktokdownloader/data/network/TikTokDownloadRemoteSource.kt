@@ -3,6 +3,7 @@ package org.fnives.tiktokdownloader.data.network
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
+import org.fnives.tiktokdownloader.errortracking.ErrorTracer
 import org.fnives.tiktokdownloader.Logger
 import org.fnives.tiktokdownloader.data.model.VideoInPending
 import org.fnives.tiktokdownloader.data.model.VideoInSavingIntoFile
@@ -28,6 +29,7 @@ class TikTokDownloadRemoteSource(
         withContext(Dispatchers.IO) {
             cookieStore.clear()
             wrapIntoProperException {
+                ErrorTracer.startErrorTransaction(videoInPending.url)
                 delay(delayBeforeRequest) // added just so captcha trigger may not happen
                 val actualUrl = service.getContentActualUrlAndCookie(videoInPending.url)
                 val videoUrl: VideoFileUrl
@@ -43,19 +45,26 @@ class TikTokDownloadRemoteSource(
                 }
                 Logger.logMessage("videoFileUrl found = ${videoUrl.videoFileUrl}")
                 delay(delayBeforeRequest) // added just so captcha trigger may not happen
-                val response = service.getVideo(videoUrl.videoFileUrl)
+                try {
+                    val response = service.getVideo(videoUrl.videoFileUrl)
+                    ErrorTracer.cancelErrorTransaction()
 
-                VideoInSavingIntoFile(
-                    id = videoInPending.id,
-                    url = videoInPending.url,
-                    contentType = response.mediaType?.let {
-                        VideoInSavingIntoFile.ContentType(
-                            it.type,
-                            it.subtype
-                        )
-                    },
-                    byteStream = response.videoInputStream
-                )
+                    VideoInSavingIntoFile(
+                        id = videoInPending.id,
+                        url = videoInPending.url,
+                        contentType = response.mediaType?.let {
+                            VideoInSavingIntoFile.ContentType(
+                                it.type,
+                                it.subtype
+                            )
+                        },
+                        byteStream = response.videoInputStream
+                    )
+                } catch (throwable: Throwable) {
+                    val exceptionName = (throwable as? HtmlException)?.exceptionName ?: "Unknown Error"
+                    ErrorTracer.addError("video-stream", "$exceptionName error while service.getVideo", throwable = throwable)
+                    throw throwable
+                }
             }
         }
 
@@ -76,5 +85,7 @@ class TikTokDownloadRemoteSource(
                 cause = throwable,
                 html = (throwable as? HtmlException)?.html.orEmpty()
             )
+        } finally {
+            ErrorTracer.commitErrorTransaction()
         }
 }

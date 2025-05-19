@@ -1,7 +1,9 @@
 package org.fnives.tiktokdownloader.data.network.parsing.converter
 
 import okhttp3.ResponseBody
+import org.fnives.tiktokdownloader.errortracking.ErrorTracer
 import org.fnives.tiktokdownloader.data.network.exceptions.CaptchaRequiredException
+import org.fnives.tiktokdownloader.data.network.exceptions.HtmlException
 import org.fnives.tiktokdownloader.data.network.exceptions.VideoDeletedException
 import org.fnives.tiktokdownloader.data.network.exceptions.VideoPrivateException
 import org.fnives.tiktokdownloader.data.network.parsing.response.ActualVideoPageUrl
@@ -28,7 +30,13 @@ class ActualVideoPageUrlConverter(
                 .split("\"")[0]
 
             ActualVideoPageUrl(actualVideoPageUrl, responseBodyAsString)
-        } catch (_: Throwable) {
+        } catch (throwable: Throwable) {
+            val exceptionName = (throwable as? HtmlException)?.exceptionName ?: "Unknown Error"
+            ErrorTracer.addError(
+                html = responseBodyAsString,
+                message = "$exceptionName in ActualVideoPageUrlConverter",
+                throwable = throwable
+            )
             ActualVideoPageUrl(null, responseBodyAsString)
         }
 

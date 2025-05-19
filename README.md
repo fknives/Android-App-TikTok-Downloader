@@ -27,3 +27,17 @@ Click on the image for the demo video
 Here is another Secret Video QR code just for the curious minded
 
 ![QR Code for Secret](secret_video_qr_code.png)
+
+
+## Note to self
+
+When checking error messages, `jq` can be a life saver.
+
+Example getting the stack trace for a specific error message:
+
+`jq -r '.[].errors[] | select(.message == "Parsing Error") | .stacktrace' errors.json`
+
+Or getting all htmls if an error happened in the json:
+`jq '.[] | select(.errors[]?.message == "Parsing Error") | .errors[].html'`
+
+> Use -r when you want to avoid the JSON string quotes around output. 

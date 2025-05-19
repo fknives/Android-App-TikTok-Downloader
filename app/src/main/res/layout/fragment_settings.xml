@@ -20,26 +20,43 @@
         app:cardElevation="@dimen/card_elevation">
 
         <LinearLayout
-            android:id="@+id/always_open_app_holder"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:background="?attr/selectableItemBackground"
-            android:orientation="horizontal"
-            android:padding="@dimen/default_padding">
+            android:orientation="vertical">
+
+            <LinearLayout
+                android:id="@+id/always_open_app_holder"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="?attr/selectableItemBackground"
+                android:orientation="horizontal"
+                android:padding="@dimen/default_padding">
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_vertical"
+                    android:layout_weight="1"
+                    android:text="@string/user_preference_always_open_app"
+                    android:textAppearance="?attr/textAppearanceSubtitle1" />
+
+                <androidx.appcompat.widget.SwitchCompat
+                    android:id="@+id/always_open_app"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_vertical" />
+            </LinearLayout>
 
             <TextView
-                android:layout_width="0dp"
+                android:id="@+id/report_error_cta"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_weight="1"
                 android:layout_gravity="center_vertical"
-                android:text="@string/user_preference_always_open_app"
+                android:background="?attr/selectableItemBackground"
+                android:minHeight="@dimen/minimum_touch_target"
+                android:padding="@dimen/default_padding"
+                android:text="@string/report_errors"
                 android:textAppearance="?attr/textAppearanceSubtitle1" />
-
-            <androidx.appcompat.widget.SwitchCompat
-                android:id="@+id/always_open_app"
-                android:layout_width="wrap_content"
-                android:layout_gravity="center_vertical"
-                android:layout_height="wrap_content" />
         </LinearLayout>
     </androidx.cardview.widget.CardView>
 

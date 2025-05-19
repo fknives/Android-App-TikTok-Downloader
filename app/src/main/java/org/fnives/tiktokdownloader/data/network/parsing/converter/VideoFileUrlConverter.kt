@@ -1,8 +1,10 @@
 package org.fnives.tiktokdownloader.data.network.parsing.converter
 
 import okhttp3.ResponseBody
+import org.fnives.tiktokdownloader.errortracking.ErrorTracer
 import org.fnives.tiktokdownloader.Logger
 import org.fnives.tiktokdownloader.data.network.exceptions.CaptchaRequiredException
+import org.fnives.tiktokdownloader.data.network.exceptions.HtmlException
 import org.fnives.tiktokdownloader.data.network.exceptions.ParsingException
 import org.fnives.tiktokdownloader.data.network.exceptions.VideoDeletedException
 import org.fnives.tiktokdownloader.data.network.exceptions.VideoPrivateException
@@ -36,15 +38,25 @@ class VideoFileUrlConverter(
         VideoPrivateException::class,
     )
     private fun convert(responseBody: String): VideoFileUrl {
-        val html = responseBody.also(throwIfIsCaptchaResponse::invoke)
-            .also(throwIfVideoIsDeletedResponse::invoke)
-            .also(throwIfVideoIsPrivateResponse::invoke)
-        val url =
-            tryToParseDownloadLink(html).also { Logger.logMessage("parsed download link = $it") }
-                ?: tryToParseVideoSrc(html).also { Logger.logMessage("parsed video src = $it") }
-                ?: throw IllegalArgumentException("Couldn't parse url from HTML: $html")
+        try {
+            val html = responseBody.also(throwIfIsCaptchaResponse::invoke)
+                .also(throwIfVideoIsDeletedResponse::invoke)
+                .also(throwIfVideoIsPrivateResponse::invoke)
+            val url =
+                tryToParseDownloadLink(html).also { Logger.logMessage("parsed download link = $it") }
+                    ?: tryToParseVideoSrc(html).also { Logger.logMessage("parsed video src = $it") }
+                    ?: throw IllegalArgumentException("Couldn't parse url from HTML: $html")
 
-        return VideoFileUrl(url)
+            return VideoFileUrl(url)
+        } catch (throwable: Throwable) {
+            val exceptionName = (throwable as? HtmlException)?.exceptionName ?: "Unknown Error"
+            ErrorTracer.addError(
+                html = responseBody,
+                message = "$exceptionName in VideoFileUrlConverter",
+                throwable = throwable
+            )
+            throw throwable
+        }
     }
 
     companion object {
