@@ -8,6 +8,7 @@ import org.fnives.tiktokdownloader.data.model.VideoInSavingIntoFile
 import org.fnives.tiktokdownloader.data.network.exceptions.CaptchaRequiredException
 import org.fnives.tiktokdownloader.data.network.exceptions.NetworkException
 import org.fnives.tiktokdownloader.data.network.exceptions.ParsingException
+import org.fnives.tiktokdownloader.data.network.exceptions.VideoDeletedException
 import org.fnives.tiktokdownloader.di.module.NetworkModule
 import org.fnives.tiktokdownloader.helper.readResourceFile
 import org.junit.jupiter.api.AfterEach
@@ -260,8 +261,21 @@ class TikTokDownloadRemoteSourceTest {
         }
     }
 
+    @Test
+    fun GIVEN_deleted_video_response_v1_THEN_proper_Exception_is_Returned() {
+        Assertions.assertThrows(VideoDeletedException::class.java) {
+            runBlocking<Unit> {
+                val deletedResponse = readResourceFileDeletedV1UrlResponse()
+                mockWebServer.enqueue(MockResponse().setResponseCode(200).setBody(deletedResponse))
+
+                sut.getVideo(VideoInPending("", TEST_URL))
+            }
+        }
+    }
+
     companion object {
         private const val SHORTENED_URL_RESPONSE = "response/shortened_url_response.html"
+        private const val DELETED_V1_URL_RESPONSE = "response/video_deleted_v1.html"
         private const val CAPTCHA_REQUIRED_RESPONSE_ONE = "response/captcha_required_one.html"
         private const val CAPTCHA_REQUIRED_RESPONSE_TWO = "response/captcha_required_two.html"
         private const val MAIN_PAGE_VARIANT_1_RESPONSE = "response/main_page_v1.html"
@@ -296,6 +310,9 @@ class TikTokDownloadRemoteSourceTest {
         private fun Any.readCaptchaTwoResponse() =
             readResourceFile(CAPTCHA_REQUIRED_RESPONSE_TWO)
                 .replace("https://www.tiktok.com/@ieclauuu/video/6887614455967010049", CAPTCHA_TEST_URL)
+
+        private fun Any.readResourceFileDeletedV1UrlResponse() =
+            readResourceFile(DELETED_V1_URL_RESPONSE)
 
         @JvmStatic
         private fun captchaResponses() = Stream.of(

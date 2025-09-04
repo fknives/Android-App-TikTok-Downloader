@@ -38,6 +38,6 @@ Example getting the stack trace for a specific error message:
 `jq -r '.[].errors[] | select(.message == "Parsing Error") | .stacktrace' errors.json`
 
 Or getting all htmls if an error happened in the json:
-`jq '.[] | select(.errors[]?.message == "Parsing Error") | .errors[].html'`
+`jq '.[] | select(.errors[]?.message == "Parsing Error") | .errors[].html' errors.json`
 
 > Use -r when you want to avoid the JSON string quotes around output. 

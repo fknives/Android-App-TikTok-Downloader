@@ -4,12 +4,18 @@ import org.fnives.tiktokdownloader.data.network.exceptions.VideoDeletedException
 
 class ThrowIfVideoIsDeletedResponse {
 
+    private val potentialIssues = listOf(
+        "\"statusMsg\":\"status_deleted",
+        "\"statusMsg\":\"item doesn't exist",
+        "statusMsg\":\"[^\"]*status_audit_not_pass"
+    )
+
     @Throws(VideoDeletedException::class)
     fun invoke(html: String) {
-        if (html.contains("\"statusMsg\":\"status_deleted")) {
-            throw VideoDeletedException(html = html)
-        } else if (html.contains("\"statusMsg\":\"item doesn't exist")) {
-            throw VideoDeletedException(html = html)
+        potentialIssues.forEach {
+            if (html.contains(it.toRegex())) {
+                throw VideoDeletedException(html = html)
+            }
         }
     }
 }
