@@ -10,6 +10,7 @@ import org.fnives.tiktokdownloader.data.network.parsing.converter.VideoResponseC
 import org.fnives.tiktokdownloader.data.network.parsing.response.ActualVideoPageUrl
 import org.fnives.tiktokdownloader.data.network.parsing.response.VideoFileUrl
 import org.fnives.tiktokdownloader.data.network.parsing.response.VideoResponse
+import org.fnives.tiktokdownloader.errortracking.ErrorTracer
 import retrofit2.Converter
 import retrofit2.Retrofit
 import java.lang.reflect.Type
@@ -39,6 +40,13 @@ class TikTokWebPageConverterFactory(
             )
 
             VideoResponse::class.java -> VideoResponseConverter()
-            else -> super.responseBodyConverter(type, annotations, retrofit)
+            else -> {
+                ErrorTracer.addError(
+                    "",
+                    message = "Couldn't find proper Converter for $type with $annotations",
+                    throwable = null
+                )
+                super.responseBodyConverter(type, annotations, retrofit)
+            }
         }
 }

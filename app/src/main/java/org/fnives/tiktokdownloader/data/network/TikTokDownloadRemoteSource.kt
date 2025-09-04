@@ -31,6 +31,7 @@ class TikTokDownloadRemoteSource(
             wrapIntoProperException {
                 ErrorTracer.startErrorTransaction(videoInPending.url)
                 delay(delayBeforeRequest) // added just so captcha trigger may not happen
+                Logger.logMessage("starting request")
                 val actualUrl = service.getContentActualUrlAndCookie(videoInPending.url)
                 val videoUrl: VideoFileUrl
                 if (actualUrl.url != null) {
