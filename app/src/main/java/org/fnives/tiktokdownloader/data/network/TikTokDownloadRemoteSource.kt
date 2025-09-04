@@ -3,7 +3,6 @@ package org.fnives.tiktokdownloader.data.network
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
-import org.fnives.tiktokdownloader.errortracking.ErrorTracer
 import org.fnives.tiktokdownloader.Logger
 import org.fnives.tiktokdownloader.data.model.VideoInPending
 import org.fnives.tiktokdownloader.data.model.VideoInSavingIntoFile
@@ -16,6 +15,7 @@ import org.fnives.tiktokdownloader.data.network.exceptions.VideoPrivateException
 import org.fnives.tiktokdownloader.data.network.parsing.converter.VideoFileUrlConverter
 import org.fnives.tiktokdownloader.data.network.parsing.response.VideoFileUrl
 import org.fnives.tiktokdownloader.data.network.session.CookieStore
+import org.fnives.tiktokdownloader.errortracking.ErrorTracer
 
 class TikTokDownloadRemoteSource(
     private val delayBeforeRequest: Long,
@@ -61,8 +61,13 @@ class TikTokDownloadRemoteSource(
                         byteStream = response.videoInputStream
                     )
                 } catch (throwable: Throwable) {
-                    val exceptionName = (throwable as? HtmlException)?.exceptionName ?: "Unknown Error"
-                    ErrorTracer.addError("video-stream", "$exceptionName error while service.getVideo", throwable = throwable)
+                    val exceptionName =
+                        (throwable as? HtmlException)?.exceptionName ?: "Unknown Error"
+                    ErrorTracer.addError(
+                        "video-stream",
+                        "$exceptionName error while service.getVideo",
+                        throwable = throwable
+                    )
                     throw throwable
                 }
             }
@@ -72,18 +77,15 @@ class TikTokDownloadRemoteSource(
     private suspend fun <T> wrapIntoProperException(request: suspend () -> T): T =
         try {
             request()
-        } catch (parsingException: ParsingException) {
-            throw parsingException
-        } catch (captchaRequiredException: CaptchaRequiredException) {
-            throw captchaRequiredException
-        } catch (videoDeletedException: VideoDeletedException) {
-            throw videoDeletedException
-        } catch (videoPrivateException: VideoPrivateException) {
-            throw videoPrivateException
         } catch (throwable: Throwable) {
+            if (throwable is HtmlException) {
+                ErrorTracer.addError(throwable.html, message = throwable.message ?: "-", throwable = throwable)
+                throw throwable
+            }
+            ErrorTracer.addError(html = "-", message = throwable.message ?: "-", throwable = throwable)
             throw NetworkException(
                 cause = throwable,
-                html = (throwable as? HtmlException)?.html.orEmpty()
+                html = "wrapIntoProperException"
             )
         } finally {
             ErrorTracer.commitErrorTransaction()
