@@ -108,23 +108,35 @@ class VideoDownloadingProcessorUseCase(
 
             ProcessState.Processed(videoDownloaded)
         } catch (networkException: NetworkException) {
+            moveAtTheEndOfList(videoInPending)
             ProcessState.NetworkError
         } catch (parsingException: ParsingException) {
+            moveAtTheEndOfList(videoInPending)
             ProcessState.ParsingError
         } catch (videoDeletedException: VideoDeletedException) {
+            moveAtTheEndOfList(videoInPending)
             ProcessState.VideoDeletedError
         } catch (videoPrivateException: VideoPrivateException) {
+            moveAtTheEndOfList(videoInPending)
             ProcessState.VideoPrivateError
         } catch (storageException: StorageException) {
+            moveAtTheEndOfList(videoInPending)
             ProcessState.StorageError
         } catch (captchaRequiredException: CaptchaRequiredException) {
+            moveAtTheEndOfList(videoInPending)
             captchaTimeoutLocalSource.onCaptchaResponseReceived()
             ProcessState.CaptchaError
         } catch (throwable: Throwable) {
+            moveAtTheEndOfList(videoInPending)
             ProcessState.UnknownError
         } finally {
             videoInProgressLocalSource.removeVideoAsInProgress(videoInPending)
         }
+
+    private fun moveAtTheEndOfList(videoInPending: VideoInPending) {
+        videoInPendingLocalSource.removeVideoFromQueue(videoInPending)
+        videoInPendingLocalSource.saveUrlIntoQueue(videoInPending)
+    }
 
     private enum class ProcessingState {
         RUNNING, ERROR
