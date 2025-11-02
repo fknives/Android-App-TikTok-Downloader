@@ -126,6 +126,8 @@ class VideoDownloadingProcessorUseCaseTest {
 
         Assertions.assertEquals(expectedList, resultList.await())
         verify(mockVideoInPendingLocalSource, times(1)).pendingVideos
+        verify(mockVideoInPendingLocalSource, times(1)).removeVideoFromQueue(videoInPending)
+        verify(mockVideoInPendingLocalSource, times(1)).saveUrlIntoQueue(videoInPending)
         verifyNoMoreInteractions(mockVideoInPendingLocalSource)
         verify(mockTikTokDownloadRemoteSource, times(1)).getVideo(videoInPending)
         verify(mockVideoDownloadedLocalSource, times(1)).savedVideos
@@ -344,6 +346,8 @@ class VideoDownloadingProcessorUseCaseTest {
         Assertions.assertEquals(expectedList, resultList.await())
         verify(mockVideoInProgressLocalSource, times(1)).removeVideoAsInProgress(videoInPending)
         verify(mockVideoInPendingLocalSource, times(1)).pendingVideos
+        verify(mockVideoInPendingLocalSource, times(1)).removeVideoFromQueue(videoInPending)
+        verify(mockVideoInPendingLocalSource, times(1)).saveUrlIntoQueue(videoInPending)
         verifyNoMoreInteractions(mockVideoInPendingLocalSource)
     }
 
@@ -441,6 +445,8 @@ class VideoDownloadingProcessorUseCaseTest {
 
         Assertions.assertEquals(expectedList, resultList.await())
         verify(mockVideoInPendingLocalSource, times(1)).pendingVideos
+        verify(mockVideoInPendingLocalSource, times(1)).removeVideoFromQueue(videoInPending)
+        verify(mockVideoInPendingLocalSource, times(1)).saveUrlIntoQueue(videoInPending)
         verify(mockVideoInProgressLocalSource, times(1)).removeVideoAsInProgress(videoInPending)
         verify(mockVideoInProgressLocalSource, times(1)).markVideoAsInProgress(videoInPending)
         verify(mockVideoInProgressLocalSource, times(1)).removeVideoAsInProgress(videoInPending)
