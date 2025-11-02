@@ -69,12 +69,13 @@ class TikTokDownloadRemoteSourceUpToDateTest {
     @Test
     fun GIVEN_private_WHEN_downloading_THEN_proper_exception_is_thrown() {
         val parameter = VideoInPending("123", PRIVATE_VIDEO_URL)
-        Assertions.assertThrows(VideoDeletedException::class.java) {
-            // DELETED response is also accepted: sometimes cant differentiate
-            Assertions.assertThrows(VideoPrivateException::class.java) {
+            val throwable = Assertions.assertThrows(Throwable::class.java) {
                 runBlocking { sut.getVideo(parameter) }
             }
-        }
+        // DELETED response is also accepted: sometimes cant differentiate
+        assert(throwable is VideoDeletedException || throwable is VideoPrivateException, {
+            "Expected throwable to be DELETED or PRIVAte, but it was netiher: $throwable"
+        })
     }
 
     companion object {
