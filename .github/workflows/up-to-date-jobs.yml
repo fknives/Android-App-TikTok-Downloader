@@ -29,5 +29,5 @@ jobs:
         if: always()
         with:
           name: Test Results
-          path: ./**/build/reports/tests/**/index.html
+          path: ./**/build/reports/tests/**/**.html
           retention-days: 1
