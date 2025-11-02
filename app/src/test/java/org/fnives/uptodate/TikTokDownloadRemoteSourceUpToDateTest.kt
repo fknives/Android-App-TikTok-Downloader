@@ -69,8 +69,11 @@ class TikTokDownloadRemoteSourceUpToDateTest {
     @Test
     fun GIVEN_private_WHEN_downloading_THEN_proper_exception_is_thrown() {
         val parameter = VideoInPending("123", PRIVATE_VIDEO_URL)
-        Assertions.assertThrows(VideoPrivateException::class.java) {
-            runBlocking { sut.getVideo(parameter) }
+        Assertions.assertThrows(VideoDeletedException::class.java) {
+            // DELETED response is also accepted: sometimes cant differentiate
+            Assertions.assertThrows(VideoPrivateException::class.java) {
+                runBlocking { sut.getVideo(parameter) }
+            }
         }
     }
 

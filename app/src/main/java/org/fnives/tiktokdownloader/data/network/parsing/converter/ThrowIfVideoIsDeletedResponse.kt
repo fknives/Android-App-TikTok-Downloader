@@ -10,10 +10,15 @@ class ThrowIfVideoIsDeletedResponse {
         "statusMsg\":\"[^\"]*status_audit_not_pass"
     )
 
+    private val redirectedToExplorePage = "\"seo.abtest\":{\"canonical\":\"https:\\u002F\\u002Fwww.tiktok.com\\u002Fexplore\""
+
     @Throws(VideoDeletedException::class)
     fun invoke(html: String) {
         potentialIssues.forEach {
             if (html.contains(it.toRegex())) {
+                throw VideoDeletedException(html = html)
+            }
+            if (html.contains(redirectedToExplorePage)) {
                 throw VideoDeletedException(html = html)
             }
         }

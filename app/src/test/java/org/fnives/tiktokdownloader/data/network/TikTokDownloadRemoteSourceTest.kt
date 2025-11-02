@@ -273,9 +273,22 @@ class TikTokDownloadRemoteSourceTest {
         }
     }
 
+    @Test
+    fun GIVEN_deleted_video_response_v2_THEN_proper_Exception_is_Returned() {
+        Assertions.assertThrows(VideoDeletedException::class.java) {
+            runBlocking<Unit> {
+                val deletedResponse = readResourceFileDeletedV2UrlResponse()
+                mockWebServer.enqueue(MockResponse().setResponseCode(200).setBody(deletedResponse))
+
+                sut.getVideo(VideoInPending("", TEST_URL))
+            }
+        }
+    }
+
     companion object {
         private const val SHORTENED_URL_RESPONSE = "response/shortened_url_response.html"
         private const val DELETED_V1_URL_RESPONSE = "response/video_deleted_v1.html"
+        private const val DELETED_V2_URL_RESPONSE = "response/video_deleted_v2.html"
         private const val CAPTCHA_REQUIRED_RESPONSE_ONE = "response/captcha_required_one.html"
         private const val CAPTCHA_REQUIRED_RESPONSE_TWO = "response/captcha_required_two.html"
         private const val MAIN_PAGE_VARIANT_1_RESPONSE = "response/main_page_v1.html"
@@ -313,6 +326,9 @@ class TikTokDownloadRemoteSourceTest {
 
         private fun Any.readResourceFileDeletedV1UrlResponse() =
             readResourceFile(DELETED_V1_URL_RESPONSE)
+
+        private fun Any.readResourceFileDeletedV2UrlResponse() =
+            readResourceFile(DELETED_V2_URL_RESPONSE)
 
         @JvmStatic
         private fun captchaResponses() = Stream.of(
