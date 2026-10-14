@@ -73,6 +73,7 @@ object ErrorTracer {
 
 val ErrorTracer.observe: Flow<Boolean>
     get() = callbackFlow {
+        send(ErrorTracer.hasErrors)
         val listener: () -> Unit = {
             trySend(ErrorTracer.hasErrors)
         }
