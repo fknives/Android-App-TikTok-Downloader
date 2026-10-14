@@ -29,9 +29,10 @@ object ErrorTracer {
 
     fun commitErrorTransaction() {
         val needsToNotify = !hasErrors
-        val errorTransaction = errorTransaction
-        if (errorTransaction != null) {
-            errorTransactions.add(errorTransaction)
+        val committedTransaction = errorTransaction
+        errorTransaction = null
+        if (committedTransaction != null) {
+            errorTransactions.add(committedTransaction)
         }
         if (needsToNotify) {
             val errorListener = errorListener

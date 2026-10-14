@@ -2,14 +2,27 @@ package org.fnives.tiktokdownloader.data.local.save.video
 
 import android.content.ContentValues
 import android.provider.MediaStore
+import org.fnives.tiktokdownloader.data.network.exceptions.NetworkException
+import java.io.IOException
 import java.io.InputStream
 import java.io.OutputStream
 import java.util.concurrent.TimeUnit
 
+@Throws(NetworkException::class, IOException::class)
 fun InputStream.safeCopyInto(outputStream: OutputStream) {
     outputStream.use { out ->
         use { input ->
-            input.copyTo(out)
+            val buffer = ByteArray(DEFAULT_BUFFER_SIZE)
+            while (true) {
+                val bytesRead = try {
+                    input.read(buffer)
+                } catch (ioException: IOException) {
+                    // The bytes are read from the network response, so a failure here is a network problem rather than a local storage problem.
+                    throw NetworkException(message = "Couldn't read the response stream", html = "", cause = ioException)
+                }
+                if (bytesRead == -1) break
+                out.write(buffer, 0, bytesRead)
+            }
         }
     }
 }

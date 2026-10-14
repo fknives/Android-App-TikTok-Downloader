@@ -4,11 +4,14 @@ import android.content.ContentResolver
 import android.os.Environment
 import android.provider.MediaStore
 import org.fnives.tiktokdownloader.data.model.VideoInSavingIntoFile
+import org.fnives.tiktokdownloader.data.network.exceptions.NetworkException
 import java.io.File
+import java.io.IOException
 
 @Suppress("DEPRECATION")
 class SaveVideoFileBelowApi29(private val resolver: ContentResolver) : SaveVideoFile {
 
+    @Throws(NetworkException::class, IOException::class)
     override fun invoke(directory: String, fileName: String, videoInProcess: VideoInSavingIntoFile): String? {
         val externalDirectory =
             Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MOVIES)

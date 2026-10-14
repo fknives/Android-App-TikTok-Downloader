@@ -16,6 +16,7 @@ import org.fnives.tiktokdownloader.data.local.save.video.SaveVideoFile
 import org.fnives.tiktokdownloader.data.local.verify.exists.VerifyFileForUriExists
 import org.fnives.tiktokdownloader.data.model.VideoDownloaded
 import org.fnives.tiktokdownloader.data.model.VideoInSavingIntoFile
+import org.fnives.tiktokdownloader.data.network.exceptions.NetworkException
 import org.fnives.tiktokdownloader.helper.mock.InMemorySharedPreferencesManager
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.BeforeEach
@@ -161,6 +162,29 @@ class VideoDownloadedLocalSourceTest {
                 sut.saveVideo(videoInSavingIntoFile)
             }
         }
+    }
+
+    @Test
+    fun GIVEN_readingResponseException_from_savingUseCase_WHEN_saving_video_THEN_it_is_not_wrapped_into_StorageException() {
+        val thrown = Assertions.assertThrows(Throwable::class.java) {
+            runBlocking<Unit> {
+                val videoInSavingIntoFile = VideoInSavingIntoFile(
+                    id = "id",
+                    url = "alma",
+                    contentType = VideoInSavingIntoFile.ContentType("a", "b"),
+                    byteStream = FalseInputStream()
+                )
+                val expectedDir = "TikTok_Downloader"
+                val expectedFileName = videoInSavingIntoFile.id + ".b"
+                whenever(mockSaveVideoFile.invoke(expectedDir, expectedFileName, videoInSavingIntoFile))
+                    .then { throw NetworkException(html = "", cause = Throwable()) }
+
+                sut.saveVideo(videoInSavingIntoFile)
+            }
+        }
+
+        Assertions.assertTrue(thrown is NetworkException)
+        Assertions.assertFalse(thrown is StorageException)
     }
 
     @Test

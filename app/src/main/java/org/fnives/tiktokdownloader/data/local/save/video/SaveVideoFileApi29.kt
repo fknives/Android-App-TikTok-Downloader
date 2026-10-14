@@ -7,11 +7,14 @@ import android.provider.MediaStore
 import android.provider.MediaStore.Video.Media
 import androidx.annotation.RequiresApi
 import org.fnives.tiktokdownloader.data.model.VideoInSavingIntoFile
+import org.fnives.tiktokdownloader.data.network.exceptions.NetworkException
 import java.io.FileOutputStream
+import java.io.IOException
 
 class SaveVideoFileApi29(private val resolver: ContentResolver) : SaveVideoFile {
 
     @RequiresApi(Build.VERSION_CODES.Q)
+    @Throws(NetworkException::class, IOException::class)
     override fun invoke(directory: String, fileName: String, videoInProcess: VideoInSavingIntoFile): String? {
         val values = buildDefaultVideoContentValues(
             fileName = fileName,

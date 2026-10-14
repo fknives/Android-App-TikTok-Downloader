@@ -24,6 +24,7 @@ import org.fnives.tiktokdownloader.data.network.TikTokDownloadRemoteSource
 import org.fnives.tiktokdownloader.data.network.exceptions.CaptchaRequiredException
 import org.fnives.tiktokdownloader.data.network.exceptions.NetworkException
 import org.fnives.tiktokdownloader.data.network.exceptions.ParsingException
+import org.fnives.tiktokdownloader.errortracking.ErrorTracer
 import org.fnives.tiktokdownloader.helper.advanceTimeBy
 import org.fnives.tiktokdownloader.helper.advanceUntilIdle
 import org.junit.jupiter.api.Assertions
@@ -309,6 +310,62 @@ class VideoDownloadingProcessorUseCaseTest {
     }
 
     @Test
+    fun GIVEN_one_pending_video_AND_successful_request_AND_reading_response_error_WHEN_observing_THEN_network_error_is_emitted() = runBlocking {
+        val videoInPending = VideoInPending("alma", "banan")
+        videoInPendingMutableFlow.value = listOf(videoInPending)
+        val videoInSavingIntoFile = VideoInSavingIntoFile("x", "u", VideoInSavingIntoFile.ContentType("a", "b"), FalseInputStream())
+        whenever(mockTikTokDownloadRemoteSource.getVideo(videoInPending)).doReturn(videoInSavingIntoFile)
+        whenever(mockVideoDownloadedLocalSource.saveVideo(anyOrNull())).then {
+            throw NetworkException(html = "", cause = Throwable())
+        }
+        val expectedList = listOf(ProcessState.Processing(videoInPending), ProcessState.NetworkError)
+
+        val resultList = async(testDispatcher) { sut.processState.take(2).toList() }
+        testDispatcher.advanceUntilIdle()
+
+        Assertions.assertEquals(expectedList, resultList.await())
+        verify(mockVideoDownloadedLocalSource, times(1)).saveVideo(videoInSavingIntoFile)
+        verify(mockVideoDownloadedLocalSource, times(1)).savedVideos
+        verifyNoMoreInteractions(mockVideoDownloadedLocalSource)
+    }
+
+    @Test
+    fun GIVEN_one_pending_video_AND_error_WHEN_observing_THEN_error_transaction_is_committed_with_the_url() = runBlocking {
+        val videoInPending = VideoInPending("alma", ERROR_TRACKED_URL)
+        videoInPendingMutableFlow.value = listOf(videoInPending)
+        whenever(mockTikTokDownloadRemoteSource.getVideo(videoInPending)).then {
+            throw NetworkException(html = "")
+        }
+
+        val resultList = async(testDispatcher) { sut.processState.take(2).toList() }
+        testDispatcher.advanceUntilIdle()
+        resultList.await()
+
+        Assertions.assertTrue(
+            ErrorTracer.getErrorAsJSON().contains(ERROR_TRACKED_URL),
+            "The error transaction should be committed with the video url"
+        )
+    }
+
+    @Test
+    fun GIVEN_one_pending_video_AND_success_WHEN_observing_THEN_error_transaction_is_cancelled() = runBlocking {
+        val videoInPending = VideoInPending("alma", SUCCESS_NOT_TRACKED_URL)
+        videoInPendingMutableFlow.value = listOf(videoInPending)
+        val videoInSavingIntoFile = VideoInSavingIntoFile("x", "u", VideoInSavingIntoFile.ContentType("a", "b"), FalseInputStream())
+        whenever(mockTikTokDownloadRemoteSource.getVideo(videoInPending)).doReturn(videoInSavingIntoFile)
+        whenever(mockVideoDownloadedLocalSource.saveVideo(anyOrNull())).doReturn(VideoDownloaded("zz", "yy", "xx"))
+
+        val resultList = async(testDispatcher) { sut.processState.take(2).toList() }
+        testDispatcher.advanceUntilIdle()
+        resultList.await()
+
+        Assertions.assertFalse(
+            ErrorTracer.getErrorAsJSON().contains(SUCCESS_NOT_TRACKED_URL),
+            "A successful download should not commit an error transaction"
+        )
+    }
+
+    @Test
     fun GIVEN_one_pending_video_AND_successful_request_AND_successful_file_save_WHEN_observing_THEN_pending_is_removed() = runBlocking {
         val videoInPending = VideoInPending("alma", "banan")
         val videoDownloaded = VideoDownloaded("zz", "yy", "xx")
@@ -492,5 +549,10 @@ class VideoDownloadingProcessorUseCaseTest {
 
     class FalseInputStream : InputStream() {
         override fun read(): Int = 0
+    }
+
+    companion object {
+        private const val ERROR_TRACKED_URL = "error-tracer-committed-url"
+        private const val SUCCESS_NOT_TRACKED_URL = "error-tracer-cancelled-url"
     }
 }

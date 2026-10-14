@@ -29,7 +29,6 @@ class TikTokDownloadRemoteSource(
         withContext(Dispatchers.IO) {
             cookieStore.clear()
             wrapIntoProperException {
-                ErrorTracer.startErrorTransaction(videoInPending.url)
                 delay(delayBeforeRequest) // added just so captcha trigger may not happen
                 Logger.logMessage("starting request")
                 val actualUrl = service.getContentActualUrlAndCookie(videoInPending.url)
@@ -48,7 +47,6 @@ class TikTokDownloadRemoteSource(
                 delay(delayBeforeRequest) // added just so captcha trigger may not happen
                 try {
                     val response = service.getVideo(videoUrl.videoFileUrl)
-                    ErrorTracer.cancelErrorTransaction()
 
                     VideoInSavingIntoFile(
                         id = videoInPending.id,
@@ -88,7 +86,5 @@ class TikTokDownloadRemoteSource(
                 cause = throwable,
                 html = "wrapIntoProperException"
             )
-        } finally {
-            ErrorTracer.commitErrorTransaction()
         }
 }
