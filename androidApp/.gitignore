@@ -9,7 +9,6 @@
 /captures
 .externalNativeBuild
 .cxx
-release/
 *.jks
 signing.config.properties
 
