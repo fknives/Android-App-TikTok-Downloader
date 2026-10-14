@@ -20,6 +20,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.net.toUri
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.pierfrancescosoffritti.androidyoutubeplayer.core.player.listeners.AbstractYouTubePlayerListener
 import com.pierfrancescosoffritti.androidyoutubeplayer.core.player.options.IFramePlayerOptions
 import com.pierfrancescosoffritti.androidyoutubeplayer.core.player.views.YouTubePlayerView
@@ -87,6 +88,7 @@ private fun HelpCard(content: @Composable ColumnScope.() -> Unit) {
 
 @Composable
 private fun Youtube(videoId: String) {
+    val lifecycleOwner = LocalLifecycleOwner.current
     AndroidView(factory = { context ->
         val view = YouTubePlayerView(context)
 
@@ -97,6 +99,8 @@ private fun Youtube(videoId: String) {
             playerOptions = IFramePlayerOptions.getDefault(context),
             videoId = videoId
         )
+
+        lifecycleOwner.lifecycle.addObserver(view)
         return@AndroidView view
     })
 }
