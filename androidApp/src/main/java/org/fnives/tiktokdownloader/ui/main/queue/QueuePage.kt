@@ -66,7 +66,7 @@ fun QueuePage(
                     value = input,
                     onValueChange = { input = it },
                     label = {
-                        Text("TikTok Link")
+                        Text(stringResource(R.string.tik_tok_link))
                     }
                 )
             },
