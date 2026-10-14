@@ -1,5 +1,8 @@
 package org.fnives.tiktokdownloader.ui.main.help
 
+import android.content.Intent
+import androidx.activity.compose.LocalActivity
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
@@ -16,6 +19,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
+import androidx.core.net.toUri
 import com.pierfrancescosoffritti.androidyoutubeplayer.core.player.listeners.AbstractYouTubePlayerListener
 import com.pierfrancescosoffritti.androidyoutubeplayer.core.player.options.IFramePlayerOptions
 import com.pierfrancescosoffritti.androidyoutubeplayer.core.player.views.YouTubePlayerView
@@ -52,10 +56,18 @@ fun HelpPage() {
             )
             Text(stringResource(R.string.error_handling))
             Text(stringResource(R.string.captcha_handling))
-            Text(stringResource(R.string.link_to_repository))
+            val activity = LocalActivity.current
+            Text(stringResource(R.string.link_to_repository), Modifier.clickable(onClick = {
+                activity?.startActivity(getHelpIntent())
+            }))
         }
     }
 }
+
+private fun getHelpIntent() = Intent(
+    Intent.ACTION_VIEW,
+    "https://github.com/fknives/TikTok-Downloader".toUri()
+)
 
 @Composable
 private fun HelpCard(content: @Composable ColumnScope.() -> Unit) {
