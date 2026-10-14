@@ -9,6 +9,8 @@ import kotlinx.coroutines.launch
 import org.fnives.tiktokdownloader.data.model.UserPreferences
 import org.fnives.tiktokdownloader.data.usecase.ObserveUserPreferences
 import org.fnives.tiktokdownloader.data.usecase.SetUserPreferences
+import org.fnives.tiktokdownloader.errortracking.ErrorTracer
+import org.fnives.tiktokdownloader.errortracking.observe
 
 class SettingsViewModel(
     getUserPreferences: ObserveUserPreferences,
@@ -19,6 +21,12 @@ class SettingsViewModel(
         viewModelScope,
         started = SharingStarted.Eagerly,
         initialValue = UserPreferences(alwaysOpenApp = false)
+    )
+
+    val showReportButton: StateFlow<Boolean> = ErrorTracer.observe.stateIn(
+        viewModelScope,
+        started = SharingStarted.Eagerly,
+        initialValue = false
     )
 
     fun setAlwaysOpenApp(alwaysOpenApp: Boolean) {

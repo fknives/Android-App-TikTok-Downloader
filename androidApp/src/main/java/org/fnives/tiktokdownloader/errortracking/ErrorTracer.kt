@@ -5,6 +5,10 @@ import android.os.Looper
 import androidx.annotation.WorkerThread
 import com.google.gson.Gson
 import com.google.gson.annotations.SerializedName
+import kotlinx.coroutines.awaitCancellation
+import kotlinx.coroutines.channels.awaitClose
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.callbackFlow
 
 object ErrorTracer {
 
@@ -66,6 +70,15 @@ object ErrorTracer {
         return "[$arrayInner]"
     }
 }
+
+val ErrorTracer.observe: Flow<Boolean>
+    get() = callbackFlow {
+        val listener: () -> Unit = {
+            trySend(ErrorTracer.hasErrors)
+        }
+        val dispose = subscribeToHasErrorChanges(listener)
+        awaitClose(dispose)
+    }
 
 private class ErrorTransaction(
     @SerializedName("url") val url: String

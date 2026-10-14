@@ -70,19 +70,22 @@ fun SettingsPage(
                     )
                 }
                 val context = LocalContext.current
-                Text(
-                    stringResource(R.string.report_errors),
-                    style = MaterialTheme.typography.titleMedium,
-                    modifier = Modifier
-                        .clickable {
-                            SendErrorsAsEmail.send(context)
-                        }
-                        .fillMaxWidth()
-                        .defaultMinSize(minHeight = 48.dp)
-                        .wrapContentHeight(Alignment.CenterVertically)
-                        .padding(horizontal = 16.dp)
+                val showReportButton by viewModel.showReportButton.collectAsStateWithLifecycle()
+                if (showReportButton) {
+                    Text(
+                        stringResource(R.string.report_errors),
+                        style = MaterialTheme.typography.titleMedium,
+                        modifier = Modifier
+                            .clickable {
+                                SendErrorsAsEmail.send(context)
+                            }
+                            .fillMaxWidth()
+                            .defaultMinSize(minHeight = 48.dp)
+                            .wrapContentHeight(Alignment.CenterVertically)
+                            .padding(horizontal = 16.dp)
 
-                )
+                    )
+                }
             }
         }
     }
