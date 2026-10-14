@@ -14,6 +14,7 @@ import org.fnives.tiktokdownloader.data.network.session.CookieSavingInterceptor
 import org.fnives.tiktokdownloader.data.network.session.CookieStore
 import retrofit2.Converter
 import retrofit2.Retrofit
+import java.util.concurrent.TimeUnit
 
 class NetworkModule(private val delayBeforeRequest: Long) {
 
@@ -49,6 +50,8 @@ class NetworkModule(private val delayBeforeRequest: Long) {
                     it
                 }
             }
+            .connectTimeout(30, TimeUnit.SECONDS)
+            .readTimeout(1, TimeUnit.MINUTES)
             .build()
 
     private val retrofit: Retrofit

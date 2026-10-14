@@ -13,6 +13,9 @@ import org.fnives.tiktokdownloader.data.local.save.video.SaveVideoFile
 import org.fnives.tiktokdownloader.data.local.verify.exists.VerifyFileForUriExists
 import org.fnives.tiktokdownloader.data.model.VideoDownloaded
 import org.fnives.tiktokdownloader.data.model.VideoInSavingIntoFile
+import org.fnives.tiktokdownloader.data.network.exceptions.HtmlException
+import org.fnives.tiktokdownloader.data.network.exceptions.NetworkException
+import org.fnives.tiktokdownloader.errortracking.ErrorTracer
 
 class VideoDownloadedLocalSource(
     private val saveVideoFile: SaveVideoFile,
@@ -37,11 +40,31 @@ class VideoDownloadedLocalSource(
         }
             .distinctUntilChanged()
 
-    @Throws(StorageException::class)
-    fun saveVideo(videoInProcess: VideoInSavingIntoFile): VideoDownloaded {
+    @Throws(StorageException::class, NetworkException::class)
+    fun saveVideo(videoInProcess: VideoInSavingIntoFile): VideoDownloaded =
+        try {
+            saveVideoIntoStorage(videoInProcess)
+        } catch (throwable: Throwable) {
+            val exceptionName = when (throwable) {
+                is StorageException -> "Storage"
+                else -> (throwable as? HtmlException)?.exceptionName ?: "Unknown Error"
+            }
+            ErrorTracer.addError(
+                html = "-",
+                message = "$exceptionName in VideoDownloadedLocalSource",
+                throwable = throwable
+            )
+            throw throwable
+        }
+
+    @Throws(StorageException::class, NetworkException::class)
+    private fun saveVideoIntoStorage(videoInProcess: VideoInSavingIntoFile): VideoDownloaded {
         val fileName = videoInProcess.fileName()
         val uri = try {
             saveVideoFile("TikTok_Downloader", fileName, videoInProcess)
+        } catch (networkException: NetworkException) {
+            // Reading the response is network IO, so it should not be reported as a storage failure.
+            throw networkException
         } catch (throwable: Throwable) {
             throw StorageException(cause = throwable)
         }

@@ -18,3 +18,7 @@
 .externalNativeBuild
 .cxx
 local.properties
+
+.env
+.devcontainer
+/error*.json

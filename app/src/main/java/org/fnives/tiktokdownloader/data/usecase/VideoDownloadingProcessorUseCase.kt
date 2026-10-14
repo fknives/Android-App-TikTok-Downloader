@@ -33,6 +33,7 @@ import org.fnives.tiktokdownloader.data.network.exceptions.NetworkException
 import org.fnives.tiktokdownloader.data.network.exceptions.ParsingException
 import org.fnives.tiktokdownloader.data.network.exceptions.VideoDeletedException
 import org.fnives.tiktokdownloader.data.network.exceptions.VideoPrivateException
+import org.fnives.tiktokdownloader.errortracking.ErrorTracer
 
 @OptIn(FlowPreview::class)
 class VideoDownloadingProcessorUseCase(
@@ -80,8 +81,9 @@ class VideoDownloadingProcessorUseCase(
             emit(downloadVideo(videoInPending))
         }
 
-    private suspend fun downloadVideo(videoInPending: VideoInPending): ProcessState =
-        try {
+    private suspend fun downloadVideo(videoInPending: VideoInPending): ProcessState {
+        ErrorTracer.startErrorTransaction(videoInPending.url)
+        return try {
             val alreadyDownloaded = videoDownloadedLocalSource.savedVideos.first()
                 .firstOrNull { it.id == videoInPending.id }
             val videoDownloaded = when {
@@ -106,6 +108,7 @@ class VideoDownloadingProcessorUseCase(
                 }
             }
 
+            ErrorTracer.cancelErrorTransaction()
             ProcessState.Processed(videoDownloaded)
         } catch (networkException: NetworkException) {
             moveAtTheEndOfList(videoInPending)
@@ -131,7 +134,9 @@ class VideoDownloadingProcessorUseCase(
             ProcessState.UnknownError
         } finally {
             videoInProgressLocalSource.removeVideoAsInProgress(videoInPending)
+            ErrorTracer.commitErrorTransaction()
         }
+    }
 
     private fun moveAtTheEndOfList(videoInPending: VideoInPending) {
         videoInPendingLocalSource.removeVideoFromQueue(videoInPending)
