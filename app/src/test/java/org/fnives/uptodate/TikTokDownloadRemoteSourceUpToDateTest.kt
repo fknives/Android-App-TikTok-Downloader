@@ -31,7 +31,7 @@ class TikTokDownloadRemoteSourceUpToDateTest {
         sut = NetworkModule(1).tikTokDownloadRemoteSource
     }
 
-    @Disabled("Can trigger captcha, so only run it separately")
+//    @Disabled("Can trigger captcha, so only run it separately")
     @Timeout(value = 120)
     @Test
     fun GIVEN_actualVideo_WHEN_downloading_THEN_the_file_matching_with_the_previously_loaded_video() {
@@ -57,7 +57,7 @@ class TikTokDownloadRemoteSourceUpToDateTest {
         )
     }
 
-    @Disabled("Can trigger captcha, so only run it separately")
+//    @Disabled("Can trigger captcha, so only run it separately")
     @Timeout(value = 120)
     @Test
     fun GIVEN_deleted_WHEN_downloading_THEN_proper_exception_is_thrown() {
@@ -67,7 +67,7 @@ class TikTokDownloadRemoteSourceUpToDateTest {
         }
     }
 
-    @Disabled("Can trigger captcha, so only run it separately")
+//    @Disabled("Can trigger captcha, so only run it separately")
     @Timeout(value = 120)
     @Test
     fun GIVEN_private_WHEN_downloading_THEN_proper_exception_is_thrown() {
