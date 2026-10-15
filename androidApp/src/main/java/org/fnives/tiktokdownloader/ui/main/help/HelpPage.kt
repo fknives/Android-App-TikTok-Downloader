@@ -96,20 +96,23 @@ private fun HelpCard(content: @Composable ColumnScope.() -> Unit) {
 @Composable
 private fun Youtube(videoId: String) {
     val lifecycleOwner = LocalLifecycleOwner.current
-    AndroidView(factory = { context ->
-        val view = YouTubePlayerView(context)
+    AndroidView(
+        factory = { context ->
+            val view = YouTubePlayerView(context)
 
-        view.enableAutomaticInitialization = false
-        view.initialize(
-            object : AbstractYouTubePlayerListener() {},
-            handleNetworkEvents = true,
-            playerOptions = IFramePlayerOptions.getDefault(context),
-            videoId = videoId
-        )
+            view.enableAutomaticInitialization = false
+            view.initialize(
+                object : AbstractYouTubePlayerListener() {},
+                handleNetworkEvents = true,
+                playerOptions = IFramePlayerOptions.getDefault(context),
+                videoId = videoId
+            )
 
-        lifecycleOwner.lifecycle.addObserver(view)
-        return@AndroidView view
-    })
+            lifecycleOwner.lifecycle.addObserver(view)
+            return@AndroidView view
+        },
+        onRelease = lifecycleOwner.lifecycle::removeObserver
+    )
 }
 
 @Composable
