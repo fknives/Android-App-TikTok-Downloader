@@ -20,5 +20,6 @@
 local.properties
 
 .env
+.env.example
 .devcontainer
 /error*.json

@@ -1,0 +1,8 @@
+<resources>
+
+    <style name="Theme.TikTokDownloader">
+        <item name="colorPrimary">@color/purple_200</item>
+        <item name="android:windowLightStatusBar">false</item>
+    </style>
+
+</resources>

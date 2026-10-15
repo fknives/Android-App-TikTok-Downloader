@@ -1,0 +1,78 @@
+package org.fnives.tiktokdownloader.di.module
+
+import okhttp3.OkHttpClient
+import okhttp3.logging.HttpLoggingInterceptor
+import org.fnives.tiktokdownloader.Config
+import org.fnives.tiktokdownloader.data.network.TikTokDownloadRemoteSource
+import org.fnives.tiktokdownloader.data.network.TikTokRetrofitService
+import org.fnives.tiktokdownloader.data.network.parsing.TikTokWebPageConverterFactory
+import org.fnives.tiktokdownloader.data.network.parsing.converter.ThrowIfIsCaptchaResponse
+import org.fnives.tiktokdownloader.data.network.parsing.converter.ThrowIfVideoIsDeletedResponse
+import org.fnives.tiktokdownloader.data.network.parsing.converter.ThrowIfVideoIsPrivateResponse
+import org.fnives.tiktokdownloader.data.network.parsing.converter.VideoFileUrlConverter
+import org.fnives.tiktokdownloader.data.network.session.CookieSavingInterceptor
+import org.fnives.tiktokdownloader.data.network.session.CookieStore
+import retrofit2.Converter
+import retrofit2.Retrofit
+import java.util.concurrent.TimeUnit
+
+class NetworkModule(private val delayBeforeRequest: Long) {
+
+    private val throwIfIsCaptchaResponse: ThrowIfIsCaptchaResponse
+        get() = ThrowIfIsCaptchaResponse()
+
+    private val throwIfVideoIsDeletedResponse: ThrowIfVideoIsDeletedResponse
+        get() = ThrowIfVideoIsDeletedResponse()
+
+    private val throwIfVideoIsPrivateResponse: ThrowIfVideoIsPrivateResponse
+        get() = ThrowIfVideoIsPrivateResponse()
+
+    private val tikTokConverterFactory: Converter.Factory
+        get() = TikTokWebPageConverterFactory(
+            throwIfIsCaptchaResponse,
+            throwIfVideoIsDeletedResponse,
+            throwIfVideoIsPrivateResponse
+        )
+
+    private val cookieSavingInterceptor: CookieSavingInterceptor by lazy { CookieSavingInterceptor() }
+
+    private val cookieStore: CookieStore get() = cookieSavingInterceptor
+
+    private val okHttpClient: OkHttpClient
+        get() = OkHttpClient.Builder()
+            .addInterceptor(cookieSavingInterceptor)
+            .let {
+                if (Config.DEBUG) {
+                    it.addInterceptor(HttpLoggingInterceptor().apply {
+                        level = HttpLoggingInterceptor.Level.BODY
+                    })
+                } else {
+                    it
+                }
+            }
+            .connectTimeout(30, TimeUnit.SECONDS)
+            .readTimeout(1, TimeUnit.MINUTES)
+            .build()
+
+    private val retrofit: Retrofit
+        get() = Retrofit.Builder()
+            .baseUrl("https://google.com")
+            .addConverterFactory(tikTokConverterFactory)
+            .client(okHttpClient)
+            .build()
+
+    private val tikTokRetrofitService: TikTokRetrofitService
+        get() = retrofit.create(TikTokRetrofitService::class.java)
+
+    val tikTokDownloadRemoteSource: TikTokDownloadRemoteSource
+        get() = TikTokDownloadRemoteSource(
+            delayBeforeRequest,
+            tikTokRetrofitService,
+            cookieStore,
+            VideoFileUrlConverter(
+                throwIfIsCaptchaResponse,
+                throwIfVideoIsDeletedResponse,
+                throwIfVideoIsPrivateResponse
+            )
+        )
+}

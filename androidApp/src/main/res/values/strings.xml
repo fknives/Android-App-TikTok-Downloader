@@ -1,0 +1,58 @@
+<resources>
+    <string name="app_name">TikTokDownloader</string>
+
+    <string name="tik_tok_downloader_started">TikTok Downloader Started</string>
+    <string name="tik_tok_downloader_processing">Downloading: %s</string>
+    <string name="tik_tok_downloader_notification_channel">Downloader Progress</string>
+
+    <string name="queue">Queue</string>
+    <string name="help">Help</string>
+
+    <string name="copy_the_link_from_tiktok_here_to_download_it">Copy link here from TikTok to download it</string>
+    <string name="start_download">Start Download</string>
+    <string name="start">Start</string>
+
+    <string name="status_pending">Pending</string>
+    <string name="status_finished">Downloaded</string>
+
+    <string name="network_error">Network Error</string>
+    <string name="parsing_error">Parsing Error</string>
+    <string name="storage_error">Failed to Store Video</string>
+    <string name="unexpected_error">Unexpected Error</string>
+    <string name="video_deleted_error">Video seems to be DELETED</string>
+    <string name="video_private_error">Video seems to be PRIVATE</string>
+    <string name="permission_request">Permission Needed</string>
+    <string name="permission_rationale">External Storage permission is needed in order to save the video to your device</string>
+    <string name="notification_permission_request">Notifications Needed</string>
+    <string name="notification_permission_rationale">Notification permission is needed so downloads can keep running in the background and so you are notified when a download finishes or fails.</string>
+    <string name="ok">OK</string>
+    <string name="cant_operate_without_permission">Can\'t operate without external storage permission</string>
+    <string name="captcha_error">Captcha seems necessary, try later!</string>
+    <string name="tik_tok_link">TikTok Link</string>
+    <string name="how_to_use_in_app">How To Use In App</string>
+    <string name="how_to_use_in_app_description">- Open Queue Screen.
+        \n- Copy the link from TikTok into the input field.
+        \n- Press start.
+        \n- If error happens retry with the refresh button.
+        \n\n<b>Note</b>:
+        \n- Clicking on video will open the Gallery app.
+        \n- Clicking on a video URL will open in TikTok.
+        \n- Swiping away a video will remove it from the list.
+        \n- When not loading, Pending videos can be reordered by dragging.</string>
+    <string name="how_to_use_from_tiktok">How To Use From TikTok</string>
+    <string name="how_to_use_from_tiktok_description">- In TikTok press share.
+        \n- Select Other.
+        \n- Select TikTok Downloader.
+        \n- You receive a notification about the state of download.
+        \n- If you need to retry, open the App.
+    </string>
+    <string name="additional_information">Additional Information</string>
+    <string name="error_handling">The download may fail for various reasons. In such case on the Queue screen you will see a refresh icon. Pressing that will retry the download.</string>
+    <string name="captcha_handling">It\'s possible if you try to download too many videos at the same time <b>captcha</b> will be triggered. Since we don\'t want to overload the server, in such case you will need to wait a couple hours to properly retry the download. If that still doesn\'t work you may need to verify a captcha on the same network.</string>
+    <string name="link_to_repository"><![CDATA[This is an open source project. You can see the repository clicking <u>here.</u>]]></string>
+    <string name="could_not_open">Couldn\'t open!</string>
+    <string name="settings">Settings</string>
+    <string name="user_preference_always_open_app">Always open app when sharing video</string>
+    <string name="report_errors">Report errors via e-mail</string>
+    <string name="dismiss">Dismiss</string>
+</resources>
