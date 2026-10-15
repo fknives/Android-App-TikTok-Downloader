@@ -2,6 +2,7 @@ package org.fnives.tiktokdownloader.ui.main.help
 
 import android.content.Intent
 import androidx.activity.compose.LocalActivity
+import androidx.annotation.StringRes
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -15,8 +16,11 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.fromHtml
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.net.toUri
@@ -58,9 +62,12 @@ fun HelpPage() {
             Text(stringResource(R.string.error_handling))
             Text(stringResource(R.string.captcha_handling))
             val activity = LocalActivity.current
-            Text(stringResource(R.string.link_to_repository), Modifier.clickable(onClick = {
-                activity?.startActivity(getHelpIntent())
-            }))
+            Text(
+                annotatedStringResource(R.string.link_to_repository),
+                Modifier.clickable(onClick = {
+                    activity?.startActivity(getHelpIntent())
+                })
+            )
         }
     }
 }
@@ -103,4 +110,12 @@ private fun Youtube(videoId: String) {
         lifecycleOwner.lifecycle.addObserver(view)
         return@AndroidView view
     })
+}
+
+@Composable
+private fun annotatedStringResource(@StringRes id: Int): AnnotatedString {
+    val string = stringResource(id)
+    return remember(string) {
+        AnnotatedString.fromHtml(string)
+    }
 }
