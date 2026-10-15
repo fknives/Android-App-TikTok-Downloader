@@ -23,7 +23,7 @@ jobs:
           distribution: 'adopt'
           java-version: '17'
       - name: Run Up-To-Date Tests
-        run: ./gradlew :app:testDebugUnitTest --tests "org.fnives.uptodate.*"
+        run: ./gradlew :androidApp:testDebugUnitTest --tests "org.fnives.uptodate.*"
       - name: Upload Test Results
         uses: actions/upload-artifact@v4
         if: always()
