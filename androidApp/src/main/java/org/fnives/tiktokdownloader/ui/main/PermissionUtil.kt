@@ -12,19 +12,19 @@ import org.fnives.tiktokdownloader.ui.permission.PermissionRequester
 import org.fnives.tiktokdownloader.ui.permission.rememberPermissionRequester
 
 @Composable
-fun RequestStoragePermissionEffect() = RequestNotificationEffect {
+fun RequestStoragePermissionEffect() = RequestPermissionEffect {
     request(Permission.STORAGE)
 }
 
 @Composable
-fun RequestNotificationPermissionEffectIfNeeded() = RequestNotificationEffect {
+fun RequestNotificationPermissionEffectIfNeeded() = RequestPermissionEffect {
     if (!ServiceLocator.useCaseModule.getUserPreferences().alwaysOpenApp) {
         request(Permission.NOTIFICATION)
     }
 }
 
 @Composable
-private fun RequestNotificationEffect(action: suspend PermissionRequester.() -> Unit) {
+private fun RequestPermissionEffect(action: suspend PermissionRequester.() -> Unit) {
     val permissionRequester = rememberPermissionRequester()
     var initialPermissionsChecked by rememberSaveable { mutableStateOf(false) }
     LaunchedEffect(Unit) {
