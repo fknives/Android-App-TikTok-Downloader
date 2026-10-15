@@ -1,16 +1,11 @@
 package org.fnives.tiktokdownloader.di.module
 
-import org.fnives.tiktokdownloader.ui.permission.PermissionRationaleDialogFactory
-import org.fnives.tiktokdownloader.ui.permission.PermissionRequester
+import android.content.Context
+import org.fnives.tiktokdownloader.ui.permission.PermissionChecker
 
-class PermissionModule {
+class PermissionModule(context: Context) {
 
-    private val permissionRationaleDialogFactory: PermissionRationaleDialogFactory
-        get() = PermissionRationaleDialogFactory()
-
-    private val permissionRequesterFactory: PermissionRequester.Factory
-        get() = PermissionRequester.Factory(permissionRationaleDialogFactory)
-
-    val permissionRequester: PermissionRequester
-        get() = permissionRequesterFactory.invoke()
+    val permissionChecker: PermissionChecker by lazy {
+        PermissionChecker(context.applicationContext)
+    }
 }

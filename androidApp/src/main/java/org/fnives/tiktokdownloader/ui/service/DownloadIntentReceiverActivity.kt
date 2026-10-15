@@ -6,13 +6,10 @@ import androidx.appcompat.app.AppCompatActivity
 import org.fnives.tiktokdownloader.data.usecase.GetUserPreferences
 import org.fnives.tiktokdownloader.di.ServiceLocator
 import org.fnives.tiktokdownloader.ui.main.MainActivity
-import org.fnives.tiktokdownloader.ui.permission.PermissionRequester
+import org.fnives.tiktokdownloader.ui.permission.Permission
 
 class DownloadIntentReceiverActivity : AppCompatActivity() {
 
-    private val permissionRequester: PermissionRequester by lazy {
-        ServiceLocator.permissionModule.permissionRequester
-    }
     private val getUserPreferences: GetUserPreferences by lazy {
         ServiceLocator.useCaseModule.getUserPreferences
     }
@@ -34,7 +31,7 @@ class DownloadIntentReceiverActivity : AppCompatActivity() {
     }
 
     private fun openOnlyIfNeeded(url: String) {
-        if (permissionRequester.isGranted(this)) {
+        if (ServiceLocator.permissionChecker.isGranted(Permission.STORAGE)) {
             startService(QueueService.buildIntent(this, url))
         } else {
             startActivity(MainActivity.buildIntent(this, url))

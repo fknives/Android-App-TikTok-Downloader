@@ -23,6 +23,8 @@
     <string name="video_private_error">Video seems to be PRIVATE</string>
     <string name="permission_request">Permission Needed</string>
     <string name="permission_rationale">External Storage permission is needed in order to save the video to your device</string>
+    <string name="notification_permission_request">Notifications Needed</string>
+    <string name="notification_permission_rationale">Notification permission is needed so downloads can keep running in the background and so you are notified when a download finishes or fails.</string>
     <string name="ok">OK</string>
     <string name="cant_operate_without_permission">Can\'t operate without external storage permission</string>
     <string name="captcha_error">Captcha seems necessary, try later!</string>

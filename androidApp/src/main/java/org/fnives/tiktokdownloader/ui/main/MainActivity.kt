@@ -43,13 +43,11 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
 import org.fnives.tiktokdownloader.R
-import org.fnives.tiktokdownloader.di.ServiceLocator
 import org.fnives.tiktokdownloader.di.provideViewModels
 import org.fnives.tiktokdownloader.ui.TikTokDownloaderTheme
 import org.fnives.tiktokdownloader.ui.main.help.HelpPage
 import org.fnives.tiktokdownloader.ui.main.queue.QueuePage
 import org.fnives.tiktokdownloader.ui.main.settings.SettingsPage
-import org.fnives.tiktokdownloader.ui.permission.PermissionRequester
 import org.fnives.tiktokdownloader.ui.service.QueueService
 import org.fnives.tiktokdownloader.ui.shared.LocalSnackbarHostState
 import org.fnives.tiktokdownloader.ui.shared.NoPaddingSnackbar
@@ -57,13 +55,9 @@ import org.fnives.tiktokdownloader.ui.shared.NoPaddingSnackbar
 class MainActivity : AppCompatActivity() {
 
     private val viewModel by provideViewModels<MainViewModel>()
-    private val permissionRequester: PermissionRequester by lazy {
-        ServiceLocator.permissionModule.permissionRequester
-    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        permissionRequester(this@MainActivity)
         stopService(QueueService.buildIntent(this))
 
         setContent {
@@ -75,6 +69,8 @@ class MainActivity : AppCompatActivity() {
                     snackbarHostState.showSnackbar(resources.getString(it.stringRes))
                 }
             }
+            RequestStoragePermissionEffect()
+            RequestNotificationPermissionEffectIfNeeded()
 
             TikTokDownloaderTheme {
                 CompositionLocalProvider(LocalSnackbarHostState provides snackbarHostState) {

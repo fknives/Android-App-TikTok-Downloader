@@ -11,6 +11,7 @@ import org.fnives.tiktokdownloader.di.module.NetworkModule
 import org.fnives.tiktokdownloader.di.module.PermissionModule
 import org.fnives.tiktokdownloader.di.module.UseCaseModule
 import org.fnives.tiktokdownloader.di.module.ViewModelModule
+import org.fnives.tiktokdownloader.ui.permission.PermissionChecker
 import org.fnives.tiktokdownloader.ui.service.QueueServiceViewModel
 import java.util.concurrent.TimeUnit
 
@@ -25,6 +26,9 @@ object ServiceLocator {
     private var _permissionModule: PermissionModule? = null
     val permissionModule: PermissionModule
         get() = _permissionModule ?: throw IllegalStateException("$this.start has not been called!")
+
+    val permissionChecker: PermissionChecker
+        get() = permissionModule.permissionChecker
 
     private var _useCaseModule: UseCaseModule? = null
     val useCaseModule: UseCaseModule
@@ -46,7 +50,7 @@ object ServiceLocator {
             networkModule = networkModule
         )
         _useCaseModule = useCaseModule
-        _permissionModule = PermissionModule()
+        _permissionModule = PermissionModule(context)
         _viewModelModule = ViewModelModule(useCaseModule)
     }
 

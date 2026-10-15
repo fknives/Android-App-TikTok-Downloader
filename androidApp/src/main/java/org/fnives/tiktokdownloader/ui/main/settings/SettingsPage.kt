@@ -26,11 +26,14 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import org.fnives.tiktokdownloader.R
 import org.fnives.tiktokdownloader.di.ServiceLocator
 import org.fnives.tiktokdownloader.errortracking.SendErrorsAsEmail
+import org.fnives.tiktokdownloader.ui.permission.Permission
+import org.fnives.tiktokdownloader.ui.permission.rememberPermissionRequester
 
 @Composable
 fun SettingsPage(
     viewModel: SettingsViewModel = ServiceLocator.viewModel()
 ) {
+    val permissionRequester = rememberPermissionRequester()
     Column(
         Modifier
             .padding(horizontal = 24.dp, vertical = 16.dp)
@@ -53,7 +56,13 @@ fun SettingsPage(
                 val userPreferences by viewModel.userPreferences.collectAsStateWithLifecycle()
                 Row(
                     modifier = Modifier
-                        .clickable { viewModel.setAlwaysOpenApp(!userPreferences.alwaysOpenApp) }
+                        .clickable {
+                            val newValue = !userPreferences.alwaysOpenApp
+                            viewModel.setAlwaysOpenApp(newValue)
+                            if (!newValue) {
+                                permissionRequester.request(Permission.NOTIFICATION)
+                            }
+                        }
                         .fillMaxWidth()
                         .defaultMinSize(minHeight = 48.dp)
                         .padding(horizontal = 16.dp, vertical = 8.dp),
@@ -66,7 +75,12 @@ fun SettingsPage(
                     )
                     Switch(
                         checked = userPreferences.alwaysOpenApp,
-                        onCheckedChange = viewModel::setAlwaysOpenApp
+                        onCheckedChange = { checked ->
+                            viewModel.setAlwaysOpenApp(checked)
+                            if (!checked) {
+                                permissionRequester.request(Permission.NOTIFICATION)
+                            }
+                        }
                     )
                 }
                 val context = LocalContext.current
