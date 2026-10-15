@@ -43,7 +43,7 @@ class VideoInPendingLocalSource(
             .toMutableList()
 
         val index = mutableOrdered.indexOfFirst { it.second.asVideoInPending() == videoInPending }
-        if (index + positionDifference >= mutableOrdered.size) return
+        if (index + positionDifference !in mutableOrdered.indices) return
         val endTime = mutableOrdered[index + positionDifference].first
 
         val direction = -positionDifference / abs(positionDifference)
