@@ -6,15 +6,16 @@ import org.fnives.tiktokdownloader.data.local.persistent.SharedPreferencesManage
 import org.fnives.tiktokdownloader.data.local.persistent.SharedPreferencesManagerImpl
 import org.fnives.tiktokdownloader.data.local.persistent.UserPreferencesStorage
 import org.fnives.tiktokdownloader.data.local.save.video.SaveVideoFile
-import org.fnives.tiktokdownloader.data.local.verify.exists.VerifyFileForUriExists
+import org.fnives.tiktokdownloader.data.local.verify.exists.CachingVerifyFileForUriExists
 import org.fnives.tiktokdownloader.data.local.verify.exists.VerifyFileForUriExistsImpl
 
 class AndroidFileManagementModule(private val context: Context) {
     private val contentResolver: ContentResolver
         get() = context.contentResolver
 
-    val verifyFileForUriExists: VerifyFileForUriExists
-        get() = VerifyFileForUriExistsImpl(contentResolver)
+    val cachingVerifyFileForUriExists: CachingVerifyFileForUriExists by lazy {
+        CachingVerifyFileForUriExists(VerifyFileForUriExistsImpl(contentResolver))
+    }
 
     private val sharedPreferencesManagerImpl by lazy {
         SharedPreferencesManagerImpl.create(context)

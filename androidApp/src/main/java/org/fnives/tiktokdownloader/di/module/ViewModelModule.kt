@@ -18,6 +18,7 @@ class ViewModelModule(private val useCaseModule: UseCaseModule) {
         MainViewModel(
             useCaseModule.videoDownloadingProcessorUseCase,
             useCaseModule.addVideoToQueueUseCase,
+            useCaseModule.refreshVideosExistenceUseCase,
             savedStateHandle
         )
 

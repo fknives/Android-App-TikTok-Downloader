@@ -4,6 +4,9 @@ import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -12,6 +15,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.fnives.tiktokdownloader.data.model.ProcessState
 import org.fnives.tiktokdownloader.data.usecase.AddVideoToQueueUseCase
+import org.fnives.tiktokdownloader.data.usecase.RefreshVideosExistenceUseCase
 import org.fnives.tiktokdownloader.data.usecase.VideoDownloadingProcessorUseCase
 import org.fnives.tiktokdownloader.ui.main.MainActivity.Companion.INTENT_EXTRA_URL
 import org.fnives.tiktokdownloader.ui.shared.Event
@@ -19,8 +23,9 @@ import org.fnives.tiktokdownloader.ui.shared.Event
 class MainViewModel(
     private val processor: VideoDownloadingProcessorUseCase,
     private val addVideoToQueueUseCase: AddVideoToQueueUseCase,
+    private val refreshVideosExistenceUseCase: RefreshVideosExistenceUseCase,
     savedStateHandle: SavedStateHandle
-) : ViewModel() {
+) : ViewModel(), LifecycleEventObserver {
 
     private var _refreshActionVisibility by mutableStateOf(false)
     private var _currentScreen by mutableStateOf<Screen>(Screen.QUEUE)
@@ -79,6 +84,12 @@ class MainViewModel(
 
     fun onScreenSelected(screen: Screen) {
         _currentScreen = screen
+    }
+
+    override fun onStateChanged(source: LifecycleOwner, event: Lifecycle.Event) {
+        if (event == Lifecycle.Event.ON_RESUME) viewModelScope.launch {
+            refreshVideosExistenceUseCase()
+        }
     }
 
     enum class ErrorMessage {

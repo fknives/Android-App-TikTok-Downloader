@@ -17,10 +17,10 @@ if (signingFile.exists()) {
     println("Warning: No Signing Config found")
 }
 
-val keyAlias: String = signingProperties.getProperty("KEY_ALIAS", "")
-val keyPassword: String = signingProperties.getProperty("KEY_PASSWORD", "")
-val storePassword: String = signingProperties.getProperty("STORE_PASSWORD", "")
-val keystoreFile: String = signingProperties.getProperty("KEYSTORE_FILE", "")
+val releaseKeyAlias: String = signingProperties.getProperty("KEY_ALIAS", "")
+val releaseKeyPassword: String = signingProperties.getProperty("KEY_PASSWORD", "")
+val releaseStorePassword: String = signingProperties.getProperty("STORE_PASSWORD", "")
+val releaseKeystoreFile: String = signingProperties.getProperty("KEYSTORE_FILE", "")
 
 kotlin {
     compilerOptions {
@@ -46,12 +46,12 @@ android {
     }
     signingConfigs {
         create("release") {
-            keyAlias = keyAlias
-            keyPassword = keyPassword
-            if (keystoreFile.isNotBlank()) {
-                storeFile = file(keystoreFile)
+            keyAlias = releaseKeyAlias
+            keyPassword = releaseKeyPassword
+            if (releaseKeystoreFile.isNotBlank()) {
+                storeFile = file(releaseKeystoreFile)
             }
-            storePassword = storePassword
+            storePassword = releaseStorePassword
         }
     }
     buildTypes {

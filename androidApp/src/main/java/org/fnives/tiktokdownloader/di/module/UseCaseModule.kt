@@ -5,6 +5,7 @@ import org.fnives.tiktokdownloader.data.usecase.AddVideoToQueueUseCase
 import org.fnives.tiktokdownloader.data.usecase.GetUserPreferences
 import org.fnives.tiktokdownloader.data.usecase.MoveVideoInQueueUseCase
 import org.fnives.tiktokdownloader.data.usecase.ObserveUserPreferences
+import org.fnives.tiktokdownloader.data.usecase.RefreshVideosExistenceUseCase
 import org.fnives.tiktokdownloader.data.usecase.RemoveVideoFromQueueUseCase
 import org.fnives.tiktokdownloader.data.usecase.SetUserPreferences
 import org.fnives.tiktokdownloader.data.usecase.StateOfVideosObservableUseCase
@@ -21,6 +22,11 @@ class UseCaseModule(
             videoDownloadedLocalSource = localSourceModule.videoDownloadedLocalSource,
             videoInProgressLocalSource = localSourceModule.videoInProgressLocalSource,
             dispatcher = Dispatchers.IO
+        )
+
+    val refreshVideosExistenceUseCase: RefreshVideosExistenceUseCase
+        get() = RefreshVideosExistenceUseCase(
+            videoDownloadedLocalSource = localSourceModule.videoDownloadedLocalSource
         )
 
     private val urlVerificationUseCase: UrlVerificationUseCase
