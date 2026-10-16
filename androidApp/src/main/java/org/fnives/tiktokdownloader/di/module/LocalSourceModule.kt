@@ -13,7 +13,8 @@ class LocalSourceModule(private val androidFileManagementModule: AndroidFileMana
         VideoDownloadedLocalSource(
             saveVideoFile = androidFileManagementModule.saveVideoFile,
             sharedPreferencesManagerImpl = androidFileManagementModule.sharedPreferencesManager,
-            verifyFileForUriExists = androidFileManagementModule.verifyFileForUriExists
+            verifyFileForUriExists = androidFileManagementModule.cachingVerifyFileForUriExists,
+            cacheInvalidation = androidFileManagementModule.cachingVerifyFileForUriExists
         )
     }
 

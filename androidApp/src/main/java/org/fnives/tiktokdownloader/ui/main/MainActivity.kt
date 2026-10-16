@@ -59,6 +59,7 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         stopService(QueueService.buildIntent(this))
+        lifecycle.addObserver(viewModel)
 
         setContent {
             val snackbarHostState = remember { SnackbarHostState() }

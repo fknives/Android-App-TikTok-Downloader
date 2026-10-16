@@ -5,42 +5,56 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.merge
 import kotlinx.coroutines.launch
 import org.fnives.tiktokdownloader.R
 import org.fnives.tiktokdownloader.data.model.ProcessState
 import org.fnives.tiktokdownloader.data.usecase.AddVideoToQueueUseCase
+import org.fnives.tiktokdownloader.data.usecase.HasPendingVideosUseCase
 import org.fnives.tiktokdownloader.data.usecase.VideoDownloadingProcessorUseCase
 
 class QueueServiceViewModel(
     private val addVideoToQueueUseCase: AddVideoToQueueUseCase,
+    private val hasPendingVideosUseCase: HasPendingVideosUseCase,
     private val videoDownloadingProcessorUseCase: VideoDownloadingProcessorUseCase
 ) {
 
     private val parentJob = Job()
     private val viewModelScope = CoroutineScope(parentJob + Dispatchers.Main)
-    private var listeningJob: Job? = null
+    private var collectionJob: Job? = null
 
     val notificationState: StateFlow<NotificationState?>
-        field = MutableStateFlow<NotificationState?>(null)
+        field = MutableStateFlow(null)
 
-    fun onUrlReceived(url: String) {
-        if (!addVideoToQueueUseCase(url)) {
-            return
-        }
-        if (listeningJob == null) {
-            listeningJob = startListening()
-        }
+    fun fetch(url: String?) {
+        url?.let(addVideoToQueueUseCase::invoke)
         videoDownloadingProcessorUseCase.fetchVideoInState()
+        if (collectionJob != null) return
+        collectionJob = viewModelScope.launch {
+            merge(
+                hasPendingVideosUseCase().filter { !it }.map { NotificationState.Finish },
+                videoDownloadingProcessorUseCase.processEvents.map(::mapState)
+            ).collect {
+                notificationState.value = it
+            }
+        }
     }
 
-    private fun startListening(): Job = viewModelScope.launch {
-        videoDownloadingProcessorUseCase.processState.collect {
-            val value = when (it) {
+    fun onClear() {
+        parentJob.cancel()
+    }
+
+    companion object {
+
+        private fun mapState(state: ProcessState) =
+            when (state) {
                 is ProcessState.Processing ->
-                    NotificationState.Processing(it.videoInPending.url)
+                    NotificationState.Processing(state.videoInPending.url)
 
                 is ProcessState.Processed ->
-                    NotificationState.Processing(it.videoDownloaded.url)
+                    NotificationState.Processing(state.videoDownloaded.url)
 
                 ProcessState.NetworkError ->
                     NotificationState.Error(R.string.network_error)
@@ -61,11 +75,5 @@ class QueueServiceViewModel(
                 ProcessState.VideoDeletedError -> NotificationState.Error(R.string.video_deleted_error)
                 ProcessState.VideoPrivateError -> NotificationState.Error(R.string.video_private_error)
             }
-            notificationState.value = value
-        }
-    }
-
-    fun onClear() {
-        parentJob.cancel()
     }
 }

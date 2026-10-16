@@ -11,6 +11,7 @@ class ViewModelModule(private val useCaseModule: UseCaseModule) {
     val queueServiceViewModel: QueueServiceViewModel
         get() = QueueServiceViewModel(
             useCaseModule.addVideoToQueueUseCase,
+            useCaseModule.hasPendingVideosUseCase,
             useCaseModule.videoDownloadingProcessorUseCase
         )
 
@@ -18,6 +19,7 @@ class ViewModelModule(private val useCaseModule: UseCaseModule) {
         MainViewModel(
             useCaseModule.videoDownloadingProcessorUseCase,
             useCaseModule.addVideoToQueueUseCase,
+            useCaseModule.refreshVideosExistenceUseCase,
             savedStateHandle
         )
 

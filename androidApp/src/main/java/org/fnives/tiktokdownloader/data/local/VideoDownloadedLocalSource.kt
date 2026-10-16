@@ -2,7 +2,7 @@ package org.fnives.tiktokdownloader.data.local
 
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.transform
 import org.fnives.tiktokdownloader.data.local.exceptions.StorageException
 import org.fnives.tiktokdownloader.data.local.persistent.SharedPreferencesManager
 import org.fnives.tiktokdownloader.data.local.persistent.addTimeAtStart
@@ -10,6 +10,7 @@ import org.fnives.tiktokdownloader.data.local.persistent.getTimeAndOriginal
 import org.fnives.tiktokdownloader.data.local.persistent.joinNormalized
 import org.fnives.tiktokdownloader.data.local.persistent.separateIntoDenormalized
 import org.fnives.tiktokdownloader.data.local.save.video.SaveVideoFile
+import org.fnives.tiktokdownloader.data.local.verify.exists.StoredVideosCacheInvalidation
 import org.fnives.tiktokdownloader.data.local.verify.exists.VerifyFileForUriExists
 import org.fnives.tiktokdownloader.data.model.VideoDownloaded
 import org.fnives.tiktokdownloader.data.model.VideoInSavingIntoFile
@@ -20,25 +21,38 @@ import org.fnives.tiktokdownloader.errortracking.ErrorTracer
 class VideoDownloadedLocalSource(
     private val saveVideoFile: SaveVideoFile,
     private val sharedPreferencesManagerImpl: SharedPreferencesManager,
-    private val verifyFileForUriExists: VerifyFileForUriExists
+    private val verifyFileForUriExists: VerifyFileForUriExists,
+    private val cacheInvalidation: StoredVideosCacheInvalidation
 ) {
 
     val savedVideos: Flow<List<VideoDownloaded>>
-        get() = sharedPreferencesManagerImpl.downloadedVideosFlow.map { stringSet ->
-            val currentStored = stringSet.map { savedText ->
-                val (time, data) = savedText.getTimeAndOriginal()
-                Triple(savedText, time, data)
-            }
-                .sortedByDescending { it.second }
-                .map { it.first to it.third.asVideoDownloaded() }
+        get() = sharedPreferencesManagerImpl.downloadedVideosFlow.transform { stringSet ->
+            val currentStored = stringSet.asStoredVideos()
 
-            val filtered = currentStored.filter { verifyFileForUriExists(it.second.uri) }
+            emit(currentStored.map { it.second })
+
+            val filtered = filterByExistenceOfUrl(currentStored)
             if (currentStored != filtered) {
                 sharedPreferencesManagerImpl.downloadedVideos = filtered.map { it.first }.toSet()
+                emit(filtered.map { it.second })
             }
-            filtered.map { it.second }
         }
             .distinctUntilChanged()
+
+    suspend fun filterByExistenceOfUrl(items: List<Pair<String, VideoDownloaded>>) : List<Pair<String, VideoDownloaded>> {
+        if (items.isEmpty()) return items
+        val existing = verifyFileForUriExists(items.map { it.second.uri })
+        return items.filter { it.second.uri in existing }
+    }
+
+    suspend fun refreshStoredVideos() {
+        cacheInvalidation.invalidateCache()
+        val currentStored = sharedPreferencesManagerImpl.downloadedVideos.asStoredVideos()
+        val filtered = filterByExistenceOfUrl(currentStored)
+        if (currentStored != filtered) {
+            sharedPreferencesManagerImpl.downloadedVideos = filtered.map { it.first }.toSet()
+        }
+    }
 
     @Throws(StorageException::class, NetworkException::class)
     fun saveVideo(videoInProcess: VideoInSavingIntoFile): VideoDownloaded =
@@ -90,6 +104,14 @@ class VideoDownloadedLocalSource(
     }
 
     companion object {
+
+        private fun Set<String>.asStoredVideos(): List<Pair<String, VideoDownloaded>> =
+            map { savedText ->
+                val (time, data) = savedText.getTimeAndOriginal()
+                Triple(savedText, time, data)
+            }
+                .sortedByDescending { it.second }
+                .map { it.first to it.third.asVideoDownloaded() }
 
         private fun VideoDownloaded.asString(): String =
             listOf(id, url, uri).joinNormalized()

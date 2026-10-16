@@ -1,11 +1,15 @@
 package org.fnives.tiktokdownloader.ui.main
 
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.SavedStateHandle
 import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.runBlocking
 import org.fnives.tiktokdownloader.data.model.ProcessState
 import org.fnives.tiktokdownloader.data.model.VideoDownloaded
 import org.fnives.tiktokdownloader.data.model.VideoInPending
 import org.fnives.tiktokdownloader.data.usecase.AddVideoToQueueUseCase
+import org.fnives.tiktokdownloader.data.usecase.RefreshVideosExistenceUseCase
 import org.fnives.tiktokdownloader.data.usecase.VideoDownloadingProcessorUseCase
 import org.fnives.tiktokdownloader.helper.junit.rule.MainDispatcherExtension
 import org.fnives.tiktokdownloader.ui.shared.Event
@@ -20,6 +24,7 @@ import org.mockito.kotlin.doReturn
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.times
 import org.mockito.kotlin.verify
+import org.mockito.kotlin.verifyNoInteractions
 import org.mockito.kotlin.verifyNoMoreInteractions
 import org.mockito.kotlin.whenever
 import java.util.stream.Stream
@@ -31,6 +36,7 @@ class MainViewModelTest {
     private lateinit var processStateFlow: MutableSharedFlow<ProcessState>
     private lateinit var mockVideoDownloadingProcessorUseCase: VideoDownloadingProcessorUseCase
     private lateinit var mockAddVideoToQueueUseCase: AddVideoToQueueUseCase
+    private lateinit var mockRefreshVideosExistenceUseCase: RefreshVideosExistenceUseCase
     private lateinit var sut: MainViewModel
 
     @BeforeEach
@@ -38,10 +44,12 @@ class MainViewModelTest {
         processStateFlow = MutableSharedFlow(replay = 1)
         mockVideoDownloadingProcessorUseCase = mock()
         mockAddVideoToQueueUseCase = mock()
-        whenever(mockVideoDownloadingProcessorUseCase.processState).doReturn(processStateFlow)
+        mockRefreshVideosExistenceUseCase = mock()
+        whenever(mockVideoDownloadingProcessorUseCase.processEvents).doReturn(processStateFlow)
         sut = MainViewModel(
             mockVideoDownloadingProcessorUseCase,
             mockAddVideoToQueueUseCase,
+            mockRefreshVideosExistenceUseCase,
             SavedStateHandle()
         )
     }
@@ -54,6 +62,7 @@ class MainViewModelTest {
         MainViewModel(
             mockVideoDownloadingProcessorUseCase,
             mockAddVideoToQueueUseCase,
+            mockRefreshVideosExistenceUseCase,
             savedStateHandle
         )
 
@@ -70,7 +79,7 @@ class MainViewModelTest {
 
         Assertions.assertEquals(false, sut.refreshActionVisibility)
 
-        verify(mockVideoDownloadingProcessorUseCase, times(1)).processState
+        verify(mockVideoDownloadingProcessorUseCase, times(1)).processEvents
         verify(mockVideoDownloadingProcessorUseCase, times(1)).fetchVideoInState()
         verifyNoMoreInteractions(mockVideoDownloadingProcessorUseCase)
     }
@@ -81,7 +90,7 @@ class MainViewModelTest {
 
         Assertions.assertEquals(false, sut.refreshActionVisibility)
 
-        verify(mockVideoDownloadingProcessorUseCase, times(1)).processState
+        verify(mockVideoDownloadingProcessorUseCase, times(1)).processEvents
         verify(mockVideoDownloadingProcessorUseCase, times(1)).fetchVideoInState()
         verifyNoMoreInteractions(mockVideoDownloadingProcessorUseCase)
     }
@@ -100,7 +109,7 @@ class MainViewModelTest {
         processStateFlow.tryEmit(processState)
 
         Assertions.assertEquals(expected, sut.refreshActionVisibility)
-        verify(mockVideoDownloadingProcessorUseCase, times(1)).processState
+        verify(mockVideoDownloadingProcessorUseCase, times(1)).processEvents
         verify(mockVideoDownloadingProcessorUseCase, times(1)).fetchVideoInState()
         verifyNoMoreInteractions(mockVideoDownloadingProcessorUseCase)
     }
@@ -124,7 +133,7 @@ class MainViewModelTest {
             Assertions.assertTrue { sut.errorMessage is Event }
             Assertions.assertEquals(expected, sut.errorMessage?.item)
         }
-        verify(mockVideoDownloadingProcessorUseCase, times(1)).processState
+        verify(mockVideoDownloadingProcessorUseCase, times(1)).processEvents
         verify(mockVideoDownloadingProcessorUseCase, times(1)).fetchVideoInState()
         verifyNoMoreInteractions(mockVideoDownloadingProcessorUseCase)
     }
@@ -148,7 +157,7 @@ class MainViewModelTest {
         sut.onFetchDownloadClicked()
 
         verify(mockVideoDownloadingProcessorUseCase, times(2)).fetchVideoInState()
-        verify(mockVideoDownloadingProcessorUseCase, times(1)).processState
+        verify(mockVideoDownloadingProcessorUseCase, times(1)).processEvents
         verifyNoMoreInteractions(mockVideoDownloadingProcessorUseCase)
     }
 
@@ -159,8 +168,22 @@ class MainViewModelTest {
         sut.onFetchDownloadClicked()
 
         verify(mockVideoDownloadingProcessorUseCase, times(4)).fetchVideoInState()
-        verify(mockVideoDownloadingProcessorUseCase, times(1)).processState
+        verify(mockVideoDownloadingProcessorUseCase, times(1)).processEvents
         verifyNoMoreInteractions(mockVideoDownloadingProcessorUseCase)
+    }
+
+    @Test
+    fun GIVEN_initialized_WHEN_lifecycle_resumed_THEN_refresh_is_triggered() = runBlocking<Unit> {
+        sut.onStateChanged(mock<LifecycleOwner>(), Lifecycle.Event.ON_RESUME)
+
+        verify(mockRefreshVideosExistenceUseCase, times(1)).invoke()
+    }
+
+    @Test
+    fun GIVEN_initialized_WHEN_lifecycle_not_resumed_THEN_refresh_is_not_triggered() = runBlocking<Unit> {
+        sut.onStateChanged(mock<LifecycleOwner>(), Lifecycle.Event.ON_START)
+
+        verifyNoInteractions(mockRefreshVideosExistenceUseCase)
     }
 
     companion object {

@@ -1,6 +1,5 @@
 package org.fnives.tiktokdownloader.data.local
 
-import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.async
 import kotlinx.coroutines.delay
@@ -13,6 +12,7 @@ import kotlinx.coroutines.yield
 import org.fnives.tiktokdownloader.data.local.exceptions.StorageException
 import org.fnives.tiktokdownloader.data.local.persistent.SharedPreferencesManager
 import org.fnives.tiktokdownloader.data.local.save.video.SaveVideoFile
+import org.fnives.tiktokdownloader.data.local.verify.exists.StoredVideosCacheInvalidation
 import org.fnives.tiktokdownloader.data.local.verify.exists.VerifyFileForUriExists
 import org.fnives.tiktokdownloader.data.model.VideoDownloaded
 import org.fnives.tiktokdownloader.data.model.VideoInSavingIntoFile
@@ -25,6 +25,8 @@ import org.junit.jupiter.api.Timeout
 import org.mockito.kotlin.anyOrNull
 import org.mockito.kotlin.doReturn
 import org.mockito.kotlin.mock
+import org.mockito.kotlin.times
+import org.mockito.kotlin.verify
 import org.mockito.kotlin.verifyNoInteractions
 import org.mockito.kotlin.whenever
 import java.io.InputStream
@@ -38,17 +40,20 @@ class VideoDownloadedLocalSourceTest {
     private lateinit var sharedPreferencesManager: SharedPreferencesManager
     private lateinit var mockSaveVideoFile: SaveVideoFile
     private lateinit var mockVerifyFileForUriExists: VerifyFileForUriExists
+    private lateinit var mockCacheInvalidation: StoredVideosCacheInvalidation
 
     @BeforeEach
     fun setup() {
         sharedPreferencesManager = InMemorySharedPreferencesManager()
         mockSaveVideoFile = mock()
         mockVerifyFileForUriExists = mock()
+        mockCacheInvalidation = mock()
 
         sut = VideoDownloadedLocalSource(
             saveVideoFile = mockSaveVideoFile,
             sharedPreferencesManagerImpl = sharedPreferencesManager,
-            verifyFileForUriExists = mockVerifyFileForUriExists
+            verifyFileForUriExists = mockVerifyFileForUriExists,
+            cacheInvalidation = mockCacheInvalidation
         )
     }
 
@@ -82,7 +87,7 @@ class VideoDownloadedLocalSourceTest {
             val expectedDir = "TikTok_Downloader"
             val expectedFileName = videoInSavingIntoFile.id + ".b"
             whenever(mockSaveVideoFile.invoke(expectedDir, expectedFileName, videoInSavingIntoFile)).doReturn("almaUri")
-            whenever(mockVerifyFileForUriExists.invoke("almaUri")).doReturn(true)
+            whenever(mockVerifyFileForUriExists.invoke(listOf("almaUri"))).doReturn(setOf("almaUri"))
 
             val actual = async(coroutineContext) {
                 sut.savedVideos.take(2).toList()
@@ -95,7 +100,7 @@ class VideoDownloadedLocalSourceTest {
         }
 
     @Test
-    fun GIVEN_observing_saved_videos_AND_uri_doesnt_exists_WHEN_video_is_saved_THEN_videoDownloaded_is_sent_out() =
+    fun GIVEN_observing_saved_videos_AND_uri_doesnt_exists_WHEN_video_is_saved_THEN_it_is_emitted_first_and_then_pruned() =
         runBlocking<Unit> {
             val videoInSavingIntoFile = VideoInSavingIntoFile(
                 id = "id",
@@ -106,43 +111,68 @@ class VideoDownloadedLocalSourceTest {
             val expectedDir = "TikTok_Downloader"
             val expectedFileName = videoInSavingIntoFile.id + ".b"
             whenever(mockSaveVideoFile.invoke(expectedDir, expectedFileName, videoInSavingIntoFile)).doReturn("almaUri")
-            whenever(mockVerifyFileForUriExists.invoke("almaUri")).doReturn(false)
+            whenever(mockVerifyFileForUriExists.invoke(listOf("almaUri"))).doReturn(emptySet())
 
             val actual = async(coroutineContext) {
-                sut.savedVideos.take(1).toList()
+                sut.savedVideos.take(3).toList()
             }
             yield()
             sut.saveVideo(videoInSavingIntoFile)
 
-            Assertions.assertEquals(emptyList<VideoDownloaded>(), sut.savedVideos.first())
-            Assertions.assertEquals(listOf(emptyList<VideoDownloaded>()), actual.await())
+            Assertions.assertEquals(
+                listOf(
+                    emptyList<VideoDownloaded>(),
+                    listOf(VideoDownloaded("id", "alma", "almaUri")),
+                    emptyList<VideoDownloaded>(),
+                ),
+                actual.await()
+            )
+            Assertions.assertEquals(emptySet<String>(), sharedPreferencesManager.downloadedVideos)
         }
 
     @Test
-    fun GIVEN_observing_saved_videos_for_TWO_AND_uri_doesnt_exists_WHEN_video_is_saved_THEN_videoDownloaded_is_sent_out() {
-        Assertions.assertThrows(CancellationException::class.java) {
-            runBlocking<Unit> {
-                val videoInSavingIntoFile = VideoInSavingIntoFile(
-                    id = "id",
-                    url = "alma",
-                    contentType = VideoInSavingIntoFile.ContentType("a", "b"),
-                    byteStream = FalseInputStream()
-                )
-                val expectedDir = "TikTok_Downloader"
-                val expectedFileName = videoInSavingIntoFile.id + ".b"
-                whenever(mockSaveVideoFile.invoke(expectedDir, expectedFileName, videoInSavingIntoFile)).doReturn("almaUri")
-                whenever(mockVerifyFileForUriExists.invoke("almaUri")).doReturn(false)
+    fun GIVEN_a_stored_video_whose_uri_doesnt_exist_WHEN_observing_THEN_it_is_emitted_and_then_pruned() =
+        runBlocking<Unit> {
+            val videoInSavingIntoFile = VideoInSavingIntoFile(
+                id = "id",
+                url = "alma",
+                contentType = VideoInSavingIntoFile.ContentType("a", "b"),
+                byteStream = FalseInputStream()
+            )
+            whenever(mockSaveVideoFile.invoke(anyOrNull(), anyOrNull(), anyOrNull())).doReturn("almaUri")
+            whenever(mockVerifyFileForUriExists.invoke(anyOrNull())).doReturn(emptySet())
+            sut.saveVideo(videoInSavingIntoFile)
 
-                val actual = async(coroutineContext) {
-                    sut.savedVideos.take(2).toList()
-                }
-                yield()
-                sut.saveVideo(videoInSavingIntoFile)
+            val emissions = sut.savedVideos.take(2).toList()
 
-                withTimeout(300) { actual.await() }
-            }
+            Assertions.assertEquals(
+                listOf(
+                    listOf(VideoDownloaded("id", "alma", "almaUri")),
+                    emptyList<VideoDownloaded>(),
+                ),
+                emissions
+            )
+            Assertions.assertEquals(emptySet<String>(), sharedPreferencesManager.downloadedVideos)
         }
-    }
+
+    @Test
+    fun GIVEN_stored_video_whose_file_is_gone_WHEN_refreshing_THEN_cache_is_invalidated_and_it_is_pruned() =
+        runBlocking<Unit> {
+            val videoInSavingIntoFile = VideoInSavingIntoFile(
+                id = "id",
+                url = "alma",
+                contentType = VideoInSavingIntoFile.ContentType("a", "b"),
+                byteStream = FalseInputStream()
+            )
+            whenever(mockSaveVideoFile.invoke(anyOrNull(), anyOrNull(), anyOrNull())).doReturn("almaUri")
+            sut.saveVideo(videoInSavingIntoFile)
+            whenever(mockVerifyFileForUriExists.invoke(anyOrNull())).doReturn(emptySet())
+
+            sut.refreshStoredVideos()
+
+            verify(mockCacheInvalidation, times(1)).invalidateCache()
+            Assertions.assertEquals(emptySet<String>(), sharedPreferencesManager.downloadedVideos)
+        }
 
     @Test
     fun GIVEN_exception_from_savingUseCase_WHEN_saving_video_THEN_the_exception_is_wrapped_into_FileException() {
@@ -202,7 +232,7 @@ class VideoDownloadedLocalSourceTest {
                 contentType = VideoInSavingIntoFile.ContentType("a2", "b2"),
                 byteStream = FalseInputStream()
             )
-            whenever(mockVerifyFileForUriExists.invoke(anyOrNull())).doReturn(true)
+            whenever(mockVerifyFileForUriExists.invoke(anyOrNull())).then { (it.arguments[0] as List<String>).toSet() }
             whenever(mockSaveVideoFile.invoke(anyOrNull(), anyOrNull(), anyOrNull())).then {
                 "uri: " + (it.arguments[1] as String)
             }
@@ -234,7 +264,7 @@ class VideoDownloadedLocalSourceTest {
             contentType = VideoInSavingIntoFile.ContentType("a2", "b2"),
             byteStream = FalseInputStream()
         )
-        whenever(mockVerifyFileForUriExists.invoke(anyOrNull())).doReturn(true)
+        whenever(mockVerifyFileForUriExists.invoke(anyOrNull())).then { (it.arguments[0] as List<String>).toSet() }
         whenever(mockSaveVideoFile.invoke(anyOrNull(), anyOrNull(), anyOrNull())).then {
             "uri: " + (it.arguments[1] as String)
         }

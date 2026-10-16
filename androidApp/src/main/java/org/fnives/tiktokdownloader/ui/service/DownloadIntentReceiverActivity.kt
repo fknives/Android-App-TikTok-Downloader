@@ -32,7 +32,7 @@ class DownloadIntentReceiverActivity : AppCompatActivity() {
 
     private fun openOnlyIfNeeded(url: String) {
         if (ServiceLocator.permissionChecker.isGranted(Permission.STORAGE)) {
-            startService(QueueService.buildIntent(this, url))
+            startForegroundService(QueueService.buildIntent(this, url))
         } else {
             startActivity(MainActivity.buildIntent(this, url))
         }

@@ -121,6 +121,8 @@ fun QueuePage(
                         dismissState,
                         backgroundContent = {},
                         onDismiss = {
+                            orderedItems =
+                                orderedItems.toMutableList().apply { remove(item) }
                             viewModel.onElementDeleted(item)
                         }
                     ) {
