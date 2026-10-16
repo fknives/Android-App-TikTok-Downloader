@@ -40,7 +40,7 @@ class QueueService : Service() {
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         viewModel.fetch(intent?.url)
         startForeground()
-        return Service.START_NOT_STICKY
+        return super.onStartCommand(intent, flags, startId)
     }
 
     private fun startForeground() {
