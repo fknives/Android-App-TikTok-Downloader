@@ -1,3 +1,5 @@
+@file:Suppress("TestFunctionName")
+
 package org.fnives.tiktokdownloader.data.network
 
 import kotlinx.coroutines.runBlocking
@@ -118,7 +120,7 @@ class TikTokDownloadRemoteSourceTest {
     }
 
     @Test
-    fun GIVEN_proper_responses_as_variant1_THEN_parsed_properly() = runBlocking<Unit> {
+    fun GIVEN_proper_responses_as_variant1_THEN_parsed_properly() = runBlocking {
         val expectedId = "alma"
         val expectedUrl = TEST_URL
         val expectedContentType = VideoInSavingIntoFile.ContentType("video", "mp4")
@@ -143,7 +145,7 @@ class TikTokDownloadRemoteSourceTest {
 
 
     @Test
-    fun GIVEN_proper_responses_as_variant2_THEN_parsed_properly() = runBlocking<Unit> {
+    fun GIVEN_proper_responses_as_variant2_THEN_parsed_properly() = runBlocking {
         val expectedId = "e-alma"
         val expectedUrl = TEST_URL
         val expectedContentType = VideoInSavingIntoFile.ContentType("citrom", "mp4")
@@ -169,7 +171,7 @@ class TikTokDownloadRemoteSourceTest {
     @Test
     fun GIVEN_incorrect_first_response_THEN_NetworkException_is_thrown() {
         Assertions.assertThrows(NetworkException::class.java) {
-            runBlocking<Unit> {
+            runBlocking {
                 mockWebServer.enqueue(MockResponse().setResponseCode(500))
 
                 sut.getVideo(VideoInPending("", TEST_URL))
@@ -180,7 +182,7 @@ class TikTokDownloadRemoteSourceTest {
     @Test
     fun GIVEN_proper_first_incorrect_second_response_THEN_NetworkException_is_thrown() {
         Assertions.assertThrows(NetworkException::class.java) {
-            runBlocking<Unit> {
+            runBlocking {
                 val shortenedUrlResponseBody = readResourceFileShortenedUrlResponse()
                 mockWebServer.enqueue(MockResponse().setResponseCode(200).setBody(shortenedUrlResponseBody))
                 mockWebServer.enqueue(MockResponse().setResponseCode(500))
@@ -193,7 +195,7 @@ class TikTokDownloadRemoteSourceTest {
     @Test
     fun GIVEN_proper_first_and_second_but_incorrect_video_response_THEN_NetworkException_is_thrown() {
         Assertions.assertThrows(NetworkException::class.java) {
-            runBlocking<Unit> {
+            runBlocking {
                 val shortenedUrlResponseBody = readResourceFileShortenedUrlResponse()
                 val mainPageVariant1Response = readResourceFileMainPageVariant2Response()
                 mockWebServer.enqueue(MockResponse().setResponseCode(200).setBody(shortenedUrlResponseBody))
@@ -208,7 +210,7 @@ class TikTokDownloadRemoteSourceTest {
     @Test
     fun GIVEN_not_expected_response_body_as_first_THEN_ParsingException_is_thrown() {
         Assertions.assertThrows(ParsingException::class.java) {
-            runBlocking<Unit> {
+            runBlocking {
                 mockWebServer.enqueue(MockResponse().setResponseCode(200).setBody("this cannot be parsed"))
 
                 sut.getVideo(VideoInPending("", TEST_URL))
@@ -219,7 +221,7 @@ class TikTokDownloadRemoteSourceTest {
     @Test
     fun GIVEN_proper_first_but_not_expected_response_body_as_second_THEN_ParsingException_is_thrown() {
         Assertions.assertThrows(ParsingException::class.java) {
-            runBlocking<Unit> {
+            runBlocking {
                 val shortenedUrlResponseBody = readResourceFileShortenedUrlResponse()
                 mockWebServer.enqueue(MockResponse().setResponseCode(200).setBody(shortenedUrlResponseBody))
                 mockWebServer.enqueue(MockResponse().setResponseCode(200).setBody("this cannot be parsed"))
@@ -236,7 +238,7 @@ class TikTokDownloadRemoteSourceTest {
         response: String
     ) {
         Assertions.assertThrows(CaptchaRequiredException::class.java) {
-            runBlocking<Unit> {
+            runBlocking {
                 mockWebServer.enqueue(MockResponse().setResponseCode(200).setBody(response))
 
                 sut.getVideo(VideoInPending("", TEST_URL))
@@ -251,7 +253,7 @@ class TikTokDownloadRemoteSourceTest {
         response: String
     ) {
         Assertions.assertThrows(CaptchaRequiredException::class.java) {
-            runBlocking<Unit> {
+            runBlocking {
                 val shortenedUrlResponseBody = readResourceFileShortenedUrlResponse()
                 mockWebServer.enqueue(MockResponse().setResponseCode(200).setBody(shortenedUrlResponseBody))
                 mockWebServer.enqueue(MockResponse().setResponseCode(200).setBody(response))
@@ -264,7 +266,7 @@ class TikTokDownloadRemoteSourceTest {
     @Test
     fun GIVEN_deleted_video_response_v1_THEN_proper_Exception_is_Returned() {
         Assertions.assertThrows(VideoDeletedException::class.java) {
-            runBlocking<Unit> {
+            runBlocking {
                 val deletedResponse = readResourceFileDeletedV1UrlResponse()
                 mockWebServer.enqueue(MockResponse().setResponseCode(200).setBody(deletedResponse))
 
@@ -276,7 +278,7 @@ class TikTokDownloadRemoteSourceTest {
     @Test
     fun GIVEN_deleted_video_response_v2_THEN_proper_Exception_is_Returned() {
         Assertions.assertThrows(VideoDeletedException::class.java) {
-            runBlocking<Unit> {
+            runBlocking {
                 val deletedResponse = readResourceFileDeletedV2UrlResponse()
                 mockWebServer.enqueue(MockResponse().setResponseCode(200).setBody(deletedResponse))
 

@@ -7,7 +7,7 @@ import org.mockito.kotlin.mock
 
 class MockSavedStateRegistryOwner(
     override val lifecycle: Lifecycle = MockLifecycle(),
-    private val mockSavedStateRegistry: SavedStateRegistry = mock()
+    mockSavedStateRegistry: SavedStateRegistry = mock()
 ) : SavedStateRegistryOwner {
 
     override val savedStateRegistry: SavedStateRegistry = mockSavedStateRegistry

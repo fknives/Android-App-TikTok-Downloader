@@ -14,8 +14,10 @@ import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.Timeout
+import kotlin.time.Duration.Companion.milliseconds
 
 
+@Suppress("TestFunctionName")
 @Timeout(value = 2)
 class VideoInProgressLocalSourceTest {
 
@@ -29,15 +31,15 @@ class VideoInProgressLocalSourceTest {
     // region VIDEO IN PROGRESS
     @Test
     fun GIVEN_observing_videoInProcessFlow_WHEN_initialization_THEN_it_returns_null() =
-        runBlocking<Unit> {
+        runBlocking {
             Assertions.assertEquals(null, sut.videoInProcessFlow.first())
         }
 
     @Test
     fun GIVEN_observing_videoInProcessFlow_WAITING_for_2_items_WHEN_initialization_THEN_it_timesOut() {
         Assertions.assertThrows(TimeoutCancellationException::class.java) {
-            runBlocking<Unit> {
-                withTimeout(300) {
+            runBlocking {
+                withTimeout(300.milliseconds) {
                     sut.videoInProcessFlow.take(2).toList()
                 }
             }
@@ -46,8 +48,8 @@ class VideoInProgressLocalSourceTest {
 
     @Test
     fun GIVEN_observing_from_videoInProcessFlow_WHEN_markedVideoAsInProgress_THEN_it_is_returned() =
-        runBlocking<Unit> {
-            val actual = async(coroutineContext) {
+        runBlocking {
+            val actual = async {
                 sut.videoInProcessFlow.take(2).toList()
             }
             yield()
@@ -62,7 +64,7 @@ class VideoInProgressLocalSourceTest {
         runBlocking {
             sut.markVideoAsInProgress(VideoInPending("id", "alma"))
 
-            val actual = async(coroutineContext) {
+            val actual = async {
                 sut.videoInProcessFlow.take(2).toList()
             }
             yield()
@@ -77,7 +79,7 @@ class VideoInProgressLocalSourceTest {
         runBlocking {
             sut.markVideoAsInProgress(VideoInPending("id", "alma"))
 
-            val actual = async(coroutineContext) {
+            val actual = async {
                 sut.videoInProcessFlow.take(1).toList()
             }
             yield()

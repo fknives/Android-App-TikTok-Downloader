@@ -30,6 +30,7 @@ import org.mockito.kotlin.verify
 import org.mockito.kotlin.verifyNoInteractions
 import org.mockito.kotlin.whenever
 import java.io.InputStream
+import kotlin.time.Duration.Companion.milliseconds
 
 
 @Suppress("TestFunctionName")
@@ -58,7 +59,7 @@ class VideoDownloadedLocalSourceTest {
     }
 
     @Test
-    fun GIVEN_observing_saved_videos_WHEN_initialized_THEN_emptylist_is_emitted() = runBlocking<Unit> {
+    fun GIVEN_observing_saved_videos_WHEN_initialized_THEN_emptylist_is_emitted() = runBlocking {
         Assertions.assertEquals(emptyList<VideoDownloaded>(), sut.savedVideos.first())
         verifyNoInteractions(mockSaveVideoFile)
         verifyNoInteractions(mockVerifyFileForUriExists)
@@ -67,8 +68,8 @@ class VideoDownloadedLocalSourceTest {
     @Test
     fun GIVEN_observing_saved_videos_WAITING_for_2_items_WHEN_initialization_THEN_it_timesOut() {
         Assertions.assertThrows(TimeoutCancellationException::class.java) {
-            runBlocking<Unit> {
-                withTimeout(300) {
+            runBlocking {
+                withTimeout(300.milliseconds) {
                     sut.savedVideos.take(2).collect { }
                 }
             }
@@ -77,7 +78,7 @@ class VideoDownloadedLocalSourceTest {
 
     @Test
     fun GIVEN_observing_saved_videos_AND_uri_still_exists_WHEN_video_is_saved_THEN_videoDownloaded_is_sent_out() =
-        runBlocking<Unit> {
+        runBlocking {
             val videoInSavingIntoFile = VideoInSavingIntoFile(
                 id = "id",
                 url = "alma",
@@ -89,7 +90,7 @@ class VideoDownloadedLocalSourceTest {
             whenever(mockSaveVideoFile.invoke(expectedDir, expectedFileName, videoInSavingIntoFile)).doReturn("almaUri")
             whenever(mockVerifyFileForUriExists.invoke(listOf("almaUri"))).doReturn(setOf("almaUri"))
 
-            val actual = async(coroutineContext) {
+            val actual = async {
                 sut.savedVideos.take(2).toList()
             }
             yield()
@@ -101,7 +102,7 @@ class VideoDownloadedLocalSourceTest {
 
     @Test
     fun GIVEN_observing_saved_videos_AND_uri_doesnt_exists_WHEN_video_is_saved_THEN_it_is_emitted_first_and_then_pruned() =
-        runBlocking<Unit> {
+        runBlocking {
             val videoInSavingIntoFile = VideoInSavingIntoFile(
                 id = "id",
                 url = "alma",
@@ -113,7 +114,7 @@ class VideoDownloadedLocalSourceTest {
             whenever(mockSaveVideoFile.invoke(expectedDir, expectedFileName, videoInSavingIntoFile)).doReturn("almaUri")
             whenever(mockVerifyFileForUriExists.invoke(listOf("almaUri"))).doReturn(emptySet())
 
-            val actual = async(coroutineContext) {
+            val actual = async {
                 sut.savedVideos.take(3).toList()
             }
             yield()
@@ -121,9 +122,9 @@ class VideoDownloadedLocalSourceTest {
 
             Assertions.assertEquals(
                 listOf(
-                    emptyList<VideoDownloaded>(),
+                    emptyList(),
                     listOf(VideoDownloaded("id", "alma", "almaUri")),
-                    emptyList<VideoDownloaded>(),
+                    emptyList(),
                 ),
                 actual.await()
             )
@@ -132,7 +133,7 @@ class VideoDownloadedLocalSourceTest {
 
     @Test
     fun GIVEN_a_stored_video_whose_uri_doesnt_exist_WHEN_observing_THEN_it_is_emitted_and_then_pruned() =
-        runBlocking<Unit> {
+        runBlocking {
             val videoInSavingIntoFile = VideoInSavingIntoFile(
                 id = "id",
                 url = "alma",
@@ -148,7 +149,7 @@ class VideoDownloadedLocalSourceTest {
             Assertions.assertEquals(
                 listOf(
                     listOf(VideoDownloaded("id", "alma", "almaUri")),
-                    emptyList<VideoDownloaded>(),
+                    emptyList(),
                 ),
                 emissions
             )
@@ -157,7 +158,7 @@ class VideoDownloadedLocalSourceTest {
 
     @Test
     fun GIVEN_stored_video_whose_file_is_gone_WHEN_refreshing_THEN_cache_is_invalidated_and_it_is_pruned() =
-        runBlocking<Unit> {
+        runBlocking {
             val videoInSavingIntoFile = VideoInSavingIntoFile(
                 id = "id",
                 url = "alma",
@@ -177,7 +178,7 @@ class VideoDownloadedLocalSourceTest {
     @Test
     fun GIVEN_exception_from_savingUseCase_WHEN_saving_video_THEN_the_exception_is_wrapped_into_FileException() {
         Assertions.assertThrows(StorageException::class.java) {
-            runBlocking<Unit> {
+            runBlocking {
                 val videoInSavingIntoFile = VideoInSavingIntoFile(
                     id = "id",
                     url = "alma",
@@ -197,7 +198,7 @@ class VideoDownloadedLocalSourceTest {
     @Test
     fun GIVEN_readingResponseException_from_savingUseCase_WHEN_saving_video_THEN_it_is_not_wrapped_into_StorageException() {
         val thrown = Assertions.assertThrows(Throwable::class.java) {
-            runBlocking<Unit> {
+            runBlocking {
                 val videoInSavingIntoFile = VideoInSavingIntoFile(
                     id = "id",
                     url = "alma",
@@ -219,7 +220,7 @@ class VideoDownloadedLocalSourceTest {
 
     @Test
     fun GIVEN_observing_saved_videos_WHEN_saving_2_videos_THEN_then_both_of_them_are_emitted_in_reverse_order() =
-        runBlocking<Unit> {
+        runBlocking {
             val videoInSavingIntoFile1 = VideoInSavingIntoFile(
                 id = "id1",
                 url = "alma1",
@@ -232,18 +233,18 @@ class VideoDownloadedLocalSourceTest {
                 contentType = VideoInSavingIntoFile.ContentType("a2", "b2"),
                 byteStream = FalseInputStream()
             )
-            whenever(mockVerifyFileForUriExists.invoke(anyOrNull())).then { (it.arguments[0] as List<String>).toSet() }
+            whenever(mockVerifyFileForUriExists.invoke(anyOrNull())).then { (it.arguments[0] as List<*>).toSet() }
             whenever(mockSaveVideoFile.invoke(anyOrNull(), anyOrNull(), anyOrNull())).then {
                 "uri: " + (it.arguments[1] as String)
             }
             val expectedModel1 = VideoDownloaded(id = "id1", url = "alma1", uri = "uri: id1.b1")
             val expectedModel2 = VideoDownloaded(id = "id2", url = "alma2", uri = "uri: id2.b2")
             val expected = listOf(emptyList(), listOf(expectedModel1), listOf(expectedModel2, expectedModel1))
-            val actual = async(coroutineContext) { sut.savedVideos.take(3).toList() }
+            val actual = async { sut.savedVideos.take(3).toList() }
 
             yield()
             sut.saveVideo(videoInSavingIntoFile1)
-            delay(100)
+            delay(100.milliseconds)
             yield()
             sut.saveVideo(videoInSavingIntoFile2)
 
@@ -264,7 +265,7 @@ class VideoDownloadedLocalSourceTest {
             contentType = VideoInSavingIntoFile.ContentType("a2", "b2"),
             byteStream = FalseInputStream()
         )
-        whenever(mockVerifyFileForUriExists.invoke(anyOrNull())).then { (it.arguments[0] as List<String>).toSet() }
+        whenever(mockVerifyFileForUriExists.invoke(anyOrNull())).then { (it.arguments[0] as List<*>).toSet() }
         whenever(mockSaveVideoFile.invoke(anyOrNull(), anyOrNull(), anyOrNull())).then {
             "uri: " + (it.arguments[1] as String)
         }
@@ -277,11 +278,11 @@ class VideoDownloadedLocalSourceTest {
             listOf(expectedModel2),
             emptyList(),
         )
-        val actual = async(coroutineContext) { sut.savedVideos.take(expected.size).toList() }
+        val actual = async { sut.savedVideos.take(expected.size).toList() }
 
         yield()
         sut.saveVideo(videoInSavingIntoFile1)
-        delay(100)
+        delay(100.milliseconds)
         yield()
         sut.saveVideo(videoInSavingIntoFile2)
         yield()

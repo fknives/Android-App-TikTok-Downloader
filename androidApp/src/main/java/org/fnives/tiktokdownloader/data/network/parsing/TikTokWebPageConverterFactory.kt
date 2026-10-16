@@ -43,7 +43,7 @@ class TikTokWebPageConverterFactory(
             else -> {
                 ErrorTracer.addError(
                     "",
-                    message = "Couldn't find proper Converter for $type with $annotations",
+                    message = "Couldn't find proper Converter for $type with ${annotations.contentToString()}",
                     throwable = null
                 )
                 super.responseBodyConverter(type, annotations, retrofit)

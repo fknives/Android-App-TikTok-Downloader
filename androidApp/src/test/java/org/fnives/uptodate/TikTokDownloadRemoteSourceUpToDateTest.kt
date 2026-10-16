@@ -1,3 +1,5 @@
+@file:Suppress("TestFunctionName")
+
 package org.fnives.uptodate
 
 import kotlinx.coroutines.runBlocking
@@ -10,7 +12,6 @@ import org.fnives.tiktokdownloader.di.module.NetworkModule
 import org.fnives.tiktokdownloader.helper.getResourceFile
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.BeforeEach
-import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.Timeout
 import java.io.File
@@ -31,7 +32,7 @@ class TikTokDownloadRemoteSourceUpToDateTest {
         sut = NetworkModule(1).tikTokDownloadRemoteSource
     }
 
-//    @Disabled("Can trigger captcha, so only run it separately")
+    //    @Disabled("Can trigger captcha, so only run it separately")
     @Timeout(value = 120)
     @Test
     fun GIVEN_actualVideo_WHEN_downloading_THEN_the_file_matching_with_the_previously_loaded_video() {
@@ -57,7 +58,7 @@ class TikTokDownloadRemoteSourceUpToDateTest {
         )
     }
 
-//    @Disabled("Can trigger captcha, so only run it separately")
+    //    @Disabled("Can trigger captcha, so only run it separately")
     @Timeout(value = 120)
     @Test
     fun GIVEN_deleted_WHEN_downloading_THEN_proper_exception_is_thrown() {
@@ -67,18 +68,18 @@ class TikTokDownloadRemoteSourceUpToDateTest {
         }
     }
 
-//    @Disabled("Can trigger captcha, so only run it separately")
+    //    @Disabled("Can trigger captcha, so only run it separately")
     @Timeout(value = 120)
     @Test
     fun GIVEN_private_WHEN_downloading_THEN_proper_exception_is_thrown() {
         val parameter = VideoInPending("123", PRIVATE_VIDEO_URL)
-            val throwable = Assertions.assertThrows(Throwable::class.java) {
-                runBlocking { sut.getVideo(parameter) }
-            }
+        val throwable = Assertions.assertThrows(Throwable::class.java) {
+            runBlocking { sut.getVideo(parameter) }
+        }
         // DELETED response is also accepted: sometimes cant differentiate
-        assert(throwable is VideoDeletedException || throwable is VideoPrivateException, {
-            "Expected throwable to be DELETED or PRIVAte, but it was netiher: $throwable"
-        })
+        assert(throwable is VideoDeletedException || throwable is VideoPrivateException) {
+            "Expected throwable to be DELETED or PRIVAte, but it was neither: $throwable"
+        }
     }
 
     companion object {

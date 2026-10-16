@@ -72,6 +72,7 @@ class StateOfVideosObservableUseCaseTest {
         verifyNoInteractions(mockVideoInProgressLocalSource)
     }
 
+    @Suppress("UnusedFlow")
     @Test
     fun GIVEN_no_inProgress_AND_empty_pending_AND_empty_saved_THEN_emptyList_is_emitted() = runBlocking {
         videoInProgressMutableFlow.value = null
@@ -90,6 +91,7 @@ class StateOfVideosObservableUseCaseTest {
         verifyNoMoreInteractions(mockVideoInProgressLocalSource)
     }
 
+    @Suppress("UnusedFlow")
     @Test
     fun GIVEN_inProgress_AND_empty_pending_AND_empty_saved_THEN_inProgress_is_emitted() = runBlocking {
         val videoInProgress = VideoInProgress("alma", "url")

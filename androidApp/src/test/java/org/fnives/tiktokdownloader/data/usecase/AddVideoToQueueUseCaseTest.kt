@@ -43,7 +43,6 @@ class AddVideoToQueueUseCaseTest {
         whenever(mockUrlVerificationUseCase.invoke(anyOrNull())).doReturn(true)
         whenever(mockVideoInPendingLocalSource.saveUrlIntoQueue(anyOrNull())).then {
             argument = it.arguments.first() as VideoInPending
-            Unit
         }
 
         val actual = sut.invoke(expectedUrl)

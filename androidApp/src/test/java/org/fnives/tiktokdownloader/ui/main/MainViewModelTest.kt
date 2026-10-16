@@ -173,14 +173,14 @@ class MainViewModelTest {
     }
 
     @Test
-    fun GIVEN_initialized_WHEN_lifecycle_resumed_THEN_refresh_is_triggered() = runBlocking<Unit> {
+    fun GIVEN_initialized_WHEN_lifecycle_resumed_THEN_refresh_is_triggered() = runBlocking {
         sut.onStateChanged(mock<LifecycleOwner>(), Lifecycle.Event.ON_RESUME)
 
         verify(mockRefreshVideosExistenceUseCase, times(1)).invoke()
     }
 
     @Test
-    fun GIVEN_initialized_WHEN_lifecycle_not_resumed_THEN_refresh_is_not_triggered() = runBlocking<Unit> {
+    fun GIVEN_initialized_WHEN_lifecycle_not_resumed_THEN_refresh_is_not_triggered() = runBlocking {
         sut.onStateChanged(mock<LifecycleOwner>(), Lifecycle.Event.ON_START)
 
         verifyNoInteractions(mockRefreshVideosExistenceUseCase)

@@ -1,12 +1,10 @@
 package org.fnives.tiktokdownloader.di
 
 import android.content.Context
-import androidx.lifecycle.createSavedStateHandle
-import androidx.lifecycle.viewmodel.CreationExtras
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.setMain
-import org.fnives.tiktokdownloader.ui.main.MainViewModel
 import org.fnives.tiktokdownloader.ui.main.queue.QueueViewModel
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
@@ -22,6 +20,7 @@ class ServiceLocatorTest {
 
     private lateinit var mockContext: Context
 
+    @OptIn(ExperimentalCoroutinesApi::class)
     @BeforeEach
     fun setup() {
         Dispatchers.setMain(Dispatchers.Unconfined)
@@ -32,6 +31,7 @@ class ServiceLocatorTest {
         ServiceLocator.start(mockContext)
     }
 
+    @OptIn(ExperimentalCoroutinesApi::class)
     @AfterEach
     fun tearDown() {
         Dispatchers.resetMain()

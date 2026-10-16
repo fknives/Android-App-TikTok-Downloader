@@ -1,3 +1,5 @@
+@file:Suppress("UnstableApiUsage")
+
 rootProject.name = "TikTokDownloader"
 
 pluginManagement {
@@ -28,4 +30,3 @@ dependencyResolutionManagement {
 }
 
 include(":androidApp")
-//include(":sharedLogic")

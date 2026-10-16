@@ -10,6 +10,7 @@ import android.app.Service
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.content.pm.ServiceInfo
 import android.os.Build
 import android.os.IBinder
 import androidx.core.app.NotificationCompat
@@ -52,13 +53,20 @@ class QueueService : Service() {
                 NotificationManager.IMPORTANCE_MIN
             )
         )
-        startForeground(
-            SERVICE_NOTIFICATION_ID,
-            NotificationCompat.Builder(this, CHANNEL_ID)
-                .setContentTitle(getString(R.string.tik_tok_downloader_started))
-                .setSmallIcon(R.drawable.ic_download)
-                .build()
-        )
+
+        val notification = NotificationCompat.Builder(this, CHANNEL_ID)
+            .setContentTitle(getString(R.string.tik_tok_downloader_started))
+            .setSmallIcon(R.drawable.ic_download)
+            .build()
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            startForeground(
+                SERVICE_NOTIFICATION_ID,
+                notification,
+                ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC
+            )
+        } else {
+            startForeground(SERVICE_NOTIFICATION_ID, notification)
+        }
     }
 
     private fun updateNotification(notificationState: NotificationState) {

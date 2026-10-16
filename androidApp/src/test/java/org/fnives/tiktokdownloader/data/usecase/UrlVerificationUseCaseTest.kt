@@ -6,6 +6,7 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.Timeout
 
 
+@Suppress("TestFunctionName")
 @Timeout(value = 2)
 class UrlVerificationUseCaseTest {
 

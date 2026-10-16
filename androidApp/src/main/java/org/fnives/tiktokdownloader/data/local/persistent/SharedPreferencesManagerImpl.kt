@@ -8,6 +8,7 @@ import kotlinx.coroutines.flow.callbackFlow
 import kotlin.properties.ReadOnlyProperty
 import kotlin.properties.ReadWriteProperty
 import kotlin.reflect.KProperty
+import androidx.core.content.edit
 
 class SharedPreferencesManagerImpl private constructor(private val sharedPreferences: SharedPreferences) :
     SharedPreferencesManager, UserPreferencesStorage {
@@ -26,7 +27,7 @@ class SharedPreferencesManagerImpl private constructor(private val sharedPrefere
             property: KProperty<*>,
             value: Long
         ) {
-            thisRef.sharedPreferences.edit().putLong(key, value).apply()
+            thisRef.sharedPreferences.edit { putLong(key, value) }
         }
 
         override fun getValue(thisRef: SharedPreferencesManagerImpl, property: KProperty<*>): Long =
@@ -40,7 +41,7 @@ class SharedPreferencesManagerImpl private constructor(private val sharedPrefere
             property: KProperty<*>,
             value: Boolean
         ) {
-            thisRef.sharedPreferences.edit().putBoolean(key, value).apply()
+            thisRef.sharedPreferences.edit { putBoolean(key, value) }
         }
 
         override fun getValue(
@@ -57,7 +58,7 @@ class SharedPreferencesManagerImpl private constructor(private val sharedPrefere
             property: KProperty<*>,
             value: Set<String>
         ) {
-            thisRef.sharedPreferences.edit().putStringSet(key, value).apply()
+            thisRef.sharedPreferences.edit { putStringSet(key, value) }
         }
 
         override fun getValue(

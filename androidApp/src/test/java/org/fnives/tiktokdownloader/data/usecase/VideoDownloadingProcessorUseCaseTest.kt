@@ -98,6 +98,7 @@ class VideoDownloadingProcessorUseCaseTest {
         verifyNoInteractions(mockTikTokDownloadRemoteSource)
     }
 
+    @Suppress("UnusedFlow")
     @Test
     fun GIVEN_empty_pendingVideos_WHEN_observing_THEN_error_is_emited() = runBlocking {
         videoInPendingMutableFlow.value = emptyList()
@@ -114,6 +115,7 @@ class VideoDownloadingProcessorUseCaseTest {
         verifyNoInteractions(mockTikTokDownloadRemoteSource)
     }
 
+    @Suppress("UnusedFlow")
     @Test
     fun GIVEN_one_pending_video_AND_network_error_WHEN_observing_THEN_error_is_emited() = runBlocking {
         val videoInPending = VideoInPending("alma", "banan")
@@ -165,7 +167,7 @@ class VideoDownloadingProcessorUseCaseTest {
     }
 
     @Test
-    fun GIVEN_one_pending_video_AND_network_errors_WHILE_observing_WHEN_fetching_THEN_it_retries() = runBlocking<Unit> {
+    fun GIVEN_one_pending_video_AND_network_errors_WHILE_observing_WHEN_fetching_THEN_it_retries() = runBlocking {
         val videoInPending = VideoInPending("alma", "banan")
         videoInPendingMutableFlow.value = listOf(videoInPending)
         var specificException = true
@@ -184,7 +186,7 @@ class VideoDownloadingProcessorUseCaseTest {
     }
 
     @Test
-    fun GIVEN_one_pending_video_AND_parsing_errors_WHILE_observing_WHEN_fetching_THEN_it_retries() = runBlocking<Unit> {
+    fun GIVEN_one_pending_video_AND_parsing_errors_WHILE_observing_WHEN_fetching_THEN_it_retries() = runBlocking {
         val videoInPending = VideoInPending("alma", "banan")
         videoInPendingMutableFlow.value = listOf(videoInPending)
         var specificException = true
@@ -203,7 +205,7 @@ class VideoDownloadingProcessorUseCaseTest {
     }
 
     @Test
-    fun GIVEN_one_pending_video_AND_unknown_errors_WHILE_observing_WHEN_fetching_THEN_it_retries() = runBlocking<Unit> {
+    fun GIVEN_one_pending_video_AND_unknown_errors_WHILE_observing_WHEN_fetching_THEN_it_retries() = runBlocking {
         val videoInPending = VideoInPending("alma", "banan")
         videoInPendingMutableFlow.value = listOf(videoInPending)
         var specificException = true
@@ -223,7 +225,7 @@ class VideoDownloadingProcessorUseCaseTest {
 
     // verify that fetching even while request is running doesn't matter, only after error is emitted
     @Test
-    fun GIVEN_one_pending_video_AND_delaying_until_fetch_WHILE_observing_WHEN_fetching_THEN_emition_happens_only_once() = runBlocking<Unit> {
+    fun GIVEN_one_pending_video_AND_delaying_until_fetch_WHILE_observing_WHEN_fetching_THEN_emition_happens_only_once() = runBlocking {
         val videoInPending = VideoInPending("alma", "banan")
         videoInPendingMutableFlow.value = listOf(videoInPending)
         var specificException = true
@@ -249,7 +251,7 @@ class VideoDownloadingProcessorUseCaseTest {
     }
 
     @Test
-    fun GIVEN_one_pending_video_AND_failing_request_WHEN_observing_THEN_video_is_marked_processing_then_unprocessing() = runBlocking<Unit> {
+    fun GIVEN_one_pending_video_AND_failing_request_WHEN_observing_THEN_video_is_marked_processing_then_unprocessing() = runBlocking {
         val videoInPending = VideoInPending("alma", "banan")
         videoInPendingMutableFlow.value = listOf(videoInPending)
         whenever(mockTikTokDownloadRemoteSource.getVideo(videoInPending)).then {
@@ -267,6 +269,7 @@ class VideoDownloadingProcessorUseCaseTest {
         verifyNoMoreInteractions(mockVideoInProgressLocalSource)
     }
 
+    @Suppress("UnusedFlow")
     @Test
     fun GIVEN_one_pending_video_AND_successful_request_AND_storage_error_WHEN_observing_THEN_video_is_saved_called_and_error_is_propogated() = runBlocking {
         val videoInPending = VideoInPending("alma", "banan")
@@ -288,6 +291,7 @@ class VideoDownloadingProcessorUseCaseTest {
         verifyNoMoreInteractions(mockVideoDownloadedLocalSource)
     }
 
+    @Suppress("UnusedFlow")
     @Test
     fun GIVEN_one_pending_video_AND_successful_request_AND_unexpected_error_WHEN_observing_THEN_video_is_saved_called_and_error_is_propogated() = runBlocking {
         val videoInPending = VideoInPending("alma", "banan")
@@ -309,6 +313,7 @@ class VideoDownloadingProcessorUseCaseTest {
         verifyNoMoreInteractions(mockVideoDownloadedLocalSource)
     }
 
+    @Suppress("UnusedFlow")
     @Test
     fun GIVEN_one_pending_video_AND_successful_request_AND_reading_response_error_WHEN_observing_THEN_network_error_is_emitted() = runBlocking {
         val videoInPending = VideoInPending("alma", "banan")
@@ -365,6 +370,7 @@ class VideoDownloadingProcessorUseCaseTest {
         )
     }
 
+    @Suppress("UnusedFlow")
     @Test
     fun GIVEN_one_pending_video_AND_successful_request_AND_successful_file_save_WHEN_observing_THEN_pending_is_removed() = runBlocking {
         val videoInPending = VideoInPending("alma", "banan")
@@ -387,6 +393,7 @@ class VideoDownloadingProcessorUseCaseTest {
         verifyNoMoreInteractions(mockVideoInPendingLocalSource)
     }
 
+    @Suppress("UnusedFlow")
     @Test
     fun GIVEN_one_pending_video_AND_captcha_timeout_WHEN_observing_THEN_captcha_timeout_is_emited() = runBlocking {
         val videoInPending = VideoInPending("alma", "banan")
@@ -408,6 +415,7 @@ class VideoDownloadingProcessorUseCaseTest {
         verifyNoMoreInteractions(mockVideoInPendingLocalSource)
     }
 
+    @Suppress("UnusedFlow")
     @Test
     fun GIVEN_one_pending_video_AND_successful_request_AND_successful_file_save_WHEN_observing_with_2_THEN_pending_is_removed_AND_only_once_executed() =
         runBlocking {
@@ -433,6 +441,7 @@ class VideoDownloadingProcessorUseCaseTest {
             verifyNoMoreInteractions(mockVideoInPendingLocalSource)
         }
 
+    @Suppress("UnusedFlow")
     @Test
     fun GIVEN_one_pending_video_BUT_already_downloaded_WHEN_observing_THEN_processed_is_emitted_but_no_request_call() = runBlocking {
         val videoInPending = VideoInPending("alma", "banan")
@@ -458,6 +467,7 @@ class VideoDownloadingProcessorUseCaseTest {
         verifyNoInteractions(mockTikTokDownloadRemoteSource)
     }
 
+    @Suppress("UnusedFlow")
     @Test
     fun GIVEN_one_pending_video_BUT_already_downloaded_AND_captcha_timeout_WHEN_observing_THEN_processed_is_emitted_but_no_request_call() = runBlocking {
         val videoInPending = VideoInPending("alma", "banan")
@@ -484,6 +494,7 @@ class VideoDownloadingProcessorUseCaseTest {
         verifyNoInteractions(mockTikTokDownloadRemoteSource)
     }
 
+    @Suppress("UnusedFlow")
     @Test
     fun GIVEN_one_pending_video_BUT_CaptchaTimeoutException_WHEN_observing_THEN_its_saved_and_captchaError_emitted() = runBlocking {
         val videoInPending = VideoInPending("alma", "banan")
@@ -519,7 +530,7 @@ class VideoDownloadingProcessorUseCaseTest {
     }
 
     @Test
-    fun GIVEN_one_pending_video_AND_not_advancing_enough_WHILE_observing_WHEN_fetching_THEN_nothing_is_called() = runBlocking<Unit> {
+    fun GIVEN_one_pending_video_AND_not_advancing_enough_WHILE_observing_WHEN_fetching_THEN_nothing_is_called() = runBlocking {
         val videoInPending = VideoInPending("alma", "banan")
         videoInPendingMutableFlow.value = listOf(videoInPending)
         whenever(mockTikTokDownloadRemoteSource.getVideo(videoInPending)).then { throw NetworkException(html = "") }
@@ -533,7 +544,7 @@ class VideoDownloadingProcessorUseCaseTest {
     }
 
     @Test
-    fun GIVEN_one_pending_video_AND_but_advancing_enough_WHILE_observing_WHEN_fetching_THEN_nothing_is_called() = runBlocking<Unit> {
+    fun GIVEN_one_pending_video_AND_but_advancing_enough_WHILE_observing_WHEN_fetching_THEN_nothing_is_called() = runBlocking {
         val videoInPending = VideoInPending("alma", "banan")
         videoInPendingMutableFlow.value = listOf(videoInPending)
         whenever(mockTikTokDownloadRemoteSource.getVideo(videoInPending)).then { throw NetworkException(html = "") }
