@@ -49,7 +49,7 @@ class VideoDownloadingProcessorUseCase(
     private val fetch = MutableStateFlow(ProcessingState.RUNNING)
 
     @OptIn(ExperimentalCoroutinesApi::class)
-    private val _processState by lazy {
+    private val _processEvents by lazy {
         combineIntoPair(fetch, videoInPendingLocalSource.observeFirstPendingVideo())
             .filter { it.first == ProcessingState.RUNNING }
             .map { it.second }
@@ -63,7 +63,7 @@ class VideoDownloadingProcessorUseCase(
             }
             .shareIn(CoroutineScope(dispatcher), SharingStarted.Lazily)
     }
-    val processState: Flow<ProcessState> get() = _processState
+    val processEvents: Flow<ProcessState> get() = _processEvents
 
     fun fetchVideoInState() {
         fetch.value = ProcessingState.RUNNING

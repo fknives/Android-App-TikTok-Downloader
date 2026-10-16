@@ -43,7 +43,7 @@ class MainViewModel(
         savedStateHandle[INTENT_EXTRA_URL] = null
         processor.fetchVideoInState()
         viewModelScope.launch {
-            processor.processState.collect {
+            processor.processEvents.collect {
                 val errorMessage = when (it) {
                     is ProcessState.Processing,
                     is ProcessState.Processed,

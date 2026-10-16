@@ -1,7 +1,6 @@
 package org.fnives.tiktokdownloader.ui.service
 
 import android.Manifest
-import android.annotation.SuppressLint
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
@@ -38,24 +37,21 @@ class QueueService : Service() {
         }
     }
 
-    @SuppressLint("ForegroundServiceType")
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        intent?.url?.let(viewModel::onUrlReceived)
+        viewModel.fetch(intent?.url)
         startForeground()
-        return super.onStartCommand(intent, flags, startId)
+        return Service.START_NOT_STICKY
     }
 
     private fun startForeground() {
         val notificationManager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            notificationManager.createNotificationChannel(
-                NotificationChannel(
-                    CHANNEL_ID,
-                    getString(R.string.tik_tok_downloader_notification_channel),
-                    NotificationManager.IMPORTANCE_MIN
-                )
+        notificationManager.createNotificationChannel(
+            NotificationChannel(
+                CHANNEL_ID,
+                getString(R.string.tik_tok_downloader_notification_channel),
+                NotificationManager.IMPORTANCE_MIN
             )
-        }
+        )
         startForeground(
             SERVICE_NOTIFICATION_ID,
             NotificationCompat.Builder(this, CHANNEL_ID)

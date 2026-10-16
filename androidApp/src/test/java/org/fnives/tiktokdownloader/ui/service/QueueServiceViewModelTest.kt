@@ -38,7 +38,7 @@ class QueueServiceViewModelTest {
     fun setup() {
         videoDownloadingProcessorFlow = MutableSharedFlow(replay = 1)
         mockVideoDownloadingProcessorUseCase = mock()
-        whenever(mockVideoDownloadingProcessorUseCase.processState).doReturn(
+        whenever(mockVideoDownloadingProcessorUseCase.processEvents).doReturn(
             videoDownloadingProcessorFlow
         )
         mockAddVideoToQueueUseCase = mock()
@@ -53,7 +53,7 @@ class QueueServiceViewModelTest {
 
         verify(mockAddVideoToQueueUseCase, times(1)).invoke("url.com")
         verifyNoMoreInteractions(mockAddVideoToQueueUseCase)
-        verify(mockVideoDownloadingProcessorUseCase, times(1)).processState
+        verify(mockVideoDownloadingProcessorUseCase, times(1)).processEvents
         verify(mockVideoDownloadingProcessorUseCase, times(1)).fetchVideoInState()
         verifyNoMoreInteractions(mockVideoDownloadingProcessorUseCase)
     }
@@ -77,7 +77,7 @@ class QueueServiceViewModelTest {
         verify(mockAddVideoToQueueUseCase, times(1)).invoke("url.com")
         verify(mockAddVideoToQueueUseCase, times(1)).invoke("other.org")
         verifyNoMoreInteractions(mockAddVideoToQueueUseCase)
-        verify(mockVideoDownloadingProcessorUseCase, times(1)).processState
+        verify(mockVideoDownloadingProcessorUseCase, times(1)).processEvents
         verify(mockVideoDownloadingProcessorUseCase, times(2)).fetchVideoInState()
         verifyNoMoreInteractions(mockVideoDownloadingProcessorUseCase)
     }

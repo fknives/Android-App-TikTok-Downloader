@@ -3,6 +3,7 @@ package org.fnives.tiktokdownloader.di.module
 import kotlinx.coroutines.Dispatchers
 import org.fnives.tiktokdownloader.data.usecase.AddVideoToQueueUseCase
 import org.fnives.tiktokdownloader.data.usecase.GetUserPreferences
+import org.fnives.tiktokdownloader.data.usecase.HasPendingVideosUseCase
 import org.fnives.tiktokdownloader.data.usecase.MoveVideoInQueueUseCase
 import org.fnives.tiktokdownloader.data.usecase.ObserveUserPreferences
 import org.fnives.tiktokdownloader.data.usecase.RefreshVideosExistenceUseCase
@@ -31,6 +32,12 @@ class UseCaseModule(
 
     private val urlVerificationUseCase: UrlVerificationUseCase
         get() = UrlVerificationUseCase()
+
+    val hasPendingVideosUseCase: HasPendingVideosUseCase
+        get() = HasPendingVideosUseCase(
+            videoInPendingLocalSource = localSourceModule.videoInPendingLocalSource,
+            videoInProgressLocalSource = localSourceModule.videoInProgressLocalSource
+        )
 
     val addVideoToQueueUseCase: AddVideoToQueueUseCase
         get() = AddVideoToQueueUseCase(

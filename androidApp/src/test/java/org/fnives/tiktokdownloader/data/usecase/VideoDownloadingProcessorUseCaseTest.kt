@@ -104,7 +104,7 @@ class VideoDownloadingProcessorUseCaseTest {
         val expected = ProcessState.Finished
         val expectedList = listOf(expected)
 
-        val resultList = async(testDispatcher) { sut.processState.take(1).toList() }
+        val resultList = async(testDispatcher) { sut.processEvents.take(1).toList() }
         testDispatcher.advanceUntilIdle()
 
         Assertions.assertEquals(expectedList, resultList.await())
@@ -122,7 +122,7 @@ class VideoDownloadingProcessorUseCaseTest {
         val expected = ProcessState.NetworkError
         val expectedList = listOf(ProcessState.Processing(videoInPending), expected)
 
-        val resultList = async(testDispatcher) { sut.processState.take(2).toList() }
+        val resultList = async(testDispatcher) { sut.processEvents.take(2).toList() }
         testDispatcher.advanceUntilIdle()
 
         Assertions.assertEquals(expectedList, resultList.await())
@@ -144,7 +144,7 @@ class VideoDownloadingProcessorUseCaseTest {
         val expected = ProcessState.ParsingError
         val expectedList = listOf(ProcessState.Processing(videoInPending), expected)
 
-        val resultList = async(testDispatcher) { sut.processState.take(2).toList() }
+        val resultList = async(testDispatcher) { sut.processEvents.take(2).toList() }
         testDispatcher.advanceUntilIdle()
 
         Assertions.assertEquals(expectedList, resultList.await())
@@ -158,7 +158,7 @@ class VideoDownloadingProcessorUseCaseTest {
         val expected = ProcessState.UnknownError
         val expectedList = listOf(ProcessState.Processing(videoInPending), expected)
 
-        val resultList = async(testDispatcher) { sut.processState.take(2).toList() }
+        val resultList = async(testDispatcher) { sut.processEvents.take(2).toList() }
         testDispatcher.advanceUntilIdle()
 
         Assertions.assertEquals(expectedList, resultList.await())
@@ -175,7 +175,7 @@ class VideoDownloadingProcessorUseCaseTest {
         val inProgressItem = ProcessState.Processing(videoInPending)
         val expectedList = listOf(inProgressItem, ProcessState.NetworkError, inProgressItem, ProcessState.UnknownError)
 
-        val resultList = async(testDispatcher) { sut.processState.take(4).toList() }
+        val resultList = async(testDispatcher) { sut.processEvents.take(4).toList() }
         testDispatcher.advanceUntilIdle()
         sut.fetchVideoInState()
         testDispatcher.advanceUntilIdle()
@@ -194,7 +194,7 @@ class VideoDownloadingProcessorUseCaseTest {
         val inProgressItem = ProcessState.Processing(videoInPending)
         val expectedList = listOf(inProgressItem, ProcessState.ParsingError, inProgressItem, ProcessState.UnknownError)
 
-        val resultList = async(testDispatcher) { sut.processState.take(4).toList() }
+        val resultList = async(testDispatcher) { sut.processEvents.take(4).toList() }
         testDispatcher.advanceUntilIdle()
         sut.fetchVideoInState()
         testDispatcher.advanceUntilIdle()
@@ -213,7 +213,7 @@ class VideoDownloadingProcessorUseCaseTest {
         val inProgressItem = ProcessState.Processing(videoInPending)
         val expectedList = listOf(inProgressItem, ProcessState.UnknownError, inProgressItem, ProcessState.NetworkError)
 
-        val resultList = async(testDispatcher) { sut.processState.take(4).toList() }
+        val resultList = async(testDispatcher) { sut.processEvents.take(4).toList() }
         testDispatcher.advanceUntilIdle()
         sut.fetchVideoInState()
         testDispatcher.advanceUntilIdle()
@@ -240,7 +240,7 @@ class VideoDownloadingProcessorUseCaseTest {
         val inProgressItem = ProcessState.Processing(videoInPending)
         val expectedList = listOf(inProgressItem, ProcessState.NetworkError)
 
-        val resultList = async(testDispatcher) { sut.processState.take(2).toList() }
+        val resultList = async(testDispatcher) { sut.processEvents.take(2).toList() }
         testDispatcher.advanceUntilIdle()
 
         Assertions.assertEquals(expectedList, resultList.await())
@@ -258,7 +258,7 @@ class VideoDownloadingProcessorUseCaseTest {
         val inProgressItem = ProcessState.Processing(videoInPending)
         val expectedList = listOf(inProgressItem, ProcessState.NetworkError)
 
-        val resultList = async(testDispatcher) { sut.processState.take(2).toList() }
+        val resultList = async(testDispatcher) { sut.processEvents.take(2).toList() }
         testDispatcher.advanceUntilIdle()
 
         Assertions.assertEquals(expectedList, resultList.await())
@@ -279,7 +279,7 @@ class VideoDownloadingProcessorUseCaseTest {
         val expected = ProcessState.StorageError
         val expectedList = listOf(ProcessState.Processing(videoInPending), expected)
 
-        val resultList = async(testDispatcher) { sut.processState.take(2).toList() }
+        val resultList = async(testDispatcher) { sut.processEvents.take(2).toList() }
         testDispatcher.advanceUntilIdle()
 
         Assertions.assertEquals(expectedList, resultList.await())
@@ -300,7 +300,7 @@ class VideoDownloadingProcessorUseCaseTest {
         val expected = ProcessState.UnknownError
         val expectedList = listOf(ProcessState.Processing(videoInPending), expected)
 
-        val resultList = async(testDispatcher) { sut.processState.take(2).toList() }
+        val resultList = async(testDispatcher) { sut.processEvents.take(2).toList() }
         testDispatcher.advanceUntilIdle()
 
         Assertions.assertEquals(expectedList, resultList.await())
@@ -320,7 +320,7 @@ class VideoDownloadingProcessorUseCaseTest {
         }
         val expectedList = listOf(ProcessState.Processing(videoInPending), ProcessState.NetworkError)
 
-        val resultList = async(testDispatcher) { sut.processState.take(2).toList() }
+        val resultList = async(testDispatcher) { sut.processEvents.take(2).toList() }
         testDispatcher.advanceUntilIdle()
 
         Assertions.assertEquals(expectedList, resultList.await())
@@ -337,7 +337,7 @@ class VideoDownloadingProcessorUseCaseTest {
             throw NetworkException(html = "")
         }
 
-        val resultList = async(testDispatcher) { sut.processState.take(2).toList() }
+        val resultList = async(testDispatcher) { sut.processEvents.take(2).toList() }
         testDispatcher.advanceUntilIdle()
         resultList.await()
 
@@ -355,7 +355,7 @@ class VideoDownloadingProcessorUseCaseTest {
         whenever(mockTikTokDownloadRemoteSource.getVideo(videoInPending)).doReturn(videoInSavingIntoFile)
         whenever(mockVideoDownloadedLocalSource.saveVideo(anyOrNull())).doReturn(VideoDownloaded("zz", "yy", "xx"))
 
-        val resultList = async(testDispatcher) { sut.processState.take(2).toList() }
+        val resultList = async(testDispatcher) { sut.processEvents.take(2).toList() }
         testDispatcher.advanceUntilIdle()
         resultList.await()
 
@@ -378,7 +378,7 @@ class VideoDownloadingProcessorUseCaseTest {
             ProcessState.Processed(videoDownloaded)
         )
 
-        val resultList = async(testDispatcher) { sut.processState.take(2).toList() }
+        val resultList = async(testDispatcher) { sut.processEvents.take(2).toList() }
         testDispatcher.advanceUntilIdle()
 
         Assertions.assertEquals(expectedList, resultList.await())
@@ -397,7 +397,7 @@ class VideoDownloadingProcessorUseCaseTest {
             ProcessState.CaptchaError
         )
 
-        val resultList = async(testDispatcher) { sut.processState.take(2).toList() }
+        val resultList = async(testDispatcher) { sut.processEvents.take(2).toList() }
         testDispatcher.advanceUntilIdle()
 
         Assertions.assertEquals(expectedList, resultList.await())
@@ -422,8 +422,8 @@ class VideoDownloadingProcessorUseCaseTest {
                 ProcessState.Processed(videoDownloaded)
             )
 
-            val resultList1 = async(testDispatcher) { sut.processState.take(2).toList() }
-            val resultList2 = async(testDispatcher) { sut.processState.take(2).toList() }
+            val resultList1 = async(testDispatcher) { sut.processEvents.take(2).toList() }
+            val resultList2 = async(testDispatcher) { sut.processEvents.take(2).toList() }
             testDispatcher.advanceUntilIdle()
 
             Assertions.assertEquals(expectedList, resultList1.await())
@@ -444,7 +444,7 @@ class VideoDownloadingProcessorUseCaseTest {
             ProcessState.Processed(videoDownloaded)
         )
 
-        val resultList = async(testDispatcher) { sut.processState.take(2).toList() }
+        val resultList = async(testDispatcher) { sut.processEvents.take(2).toList() }
         testDispatcher.advanceUntilIdle()
 
         Assertions.assertEquals(expectedList, resultList.await())
@@ -470,7 +470,7 @@ class VideoDownloadingProcessorUseCaseTest {
             ProcessState.Processed(videoDownloaded)
         )
 
-        val resultList = async(testDispatcher) { sut.processState.take(2).toList() }
+        val resultList = async(testDispatcher) { sut.processEvents.take(2).toList() }
         testDispatcher.advanceUntilIdle()
 
         Assertions.assertEquals(expectedList, resultList.await())
@@ -497,7 +497,7 @@ class VideoDownloadingProcessorUseCaseTest {
             throw CaptchaRequiredException(html = "")
         }
 
-        val resultList = async(testDispatcher) { sut.processState.take(2).toList() }
+        val resultList = async(testDispatcher) { sut.processEvents.take(2).toList() }
         testDispatcher.advanceUntilIdle()
 
         Assertions.assertEquals(expectedList, resultList.await())
@@ -524,7 +524,7 @@ class VideoDownloadingProcessorUseCaseTest {
         videoInPendingMutableFlow.value = listOf(videoInPending)
         whenever(mockTikTokDownloadRemoteSource.getVideo(videoInPending)).then { throw NetworkException(html = "") }
 
-        val resultList = async(testDispatcher) { sut.processState.take(2).toList() }
+        val resultList = async(testDispatcher) { sut.processEvents.take(2).toList() }
         testDispatcher.advanceTimeBy(199)
 
         verifyNoInteractions(mockTikTokDownloadRemoteSource)
@@ -538,7 +538,7 @@ class VideoDownloadingProcessorUseCaseTest {
         videoInPendingMutableFlow.value = listOf(videoInPending)
         whenever(mockTikTokDownloadRemoteSource.getVideo(videoInPending)).then { throw NetworkException(html = "") }
 
-        val resultList = async(testDispatcher) { sut.processState.take(2).toList() }
+        val resultList = async(testDispatcher) { sut.processEvents.take(2).toList() }
         testDispatcher.advanceTimeBy(201)
 
         verify(mockTikTokDownloadRemoteSource, times(1)).getVideo(videoInPending)
