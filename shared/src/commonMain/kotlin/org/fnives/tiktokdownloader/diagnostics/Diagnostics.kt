@@ -8,4 +8,10 @@ interface Diagnostics {
     fun error(html: String, message: String, throwable: Throwable?)
 }
 
-expect val platformDiagnostics: Diagnostics
+object NoopDiagnostics : Diagnostics {
+    override fun log(message: String) {
+    }
+
+    override fun error(html: String, message: String, throwable: Throwable?) {
+    }
+}

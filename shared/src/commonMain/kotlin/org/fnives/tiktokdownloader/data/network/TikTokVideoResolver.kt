@@ -16,13 +16,12 @@ import org.fnives.tiktokdownloader.data.network.parsing.converter.ThrowIfVideoIs
 import org.fnives.tiktokdownloader.data.network.parsing.converter.VideoFileUrlConverter
 import org.fnives.tiktokdownloader.data.network.parsing.response.VideoFileUrl
 import org.fnives.tiktokdownloader.diagnostics.Diagnostics
-import org.fnives.tiktokdownloader.diagnostics.platformDiagnostics
 import kotlin.time.Duration.Companion.milliseconds
 
 class TikTokVideoResolver(
     private val delayBeforeRequest: Long,
     private val httpClient: HttpClient,
-    private val diagnostics: Diagnostics = platformDiagnostics,
+    private val diagnostics: Diagnostics,
 ) {
 
     private val throwIfIsCaptchaResponse = ThrowIfIsCaptchaResponse()

@@ -11,6 +11,8 @@ kotlin {
         }
     }
 
+    linuxX64()
+
     sourceSets {
         commonMain.dependencies {
             api(libs.ktor.client.core)
@@ -23,6 +25,9 @@ kotlin {
         }
         jvmMain.dependencies {
             implementation(libs.ktor.client.okhttp)
+        }
+        linuxX64Main.dependencies {
+            implementation(libs.ktor.client.curl)
         }
     }
 }

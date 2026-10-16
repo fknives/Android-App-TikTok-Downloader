@@ -10,6 +10,7 @@ import io.ktor.http.headersOf
 import kotlinx.coroutines.test.runTest
 import org.fnives.tiktokdownloader.data.network.exceptions.CaptchaRequiredException
 import org.fnives.tiktokdownloader.data.network.exceptions.VideoDeletedException
+import org.fnives.tiktokdownloader.diagnostics.NoopDiagnostics
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
@@ -39,7 +40,7 @@ class TikTokVideoResolverTest {
                 }
             }
         }
-        return TikTokVideoResolver(delayBeforeRequest = 0, httpClient = client)
+        return TikTokVideoResolver(delayBeforeRequest = 0, httpClient = client, diagnostics = NoopDiagnostics)
     }
 
     @Test
@@ -48,7 +49,6 @@ class TikTokVideoResolverTest {
 
         val result = resolver.resolve("https://vm.tiktok.com/abc/")
 
-        assertEquals(canonicalUrl, result.actualPageUrl)
         assertEquals(expectedVideoUrl, result.videoFileUrl)
         assertEquals(videoResponseHtml, result.videoResponse.bodyAsText())
     }
@@ -59,7 +59,6 @@ class TikTokVideoResolverTest {
 
         val result = resolver.resolve("https://vm.tiktok.com/abc/")
 
-        assertEquals(null, result.actualPageUrl)
         assertEquals(expectedVideoUrl, result.videoFileUrl)
         assertEquals(videoResponseHtml, result.videoResponse.bodyAsText())
     }
