@@ -1,56 +1,34 @@
 package org.fnives.tiktokdownloader.data.network.parsing.converter
 
-import okhttp3.ResponseBody
-import org.fnives.tiktokdownloader.Logger
-import org.fnives.tiktokdownloader.data.network.exceptions.CaptchaRequiredException
 import org.fnives.tiktokdownloader.data.network.exceptions.HtmlException
-import org.fnives.tiktokdownloader.data.network.exceptions.ParsingException
-import org.fnives.tiktokdownloader.data.network.exceptions.VideoDeletedException
-import org.fnives.tiktokdownloader.data.network.exceptions.VideoPrivateException
 import org.fnives.tiktokdownloader.data.network.parsing.response.VideoFileUrl
-import org.fnives.tiktokdownloader.errortracking.ErrorTracer
+import org.fnives.tiktokdownloader.diagnostics.Diagnostics
 
 class VideoFileUrlConverter(
     private val throwIfIsCaptchaResponse: ThrowIfIsCaptchaResponse,
     private val throwIfVideoIsDeletedResponse: ThrowIfVideoIsDeletedResponse,
-    private val throwIfVideoIsPrivateResponse: ThrowIfVideoIsPrivateResponse
+    private val throwIfVideoIsPrivateResponse: ThrowIfVideoIsPrivateResponse,
+    private val diagnostics: Diagnostics,
 ) : ParsingExceptionThrowingConverter<VideoFileUrl>() {
 
-    @Throws(
-        IllegalArgumentException::class,
-        IndexOutOfBoundsException::class,
-        CaptchaRequiredException::class
-    )
-    override fun convertSafely(responseBody: ResponseBody): VideoFileUrl {
-        return convert(responseBody.string())
-    }
-
-    @Throws(ParsingException::class, CaptchaRequiredException::class)
-    fun convertSafely(responseBody: String): VideoFileUrl {
+    override fun convertSafely(responseBody: String): VideoFileUrl {
         return doActionSafely { convert(responseBody) }
     }
 
-    @Throws(
-        IllegalArgumentException::class,
-        IndexOutOfBoundsException::class,
-        CaptchaRequiredException::class,
-        VideoDeletedException::class,
-        VideoPrivateException::class,
-    )
     private fun convert(responseBody: String): VideoFileUrl {
         try {
             val html = responseBody.also(throwIfIsCaptchaResponse::invoke)
                 .also(throwIfVideoIsDeletedResponse::invoke)
                 .also(throwIfVideoIsPrivateResponse::invoke)
             val url =
-                tryToParseDownloadLink(html).also { Logger.logMessage("parsed download link = $it") }
-                    ?: tryToParseVideoSrc(html).also { Logger.logMessage("parsed video src = $it") }
+                tryToParseDownloadLink(html).also { diagnostics.log("parsed download link = $it") }
+                    ?: tryToParseVideoSrc(html).also { diagnostics.log("parsed video src = $it") }
                     ?: throw IllegalArgumentException("Couldn't parse url from HTML: $html")
 
             return VideoFileUrl(url)
         } catch (throwable: Throwable) {
             val exceptionName = (throwable as? HtmlException)?.exceptionName ?: "Unknown Error"
-            ErrorTracer.addError(
+            diagnostics.error(
                 html = responseBody,
                 message = "$exceptionName in VideoFileUrlConverter",
                 throwable = throwable
@@ -84,7 +62,7 @@ class VideoFileUrlConverter(
                 null
             }
 
-        private val replacements = mutableMapOf(
+        private val replacements = mapOf(
             "\\u002F" to "/",
             "\\u0026" to "&"
         )

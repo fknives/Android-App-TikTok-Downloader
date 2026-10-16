@@ -1,27 +1,19 @@
 package org.fnives.tiktokdownloader.data.network.parsing.converter
 
-import okhttp3.ResponseBody
-import org.fnives.tiktokdownloader.data.network.exceptions.CaptchaRequiredException
 import org.fnives.tiktokdownloader.data.network.exceptions.HtmlException
 import org.fnives.tiktokdownloader.data.network.exceptions.ParsingException
-import org.fnives.tiktokdownloader.data.network.exceptions.VideoDeletedException
-import org.fnives.tiktokdownloader.data.network.exceptions.VideoPrivateException
 import org.fnives.tiktokdownloader.data.network.parsing.response.ActualVideoPageUrl
-import org.fnives.tiktokdownloader.errortracking.ErrorTracer
+import org.fnives.tiktokdownloader.diagnostics.Diagnostics
 
 class ActualVideoPageUrlConverter(
     private val throwIfIsCaptchaResponse: ThrowIfIsCaptchaResponse,
     private val throwIfVideoIsDeletedResponse: ThrowIfVideoIsDeletedResponse,
-    private val throwIfVideoIsPrivateResponse: ThrowIfVideoIsPrivateResponse
+    private val throwIfVideoIsPrivateResponse: ThrowIfVideoIsPrivateResponse,
+    private val diagnostics: Diagnostics,
 ) : ParsingExceptionThrowingConverter<ActualVideoPageUrl>() {
 
-    @Throws(
-        IndexOutOfBoundsException::class, CaptchaRequiredException::class,
-        VideoDeletedException::class,
-        VideoPrivateException::class,
-    )
-    override fun convertSafely(responseBody: ResponseBody): ActualVideoPageUrl {
-        val responseBodyAsString = responseBody.string()
+    override fun convertSafely(responseBody: String): ActualVideoPageUrl {
+        val responseBodyAsString = responseBody
         return try {
             val validateResponse = responseBodyAsString
                 .also(throwIfIsCaptchaResponse::invoke)
@@ -44,13 +36,12 @@ class ActualVideoPageUrlConverter(
             ActualVideoPageUrl(actualVideoPageUrl, responseBodyAsString)
         } catch (throwable: Throwable) {
             val exceptionName = (throwable as? HtmlException)?.exceptionName ?: "Unknown Error"
-            ErrorTracer.addError(
+            diagnostics.error(
                 html = responseBodyAsString,
                 message = "$exceptionName in ActualVideoPageUrlConverter",
                 throwable = throwable
             )
             ActualVideoPageUrl(null, responseBodyAsString)
         }
-
     }
 }

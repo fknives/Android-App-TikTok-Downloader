@@ -45,7 +45,7 @@ class TikTokDownloadRemoteSourceTest {
 
     @Test
     fun GIVEN_request_finished_with_cookies_WHEN_request_is_called_THEN_cookieStore_is_clear_and_request_doesnt_contain_cookies() {
-        val cookieToSet = "that-is-a-cookie"
+        val cookieToSet = "that-is-a-cookie=yes"
         val shortenedUrlResponseBody = readResourceFileShortenedUrlResponse()
         mockWebServer.enqueue(MockResponse()
             .setResponseCode(200)
@@ -75,7 +75,7 @@ class TikTokDownloadRemoteSourceTest {
 
     @Test
     fun GIVEN_cookie_in_first_response_THEN_it_is_used_in_the_following_requests() {
-        val expectedCookie = "that-is-a-cookie"
+        val expectedCookie = "that-is-a-cookie=yes"
         val shortenedUrlResponseBody = readResourceFileShortenedUrlResponse()
         val mainPageVariant1Response = readResourceFileMainPageVariant1Response()
         mockWebServer.enqueue(
@@ -98,8 +98,8 @@ class TikTokDownloadRemoteSourceTest {
 
     @Test
     fun GIVEN_cookie_with_extra_info_in_first_response_THEN_it_is_used_in_the_following_request_without_the_extra() {
-        val cookieWithExtra = "that-is-a-cookie; and-some-extra-unnecessary; things"
-        val expectedCookie = "that-is-a-cookie"
+        val cookieWithExtra = "that-is-a-cookie=yes; and-some-extra-unnecessary; things"
+        val expectedCookie = "that-is-a-cookie=yes"
         val shortenedUrlResponseBody = readResourceFileShortenedUrlResponse()
         mockWebServer.enqueue(
             MockResponse().setResponseCode(200).setHeader("Set-Cookie", cookieWithExtra).setBody(shortenedUrlResponseBody)
@@ -140,7 +140,7 @@ class TikTokDownloadRemoteSourceTest {
         mockWebServer.takeRequest()
         mockWebServer.takeRequest()
         val videoRequest = mockWebServer.takeRequest()
-        Assertions.assertEquals("http://localhost:8080/?a=a&b=b&c=c", videoRequest.requestUrl?.toUri()?.toString())
+        Assertions.assertEquals(VIDEO_REQUEST_TEST_URL, videoRequest.requestUrl?.toUri()?.toString())
     }
 
 
@@ -165,7 +165,7 @@ class TikTokDownloadRemoteSourceTest {
         mockWebServer.takeRequest()
         mockWebServer.takeRequest()
         val videoRequest = mockWebServer.takeRequest()
-        Assertions.assertEquals("http://localhost:8080/?a=a&b=b&c=c", videoRequest.requestUrl?.toUri()?.toString())
+        Assertions.assertEquals(VIDEO_REQUEST_TEST_URL, videoRequest.requestUrl?.toUri()?.toString())
     }
 
     @Test
@@ -295,10 +295,13 @@ class TikTokDownloadRemoteSourceTest {
         private const val CAPTCHA_REQUIRED_RESPONSE_TWO = "response/captcha_required_two.html"
         private const val MAIN_PAGE_VARIANT_1_RESPONSE = "response/main_page_v1.html"
         private const val MAIN_PAGE_VARIANT_2_RESPONSE = "response/main_page_v1.html"
-        private const val PORT = 8080
+        private const val PORT = 8081
         private const val TEST_URL = "http://127.0.0.1:$PORT"
         private const val SHORTENED_TEST_URL = "http://127.0.0.1:$PORT"
         private const val VIDEO_FILE_TEST_URL = "http:\\u002F/127.0.0.1:$PORT?a=a\\u0026b=b&c=c"
+
+        /** The video request URL as the server sees it: the fixture's bare `host?query` gains a `/`. */
+        private const val VIDEO_REQUEST_TEST_URL = "http://127.0.0.1:$PORT/?a=a&b=b&c=c"
         private const val CAPTCHA_TEST_URL = "http://127.0.0.1:$PORT"
 
         private fun Any.readResourceFileShortenedUrlResponse() =

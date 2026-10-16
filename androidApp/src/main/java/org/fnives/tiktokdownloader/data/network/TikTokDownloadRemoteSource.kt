@@ -1,9 +1,10 @@
 package org.fnives.tiktokdownloader.data.network
 
+import io.ktor.client.statement.bodyAsChannel
+import io.ktor.http.contentType
+import io.ktor.utils.io.jvm.javaio.toInputStream
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
-import org.fnives.tiktokdownloader.Logger
 import org.fnives.tiktokdownloader.data.model.VideoInPending
 import org.fnives.tiktokdownloader.data.model.VideoInSavingIntoFile
 import org.fnives.tiktokdownloader.data.network.exceptions.CaptchaRequiredException
@@ -11,53 +12,28 @@ import org.fnives.tiktokdownloader.data.network.exceptions.HtmlException
 import org.fnives.tiktokdownloader.data.network.exceptions.NetworkException
 import org.fnives.tiktokdownloader.data.network.exceptions.ParsingException
 import org.fnives.tiktokdownloader.data.network.exceptions.VideoDeletedException
-import org.fnives.tiktokdownloader.data.network.parsing.converter.VideoFileUrlConverter
-import org.fnives.tiktokdownloader.data.network.parsing.response.VideoFileUrl
-import org.fnives.tiktokdownloader.data.network.session.CookieStore
+import org.fnives.tiktokdownloader.diagnostics.Diagnostics
 import org.fnives.tiktokdownloader.errortracking.ErrorTracer
-import kotlin.time.Duration.Companion.milliseconds
 
 class TikTokDownloadRemoteSource(
-    private val delayBeforeRequest: Long,
-    private val service: TikTokRetrofitService,
-    private val cookieStore: CookieStore,
-    private val videoFileUrlConverter: VideoFileUrlConverter,
+    private val videoResolver: TikTokVideoResolver,
+    private val diagnostics: Diagnostics,
 ) {
 
     @Throws(ParsingException::class, NetworkException::class, CaptchaRequiredException::class)
     suspend fun getVideo(videoInPending: VideoInPending): VideoInSavingIntoFile =
         withContext(Dispatchers.IO) {
-            cookieStore.clear()
             wrapIntoProperException {
-                delay(delayBeforeRequest.milliseconds) // added just so captcha trigger may not happen
-                Logger.logMessage("starting request")
-                val actualUrl = service.getContentActualUrlAndCookie(videoInPending.url)
-                val videoUrl: VideoFileUrl
-                if (actualUrl.url != null) {
-                    Logger.logMessage("actualUrl found = ${actualUrl.url}")
-                    delay(delayBeforeRequest.milliseconds) // added just so captcha trigger may not happen
-
-                    videoUrl = service.getVideoUrl(actualUrl.url)
-                } else {
-                    Logger.logMessage("actualUrl not found. Attempting to parse videoUrl")
-
-                    videoUrl = videoFileUrlConverter.convertSafely(actualUrl.fullResponse)
-                }
-                Logger.logMessage("videoFileUrl found = ${videoUrl.videoFileUrl}")
-                delay(delayBeforeRequest.milliseconds) // added just so captcha trigger may not happen
+                val resolved = videoResolver.resolve(videoInPending.url)
                 try {
-                    val response = service.getVideo(videoUrl.videoFileUrl)
-
+                    val response = resolved.videoResponse
                     VideoInSavingIntoFile(
                         id = videoInPending.id,
                         url = videoInPending.url,
-                        contentType = response.mediaType?.let {
-                            VideoInSavingIntoFile.ContentType(
-                                it.type,
-                                it.subtype
-                            )
+                        contentType = response.contentType()?.let {
+                            VideoInSavingIntoFile.ContentType(it.contentType, it.contentSubtype)
                         },
-                        byteStream = response.videoInputStream
+                        byteStream = response.bodyAsChannel().toInputStream(),
                     )
                 } catch (throwable: Throwable) {
                     val exceptionName =
@@ -78,14 +54,14 @@ class TikTokDownloadRemoteSource(
             request()
         } catch (throwable: Throwable) {
             if (throwable is HtmlException) {
-                ErrorTracer.addError(
-                    throwable.html,
+                diagnostics.error(
+                    html = throwable.html,
                     message = throwable.message ?: "-",
                     throwable = throwable
                 )
                 throw throwable
             }
-            ErrorTracer.addError(
+            diagnostics.error(
                 html = "-",
                 message = throwable.message ?: "-",
                 throwable = throwable
