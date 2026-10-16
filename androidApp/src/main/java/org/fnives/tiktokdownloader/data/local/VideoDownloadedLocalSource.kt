@@ -40,6 +40,7 @@ class VideoDownloadedLocalSource(
             .distinctUntilChanged()
 
     suspend fun filterByExistenceOfUrl(items: List<Pair<String, VideoDownloaded>>) : List<Pair<String, VideoDownloaded>> {
+        if (items.isEmpty()) return items
         val existing = verifyFileForUriExists(items.map { it.second.uri })
         return items.filter { it.second.uri in existing }
     }
