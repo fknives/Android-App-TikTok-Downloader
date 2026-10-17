@@ -3,7 +3,7 @@ plugins {
 }
 
 kotlin {
-    js(IR) {
+    js {
         nodejs()
         useEsModules()
         binaries.library()
@@ -12,7 +12,6 @@ kotlin {
     sourceSets {
         jsMain.dependencies {
             implementation(project(":shared"))
-            implementation(libs.kotlinx.coroutines.core)
         }
     }
 }

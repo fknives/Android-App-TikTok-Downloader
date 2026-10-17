@@ -2,13 +2,12 @@
 
 package org.fnives.tiktokdownloader.cli
 
-import io.ktor.client.statement.bodyAsBytes
 import kotlinx.cinterop.addressOf
 import kotlinx.cinterop.convert
 import kotlinx.cinterop.usePinned
 import kotlinx.coroutines.runBlocking
+import org.fnives.tiktokdownloader.data.network.CurlVideoHttpClient
 import org.fnives.tiktokdownloader.data.network.TikTokVideoResolver
-import org.fnives.tiktokdownloader.data.network.createHttpClient
 import org.fnives.tiktokdownloader.diagnostics.Diagnostics
 import platform.posix.write
 import kotlin.system.exitProcess
@@ -32,7 +31,7 @@ fun main(args: Array<String>) {
 
     val resolver = TikTokVideoResolver(
         delayBeforeRequest = 1_000,
-        httpClient = createHttpClient(),
+        httpClient = CurlVideoHttpClient(),
         diagnostics = StderrDiagnostics,
     )
 
@@ -40,7 +39,7 @@ fun main(args: Array<String>) {
         runBlocking {
             val result = resolver.resolve(url)
             writeToFd(STDERR_FD, "resolved: ${result.videoFileUrl}\n")
-            result.videoResponse.bodyAsBytes()
+            result.videoResponse.body.raw()
         }
     } catch (throwable: Throwable) {
         writeToFd(STDERR_FD, "error: ${throwable::class.simpleName}: ${throwable.message}\n")

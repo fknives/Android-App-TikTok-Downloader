@@ -19,22 +19,19 @@ kotlin {
 
     sourceSets {
         commonMain.dependencies {
-            api(libs.ktor.client.core)
-            implementation(libs.kotlinx.coroutines.core)
+            // Intentionally empty: the parsing/resolver seam is pure Kotlin.
         }
         commonTest.dependencies {
             implementation(kotlin("test"))
-            implementation(libs.ktor.client.mock)
             implementation(libs.kotlinx.test.coroutines)
         }
         jvmMain.dependencies {
             implementation(libs.ktor.client.okhttp)
-        }
-        jsMain.dependencies {
-            implementation(libs.ktor.client.js)
+            implementation(libs.kotlinx.coroutines.core)
         }
         linuxX64Main.dependencies {
             implementation(libs.ktor.client.curl)
+            implementation(libs.kotlinx.coroutines.core)
         }
     }
 }

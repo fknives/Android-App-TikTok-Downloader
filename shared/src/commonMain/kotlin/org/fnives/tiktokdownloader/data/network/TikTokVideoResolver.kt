@@ -1,12 +1,5 @@
 package org.fnives.tiktokdownloader.data.network
 
-import io.ktor.client.HttpClient
-import io.ktor.client.request.get
-import io.ktor.client.request.header
-import io.ktor.client.statement.HttpResponse
-import io.ktor.client.statement.bodyAsText
-import io.ktor.http.HttpHeaders
-import kotlinx.coroutines.delay
 import org.fnives.tiktokdownloader.data.network.exceptions.HtmlException
 import org.fnives.tiktokdownloader.data.network.exceptions.NetworkException
 import org.fnives.tiktokdownloader.data.network.parsing.converter.ActualVideoPageUrlConverter
@@ -18,9 +11,14 @@ import org.fnives.tiktokdownloader.data.network.parsing.response.VideoFileUrl
 import org.fnives.tiktokdownloader.diagnostics.Diagnostics
 import kotlin.time.Duration.Companion.milliseconds
 
-class TikTokVideoResolver(
+private const val COOKIE_HEADER = "Cookie"
+
+/**
+ * Shared, platform-agnostic TikTok video URL resolver.
+ */
+class TikTokVideoResolver<T>(
     private val delayBeforeRequest: Long,
-    private val httpClient: HttpClient,
+    private val httpClient: VideoHttpClient<T>,
     private val diagnostics: Diagnostics,
 ) {
 
@@ -46,17 +44,17 @@ class TikTokVideoResolver(
 
     private val cookies = LinkedHashMap<String, String>()
 
-    suspend fun resolve(tiktokLink: String): ResolvedVideoUrl =
+    suspend fun resolve(tiktokLink: String): ResolvedVideoUrl<T> =
         wrapIntoProperException {
             cookies.clear() // start each resolution with a clean session
-            delay(delayBeforeRequest.milliseconds) // added just so captcha trigger may not happen
+            platformDelay(delayBeforeRequest.milliseconds) // added just so captcha trigger may not happen
             diagnostics.log("starting request")
             val firstResponse = getHtml(tiktokLink)
             val actualUrl = actualVideoPageUrlConverter.convertSafely(firstResponse)
             val videoUrl: VideoFileUrl
             if (actualUrl.url != null) {
                 diagnostics.log("actualUrl found = ${actualUrl.url}")
-                delay(delayBeforeRequest.milliseconds) // added just so captcha trigger may not happen
+                platformDelay(delayBeforeRequest.milliseconds) // added just so captcha trigger may not happen
                 videoUrl = videoFileUrlConverter.convertSafely(getHtml(actualUrl.url))
             } else {
                 diagnostics.log("actualUrl not found. Attempting to parse videoUrl")
@@ -64,28 +62,41 @@ class TikTokVideoResolver(
             }
             diagnostics.log("videoFileUrl found = ${videoUrl.videoFileUrl}")
 
-            delay(delayBeforeRequest.milliseconds) // added just so captcha trigger may not happen
-            val videoResponse = get(videoUrl.videoFileUrl, videoHeaders)
+            platformDelay(delayBeforeRequest.milliseconds) // added just so captcha trigger may not happen
+            val videoResponse = getChecked(videoUrl.videoFileUrl, videoHeaders)
 
             ResolvedVideoUrl(videoUrl.videoFileUrl, videoResponse)
         }
 
-    private suspend fun getHtml(url: String): String = get(url, pageHeaders).bodyAsText()
+    private suspend fun getHtml(url: String): String =
+        getChecked(url, pageHeaders).body.text()
 
-    private suspend fun get(url: String, headers: Map<String, String>): HttpResponse {
-        val response = httpClient.get(url) {
-            headers.forEach { (name, value) -> header(name, value) }
-            cookieHeader()?.let { header(HttpHeaders.Cookie, it) }
+    private suspend fun getChecked(url: String, headers: Map<String, String>): HttpResponseData<T> {
+        val response = get(url, headers)
+        if (!response.isSuccess) {
+            throw IllegalStateException("GET $url returned HTTP ${response.status}")
         }
+        return response
+    }
+
+    private suspend fun get(url: String, headers: Map<String, String>): HttpResponseData<T> {
+        val requestHeaders = buildMap {
+            putAll(headers)
+            cookieHeader()?.let { put(COOKIE_HEADER, it) }
+        }
+        val response = httpClient.get(url, requestHeaders)
         storeCookies(response)
         return response
     }
 
-    private fun storeCookies(response: HttpResponse) {
-        response.headers.getAll(HttpHeaders.SetCookie)?.forEach { raw ->
-            val cookie = raw.takeWhile { it != ';' }.trim()
-            if ('=' in cookie) {
-                cookies[cookie.takeWhile { it != '=' }.trim()] = cookie
+    /**
+     * Accumulates cookies across the whole resolution (like a browser cookie jar).
+     */
+    private fun storeCookies(response: HttpResponseData<T>) {
+        response.setCookies.forEach { raw ->
+            val pair = raw.substringBefore(';').trim()
+            if ('=' in pair) {
+                cookies[pair.substringBefore('=').trim()] = pair
             }
         }
     }
@@ -93,7 +104,7 @@ class TikTokVideoResolver(
     private fun cookieHeader(): String? =
         cookies.values.takeIf { it.isNotEmpty() }?.joinToString("; ")
 
-    private suspend fun <T> wrapIntoProperException(request: suspend () -> T): T =
+    private suspend fun <R> wrapIntoProperException(request: suspend () -> R): R =
         try {
             request()
         } catch (throwable: Throwable) {

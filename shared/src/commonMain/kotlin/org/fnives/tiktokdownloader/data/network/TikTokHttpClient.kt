@@ -1,20 +1,5 @@
 package org.fnives.tiktokdownloader.data.network
 
-import io.ktor.client.HttpClient
-import io.ktor.client.HttpClientConfig
-import io.ktor.client.plugins.HttpTimeout
-
-expect fun createHttpClient(): HttpClient
-
-internal fun HttpClientConfig<*>.applyCommonConfig() {
-    expectSuccess = true
-    install(HttpTimeout) {
-        requestTimeoutMillis = 60_000
-        connectTimeoutMillis = 30_000
-        socketTimeoutMillis = 60_000
-    }
-}
-
 private const val USER_AGENT =
     "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/85.0.4183.121 Safari/537.36"
 

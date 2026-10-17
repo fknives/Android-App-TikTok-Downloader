@@ -1,8 +1,5 @@
 package org.fnives.tiktokdownloader.data.network
 
-import io.ktor.client.statement.bodyAsChannel
-import io.ktor.http.contentType
-import io.ktor.utils.io.jvm.javaio.toInputStream
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.fnives.tiktokdownloader.data.model.VideoInPending
@@ -14,9 +11,10 @@ import org.fnives.tiktokdownloader.data.network.exceptions.ParsingException
 import org.fnives.tiktokdownloader.data.network.exceptions.VideoDeletedException
 import org.fnives.tiktokdownloader.diagnostics.Diagnostics
 import org.fnives.tiktokdownloader.errortracking.ErrorTracer
+import java.io.ByteArrayInputStream
 
 class TikTokDownloadRemoteSource(
-    private val videoResolver: TikTokVideoResolver,
+    private val videoResolver: TikTokVideoResolver<ByteArray>,
     private val diagnostics: Diagnostics,
 ) {
 
@@ -30,10 +28,8 @@ class TikTokDownloadRemoteSource(
                     VideoInSavingIntoFile(
                         id = videoInPending.id,
                         url = videoInPending.url,
-                        contentType = response.contentType()?.let {
-                            VideoInSavingIntoFile.ContentType(it.contentType, it.contentSubtype)
-                        },
-                        byteStream = response.bodyAsChannel().toInputStream(),
+                        contentType = response.contentType.toVideoContentType(),
+                        byteStream = ByteArrayInputStream(response.body.raw()),
                     )
                 } catch (throwable: Throwable) {
                     val exceptionName =
@@ -71,4 +67,12 @@ class TikTokDownloadRemoteSource(
                 html = "wrapIntoProperException"
             )
         }
+}
+
+/** Turns e.g. `video/mp4; charset=utf-8` into [VideoInSavingIntoFile.ContentType]. */
+private fun String?.toVideoContentType(): VideoInSavingIntoFile.ContentType? {
+    val mediaType = this?.substringBefore(';')?.trim() ?: return null
+    val parts = mediaType.split('/')
+    if (parts.size < 2) return null
+    return VideoInSavingIntoFile.ContentType(parts[0], parts[1])
 }

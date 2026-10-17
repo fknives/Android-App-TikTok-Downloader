@@ -23,3 +23,5 @@ local.properties
 .env.example
 .devcontainer
 /error*.json
+/.kotlin
+**/build/

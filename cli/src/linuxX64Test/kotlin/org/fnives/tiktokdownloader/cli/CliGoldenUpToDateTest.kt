@@ -9,6 +9,7 @@ import kotlinx.cinterop.convert
 import kotlinx.cinterop.toKString
 import kotlinx.cinterop.usePinned
 import kotlinx.coroutines.runBlocking
+import org.fnives.tiktokdownloader.data.network.CurlVideoHttpClient
 import org.fnives.tiktokdownloader.data.network.TikTokVideoResolver
 import org.fnives.tiktokdownloader.data.network.createHttpClient
 import org.fnives.tiktokdownloader.diagnostics.NoopDiagnostics
@@ -17,12 +18,9 @@ import platform.posix.fopen
 import platform.posix.fread
 import platform.posix.getcwd
 import kotlin.test.Test
+import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
-/**
- * "Up-to-date" style check: it makes a real request and byte-compares the downloaded video against
- * the checked-in golden file(s) under `src/linuxX64Test/resources/video`.
- */
 class CliGoldenUpToDateTest {
 
     @Test
@@ -30,18 +28,20 @@ class CliGoldenUpToDateTest {
         val download: ByteArray = runBlocking {
             TikTokVideoResolver(
                 delayBeforeRequest = 1_000,
-                httpClient = createHttpClient(),
+                httpClient = CurlVideoHttpClient(),
                 diagnostics = NoopDiagnostics
-            ).resolve(URL).videoResponse.bodyAsBytes()
+            ).resolve(URL).videoResponse.body.raw()
         }
 
         assertTrue(download.isNotEmpty(), "the download was empty")
 
-        val mismatchOffsets = EXPECTED_FILE_PATHS.map { firstMismatch(download, findGolden(it)) }
-        assertTrue(
-            mismatchOffsets.any { it == -1 },
-            "download (${download.size} bytes) matches none of ${EXPECTED_FILE_PATHS}; " +
-                    "first differences at offsets $mismatchOffsets",
+        val golden: ByteArray = findGolden()
+        val mismatch = firstMismatch(download, golden)
+        assertEquals(
+            mismatch,
+            -1,
+            "download (${download.size} bytes) does not match the golden file (${golden.size} bytes); " +
+                    "first difference at offset $mismatch"
         )
     }
 
@@ -54,11 +54,7 @@ class CliGoldenUpToDateTest {
         return if (a.size == b.size) -1 else shortest
     }
 
-    /**
-     * Kotlin/Native has no resource classpath, so the golden is read from disk: walk up from the
-     * working directory to the module's `src/linuxX64Test/resources`.
-     */
-    private fun findGolden(relativePath: String): ByteArray {
+    private fun findGolden(): ByteArray {
         val relative = "cli/src/linuxX64Test/resources/$relativePath"
         var directory = currentDirectory()
         while (true) {
@@ -70,8 +66,8 @@ class CliGoldenUpToDateTest {
         }
 
         val fallbacks = listOf(
-            relativePath, // working directory is the processed test resources dir
-            relative, // working directory is the repository root
+            relativePath,
+            relative,
             "src/linuxX64Test/resources/$relativePath", // working directory is the module dir
             "../cli/src/linuxX64Test/resources/$relativePath",
         )
