@@ -3,10 +3,9 @@ package org.fnives.tiktokdownloader.data.network
 import org.fnives.tiktokdownloader.data.network.exceptions.HtmlException
 import org.fnives.tiktokdownloader.data.network.exceptions.NetworkException
 import org.fnives.tiktokdownloader.data.network.parsing.converter.ActualVideoPageUrlConverter
-import org.fnives.tiktokdownloader.data.network.parsing.converter.ThrowIfIsCaptchaResponse
-import org.fnives.tiktokdownloader.data.network.parsing.converter.ThrowIfVideoIsDeletedResponse
-import org.fnives.tiktokdownloader.data.network.parsing.converter.ThrowIfVideoIsPrivateResponse
+import org.fnives.tiktokdownloader.data.network.parsing.converter.ThrowIfVideoIsNotPlayableResponse
 import org.fnives.tiktokdownloader.data.network.parsing.converter.VideoFileUrlConverter
+import org.fnives.tiktokdownloader.data.network.parsing.response.ActualVideoPageUrl
 import org.fnives.tiktokdownloader.data.network.parsing.response.VideoFileUrl
 import org.fnives.tiktokdownloader.diagnostics.Diagnostics
 import kotlin.time.Duration.Companion.milliseconds
@@ -22,20 +21,14 @@ class TikTokVideoResolver<T>(
     private val diagnostics: Diagnostics,
 ) {
 
-    private val throwIfIsCaptchaResponse = ThrowIfIsCaptchaResponse()
-    private val throwIfVideoIsDeletedResponse = ThrowIfVideoIsDeletedResponse()
-    private val throwIfVideoIsPrivateResponse = ThrowIfVideoIsPrivateResponse()
+    private val throwIfVideoIsNotPlayableResponse = ThrowIfVideoIsNotPlayableResponse()
 
     private val actualVideoPageUrlConverter = ActualVideoPageUrlConverter(
-        throwIfIsCaptchaResponse,
-        throwIfVideoIsDeletedResponse,
-        throwIfVideoIsPrivateResponse,
+        throwIfVideoIsNotPlayableResponse,
         diagnostics,
     )
     private val videoFileUrlConverter = VideoFileUrlConverter(
-        throwIfIsCaptchaResponse,
-        throwIfVideoIsDeletedResponse,
-        throwIfVideoIsPrivateResponse,
+        throwIfVideoIsNotPlayableResponse,
         diagnostics,
     )
 
@@ -51,15 +44,7 @@ class TikTokVideoResolver<T>(
             diagnostics.log("starting request")
             val firstResponse = getHtml(tiktokLink)
             val actualUrl = actualVideoPageUrlConverter.convertSafely(firstResponse)
-            val videoUrl: VideoFileUrl
-            if (actualUrl.url != null) {
-                diagnostics.log("actualUrl found = ${actualUrl.url}")
-                platformDelay(delayBeforeRequest.milliseconds) // added just so captcha trigger may not happen
-                videoUrl = videoFileUrlConverter.convertSafely(getHtml(actualUrl.url))
-            } else {
-                diagnostics.log("actualUrl not found. Attempting to parse videoUrl")
-                videoUrl = videoFileUrlConverter.convertSafely(actualUrl.fullResponse)
-            }
+            val videoUrl = videoUrlFrom(firstResponse, actualUrl)
             diagnostics.log("videoFileUrl found = ${videoUrl.videoFileUrl}")
 
             platformDelay(delayBeforeRequest.milliseconds) // added just so captcha trigger may not happen
@@ -67,6 +52,28 @@ class TikTokVideoResolver<T>(
 
             ResolvedVideoUrl(videoUrl.videoFileUrl, videoResponse)
         }
+
+    /**
+     * The video file URL for the share link's response.
+     */
+    private suspend fun videoUrlFrom(
+        firstResponse: String,
+        actualUrl: ActualVideoPageUrl
+    ): VideoFileUrl {
+        if (actualUrl.url != null) {
+            videoFileUrlConverter.parseOrNull(firstResponse)?.let { videoUrlFromShareLink ->
+                diagnostics.log(
+                    "videoFileUrl found in the share link response = ${videoUrlFromShareLink.videoFileUrl}"
+                )
+                return videoUrlFromShareLink
+            }
+            diagnostics.log("actualUrl found = ${actualUrl.url}")
+            platformDelay(delayBeforeRequest.milliseconds) // added just so captcha trigger may not happen
+            return videoFileUrlConverter.convertSafely(getHtml(actualUrl.url))
+        }
+        diagnostics.log("actualUrl not found. Attempting to parse videoUrl")
+        return videoFileUrlConverter.convertSafely(actualUrl.fullResponse)
+    }
 
     private suspend fun getHtml(url: String): String =
         getChecked(url, pageHeaders).body.text()

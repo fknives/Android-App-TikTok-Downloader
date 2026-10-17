@@ -5,10 +5,11 @@ import org.fnives.tiktokdownloader.data.network.exceptions.ParsingException
 import org.fnives.tiktokdownloader.data.network.parsing.response.ActualVideoPageUrl
 import org.fnives.tiktokdownloader.diagnostics.Diagnostics
 
+private const val CANONICAL_LINK_PREFIX = "rel=\"canonical\" href=\""
+private const val CANONICAL_JSON_PREFIX = "\"canonical\":\""
+
 class ActualVideoPageUrlConverter(
-    private val throwIfIsCaptchaResponse: ThrowIfIsCaptchaResponse,
-    private val throwIfVideoIsDeletedResponse: ThrowIfVideoIsDeletedResponse,
-    private val throwIfVideoIsPrivateResponse: ThrowIfVideoIsPrivateResponse,
+    private val throwIfVideoIsNotPlayableResponse: ThrowIfVideoIsNotPlayableResponse,
     private val diagnostics: Diagnostics,
 ) : ParsingExceptionThrowingConverter<ActualVideoPageUrl>() {
 
@@ -16,22 +17,14 @@ class ActualVideoPageUrlConverter(
         val responseBodyAsString = responseBody
         return try {
             val validateResponse = responseBodyAsString
-                .also(throwIfIsCaptchaResponse::invoke)
-                .also(throwIfVideoIsDeletedResponse::invoke)
-                .also(throwIfVideoIsPrivateResponse::invoke)
-            val actualVideoPageUrl = if (validateResponse.contains("rel=\"canonical\" href=\"")) {
-                validateResponse.split("rel=\"canonical\" href=\"")[1]
-                    .split("\"")[0]
-            } else if (validateResponse.contains("\"canonical\":\"")) {
-                validateResponse.split("\"canonical\":\"")[1]
-                    .split("\"")[0]
-                    .replace("\\u002F", "/")
-            } else {
-                throw ParsingException(
+                .also(throwIfVideoIsNotPlayableResponse::invoke)
+
+            val actualVideoPageUrl = validateResponse.valueAfter(CANONICAL_LINK_PREFIX, '"')
+                ?: validateResponse.valueAfter(CANONICAL_JSON_PREFIX, '"')?.replace("\\u002F", "/")
+                ?: throw ParsingException(
                     message = "Can't find a way to get the proper URL from the video",
                     html = responseBodyAsString
                 )
-            }
 
             ActualVideoPageUrl(actualVideoPageUrl, responseBodyAsString)
         } catch (throwable: Throwable) {
