@@ -1,0 +1,7 @@
+name = "tiktok-video-resolver"
+main = "worker.ts"
+compatibility_date = "2026-10-01"
+
+# Kotlin/JS targets a Node-flavoured runtime; keep this if the Worker complains about
+# missing Node globals. Remove it if everything works without.
+compatibility_flags = ["nodejs_compat"]

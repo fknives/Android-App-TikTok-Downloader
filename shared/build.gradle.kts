@@ -11,6 +11,10 @@ kotlin {
         }
     }
 
+    js {
+        nodejs()
+    }
+
     linuxX64()
 
     sourceSets {
@@ -25,6 +29,9 @@ kotlin {
         }
         jvmMain.dependencies {
             implementation(libs.ktor.client.okhttp)
+        }
+        jsMain.dependencies {
+            implementation(libs.ktor.client.js)
         }
         linuxX64Main.dependencies {
             implementation(libs.ktor.client.curl)
