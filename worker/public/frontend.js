@@ -24,7 +24,7 @@ downloadFrame.addEventListener("load", function () {
     try {
         var payload = JSON.parse(body.textContent);
         if (payload && typeof payload.error === "string") {
-            setStatus(friendlyError(502, payload.error), true);
+            setStatus(friendlyError(0, payload.error), true);
         }
     } catch (error) {
         // Not an error document (e.g. the browser handled the response as a download).
@@ -95,8 +95,7 @@ async function download(value) {
             throw new Error(await friendlyErrorFrom(response));
         }
 
-        var fileUrl = response.headers.get("x-video-url");
-        var cookie = response.headers.get("x-video-cookie") || "";
+        var downloadId = response.headers.get("x-download-id");
 
         var size = Number(
             response.headers.get("x-content-length") ||
@@ -107,7 +106,7 @@ async function download(value) {
             if (response.body) {
                 response.body.cancel().catch(function () { });
             }
-            startNativeDownload(fileUrl, cookie);
+            startNativeDownload(url, downloadId);
             return;
         }
 
@@ -122,7 +121,7 @@ async function download(value) {
         } catch (error) {
             // content-length was missing/lied; the real body is too big to buffer.
             if (error && error.code === "too_large") {
-                startNativeDownload(fileUrl, cookie);
+                startNativeDownload(url, downloadId);
                 return;
             }
             throw error;
@@ -139,14 +138,12 @@ async function download(value) {
     }
 }
 
-function startNativeDownload(fileUrl, cookie) {
-    if (!fileUrl) {
-        throw new Error("Server did not provide a download URL.");
+function startNativeDownload(url, id) {
+    var downloadUrl = "/api/download?url=" + encodeURIComponent(url);
+    if (id) {
+        downloadUrl += "&id=" + encodeURIComponent(id);
     }
 
-    var downloadUrl =
-        "/api/download?url=" + encodeURIComponent(fileUrl) +
-        "&cookie=" + encodeURIComponent(cookie);
     triggerDownload(downloadUrl);
 
     manualDownload.href = downloadUrl;
@@ -230,6 +227,9 @@ function friendlyError(status, detail) {
     }
     if (status === 408) {
         return "Request timed out. Please retry.";
+    }
+    if (status === 410) {
+        return "Download link expired. Please retry.";
     }
     if (status === 429 || status >= 500) {
         return "Service temporarily unavailable. Please retry later.";

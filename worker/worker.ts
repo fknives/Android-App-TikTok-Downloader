@@ -32,13 +32,11 @@ async function resolve(requestUrl: URL): Promise<Response> {
 }
 
 async function download(requestUrl: URL): Promise<Response> {
-    const fileUrl = requestUrl.searchParams.get("url");
-    if (!fileUrl) {
-        return errorResponse(400, "Missing ?url= query parameter");
-    }
-
     try {
-        return await downloadVideo(fileUrl, requestUrl.searchParams.get("cookie") || null);
+        return await downloadVideo(
+            requestUrl.searchParams.get("id"),
+            requestUrl.searchParams.get("url")
+        );
     } catch (error) {
         return errorResponse(502, String(error));
     }

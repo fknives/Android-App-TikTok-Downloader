@@ -17,6 +17,7 @@ import kotlin.coroutines.startCoroutine
 import kotlin.js.Promise
 
 private const val DEFAULT_FILE_NAME = "video.mp4"
+private const val HEADER_DOWNLOAD_ID = "x-download-id"
 
 private val httpClient: VideoHttpClient<Response> by lazy { createFetchVideoHttpClient() }
 
@@ -34,34 +35,75 @@ fun resolveVideo(url: String): Promise<Response> =
     promise {
         val resolved = newResolver().resolve(url)
         val raw = resolved.videoResponse.body.raw()
+        val id = storeDownload(resolved.videoFileUrl, resolved.cookies)
 
         raw.withHeaders {
             set("content-type", raw.headers.get("content-type") ?: "video/mp4")
             set("content-disposition", "attachment; filename=\"${fileNameFrom(url)}\"")
             set("cache-control", "no-store")
-            set("x-video-url", resolved.videoFileUrl)
-            resolved.cookies?.let { set("x-video-cookie", it) }
+            if (id != null) {
+                set(HEADER_DOWNLOAD_ID, id)
+            }
         }
     }
 
 /**
- * Re-fetches an already-resolved video file.
+ * Downloads a video natively for the second pass.
+ *
+ * On an [id] cache hit it re-fetches the already-resolved file.
+ * On a cache miss (or when no id was handed out) it resolves [url] end to end.
  */
 @JsExport
-fun downloadVideo(fileUrl: String, cookieHeader: String?): Promise<Response> =
+fun downloadVideo(id: String?, url: String?): Promise<Response> =
     promise {
-        val response = httpClient.get(fileUrl, videoFileRequestHeaders(cookieHeader))
-        if (!response.isSuccess) {
-            throw IllegalStateException("GET $fileUrl returned HTTP ${response.status}")
+        val cached = id?.let { loadDownload(it) }
+
+        val raw = if (cached != null) {
+            try {
+                fetchCached(cached)
+            } catch (error: Throwable) {
+                if (url != null) {
+                    resolveFresh(url)
+                } else {
+                    throw error
+                }
+            }
+        } else if (url != null) {
+            resolveFresh(url)
+        } else {
+            return@promise errorResponse(400, "Missing ?url= query parameter")
         }
 
-        val raw = response.body.raw()
+        val nameSource = url ?: cached?.fileUrl
+        val fileName = if (nameSource != null) fileNameFrom(nameSource) else DEFAULT_FILE_NAME
+
         raw.withHeaders {
             set("content-type", raw.headers.get("content-type") ?: "video/mp4")
-            set("content-disposition", "attachment; filename=\"${fileNameFrom(fileUrl)}\"")
+            set("content-disposition", "attachment; filename=\"${fileName}\"")
             set("cache-control", "no-store")
         }
     }
+
+private suspend fun fetchCached(cached: ResolvedDownload): Response {
+    val response = httpClient.get(cached.fileUrl, videoFileRequestHeaders(cached.cookieHeader))
+    if (!response.isSuccess) {
+        throw IllegalStateException("GET ${cached.fileUrl} returned HTTP ${response.status}")
+    }
+    return response.body.raw()
+}
+
+private suspend fun resolveFresh(url: String): Response =
+    newResolver().resolve(url).videoResponse.body.raw()
+
+private fun errorResponse(status: Int, message: String): Response {
+    val payload: dynamic = js("({})")
+    payload.error = message
+
+    val headers = Headers()
+    headers.set("content-type", "application/json; charset=utf-8")
+    headers.set("cache-control", "no-store")
+    return Response(JSON.stringify(payload), ResponseInit(status = status.toShort(), headers = headers))
+}
 
 /**
  * Last non-empty path segment of [url], mirroring the frontend's naming. Falls back
