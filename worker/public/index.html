@@ -5,21 +5,26 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>TikTok Downloader</title>
     <script type="module" src="/frontend.js"></script>
-    <link rel="stylesheet" href="/style.css">
+    <link rel="stylesheet" href="./style.css">
 </head>
 <body>
     <main>
-        <form class="download">
-        <label for="url" class="visually-hidden">TikTok URL</label>
-        <input id="url" type="text" placeholder="TikTok share URL" autocomplete="off" class="download_input" />
-        <button id="download" type="submit" class="download_cta" disabled>Download</button>
-        <p id="status" role="status" class="notice"></p>
-        <a id="manual-download" hidden target="download">Download manually</a>
-        </form>
-        <figure id="preview" class="preview" hidden>
-            <figcaption>Preview</figcaption>
-            <video id="preview-video" controls playsinline preload="metadata"></video>
-        </figure>
+        <section class="card">
+            <h1>TikTok Downloader</h1>
+            <form class="download">
+                <label for="url" class="download_label">Paste a TikTok link to download the video.</label>
+                <input id="url" type="text" placeholder="TikTok share URL" autocomplete="off" class="download_input" />
+                <button id="download" type="submit" class="download_cta" disabled>Download</button>
+                <p id="status" role="status" class="notice"></p>
+                <a id="manual-download" hidden target="download">Download manually</a>
+            </form>
+            <figure id="preview" class="preview" hidden>
+                <figcaption>
+                    <span>Preview</span>
+                </figcaption>
+                <video id="preview-video" controls playsinline preload="metadata"></video>
+            </figure>
+        </section>
     </main>
     <iframe id="download-frame" name="download" hidden></iframe>
     <a id="blob-download" hidden download></a>
