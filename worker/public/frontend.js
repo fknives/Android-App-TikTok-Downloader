@@ -1,20 +1,27 @@
 
 const input = document.getElementById("url");
-input.addEventListener("keydown", function (event) {
-    if (event.key === "Enter" && !input.disabled) {
-        download(input.value);
-    }
-});
-
+const form = document.querySelector(".download");
 const button = document.getElementById("download");
-button.disabled = true;
-button.addEventListener("click", function () {
-    download(input.value);
-});
 const statusElement = document.getElementById("status");
 const downloadFrame = document.getElementById("download-frame");
 const blobDownload = document.getElementById("blob-download");
 const manualDownload = document.getElementById("manual-download");
+
+form.addEventListener("submit", function (event) {
+    event.preventDefault();
+    download(input.value);
+});
+
+let inFlight = false;
+function syncButtonState() {
+    button.disabled = input.value.trim() === "" || inFlight;
+    if (inFlight) {
+        button.dataset.state = "loading";
+    } else {
+        delete button.dataset.state;
+    }
+}
+input.addEventListener("input", syncButtonState);
 
 downloadFrame.addEventListener("load", function () {
     var body = downloadFrame.contentDocument && downloadFrame.contentDocument.body;
@@ -36,27 +43,22 @@ const VIDEO_PATH = /^@.*\/video\/.*$/;
 const TIKTOK_URL_PATH = /^(?:[a-z0-9-]+\.)*tiktok\.com\/.+/i;
 const LARGE_FILE_BYTES = 12 * 1024 * 1024;
 
-let inFlight = false;
-
 var parsed = parsePath();
 input.value = parsed.value;
 
 if (parsed.plausible) {
-    var key = "resolved:" + location.pathname;
-    if (sessionStorage.getItem(key)) {
-        setStatus("Already resolved this link. Press Download to fetch it again.");
-        button.disabled = false;
-    } else {
-        sessionStorage.setItem(key, "1");
-        download(parsed.value);
-    }
+    download(parsed.value);
 } else {
-    button.disabled = false;
+    syncButtonState();
 }
 
 function setStatus(message, isError) {
     statusElement.textContent = message;
-    statusElement.style.color = isError ? "red" : "";
+    if (isError) {
+        statusElement.dataset.state = "error";
+    } else {
+        delete statusElement.dataset.state;
+    }
 }
 
 function parsePath() {
@@ -110,7 +112,7 @@ async function download(value) {
     }
 
     inFlight = true;
-    button.disabled = true;
+    syncButtonState();
     manualDownload.hidden = true;
     setStatus("Resolving\u2026");
 
@@ -155,7 +157,7 @@ async function download(value) {
         setStatus(error && error.message ? error.message : String(error), true);
     } finally {
         inFlight = false;
-        button.disabled = false;
+        syncButtonState();
     }
 }
 
