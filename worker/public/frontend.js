@@ -6,6 +6,8 @@ const statusElement = document.getElementById("status");
 const downloadFrame = document.getElementById("download-frame");
 const blobDownload = document.getElementById("blob-download");
 const manualDownload = document.getElementById("manual-download");
+const preview = document.getElementById("preview");
+const previewVideo = document.getElementById("preview-video");
 
 form.addEventListener("submit", function (event) {
     event.preventDefault();
@@ -13,6 +15,9 @@ form.addEventListener("submit", function (event) {
 });
 
 let inFlight = false;
+let previewUrl = null;
+let previewKey = "";
+let previewFileName = "";
 function syncButtonState() {
     button.disabled = input.value.trim() === "" || inFlight;
     if (inFlight) {
@@ -130,9 +135,16 @@ async function download(value) {
         return;
     }
 
+    if (previewUrl && previewKey === url) {
+        downloadPreview();
+        setStatus(L.status.downloadStarted);
+        return;
+    }
+
     inFlight = true;
     syncButtonState();
     manualDownload.hidden = true;
+    clearPreview();
     setStatus("", false);
 
     try {
@@ -171,7 +183,7 @@ async function download(value) {
             throw error;
         }
 
-        triggerFileDownload({ blob: blob, fileName: fileName });
+        triggerFileDownload({ blob: blob, fileName: fileName, url: url });
 
         setStatus(L.status.downloadStarted);
     } catch (error) {
@@ -288,10 +300,45 @@ function fileNameFromDisposition(header) {
     return match ? match[1].trim() : "";
 }
 
-function triggerFileDownload({ blob, fileName }) {
-    const objectUrl = URL.createObjectURL(blob);
-    blobDownload.href = objectUrl;
-    blobDownload.download = fileName;
+function clearPreview() {
+    preview.hidden = true;
+    previewVideo.pause();
+    previewVideo.removeAttribute("src");
+    previewVideo.load();
+
+    blobDownload.removeAttribute("href");
+    blobDownload.removeAttribute("download");
+
+    if (previewUrl) {
+        URL.revokeObjectURL(previewUrl);
+        previewUrl = null;
+    }
+    previewKey = "";
+    previewFileName = "";
+}
+
+function showPreview(blob) {
+    clearPreview();
+
+    previewUrl = URL.createObjectURL(blob);
+    previewVideo.src = previewUrl;
+    preview.hidden = false;
+}
+
+function triggerFileDownload({ blob, fileName, url }) {
+    showPreview(blob);
+    previewKey = url;
+    previewFileName = fileName;
+
+    downloadPreview();
+}
+
+function downloadPreview() {
+    if (!previewUrl) {
+        return;
+    }
+
+    blobDownload.href = previewUrl;
+    blobDownload.download = previewFileName;
     blobDownload.click();
-    URL.revokeObjectURL(objectUrl);
 }

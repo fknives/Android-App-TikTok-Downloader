@@ -54,6 +54,7 @@ a:active {
 
 .notice {
   color: var(--text);
+  text-align: center;
 }
 .notice[data-state="error"] {
   color: var(--error);
@@ -112,6 +113,10 @@ a:active {
 
   --shine-angle: 0deg;
   transition: border-color 0.2s ease;
+
+  -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
+  user-select: none;
 }
 
 .download_cta:not(:disabled){
@@ -189,6 +194,41 @@ a:active {
   grid-column: 1 / -1;
 }
 
+.download > #manual-download {
+  justify-self: center;
+}
+
 @media (min-width: 480px) {
   .download { grid-template-columns: 1fr auto; }
+}
+
+.preview {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5em;
+  width: 100%;
+  max-width: 40rem;
+  margin: 1rem auto 0;
+  padding-inline: 1rem;
+}
+
+.preview[hidden] {
+  display: none;
+}
+
+.preview figcaption {
+  color: var(--text);
+  font-size: 0.8em;
+  opacity: 0.8;
+}
+
+.preview video {
+  display: block;
+  width: auto;
+  height: auto;
+  max-width: 100%;
+  max-height: 60vh;
+  background: #000;
+  border-radius: 0.75em;
 }
