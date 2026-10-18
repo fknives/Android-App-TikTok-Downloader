@@ -10,4 +10,5 @@ package org.fnives.tiktokdownloader.data.network
 data class ResolvedVideoUrl<T>(
     val videoFileUrl: String,
     val videoResponse: HttpResponseData<T>,
+    val cookies: String?
 )

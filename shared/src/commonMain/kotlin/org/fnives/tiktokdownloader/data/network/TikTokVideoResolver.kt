@@ -50,7 +50,11 @@ class TikTokVideoResolver<T>(
             platformDelay(delayBeforeRequest.milliseconds) // added just so captcha trigger may not happen
             val videoResponse = getChecked(videoUrl.videoFileUrl, videoHeaders)
 
-            ResolvedVideoUrl(videoUrl.videoFileUrl, videoResponse)
+            ResolvedVideoUrl(
+                videoFileUrl = videoUrl.videoFileUrl,
+                videoResponse = videoResponse,
+                cookies = cookieHeader()
+            )
         }
 
     /**

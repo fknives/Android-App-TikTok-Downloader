@@ -29,4 +29,12 @@ internal val videoRequestHeaders: Map<String, String> = mapOf(
     "User-Agent" to USER_AGENT,
 )
 
+/**
+ * Headers for re-fetching an already-resolved video file.
+ */
+fun videoFileRequestHeaders(cookieHeader: String?): Map<String, String> = buildMap {
+    putAll(sanitizeRequestHeaders(videoRequestHeaders))
+    if (!cookieHeader.isNullOrBlank()) put("Cookie", cookieHeader)
+}
+
 internal expect fun sanitizeRequestHeaders(headers: Map<String, String>): Map<String, String>
