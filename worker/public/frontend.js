@@ -42,8 +42,14 @@ var parsed = parsePath();
 input.value = parsed.value;
 
 if (parsed.plausible) {
-    input.text = parsed.value;
-    download(parsed.value);
+    var key = "resolved:" + location.pathname;
+    if (sessionStorage.getItem(key)) {
+        setStatus("Already resolved this link. Press Download to fetch it again.");
+        button.disabled = false;
+    } else {
+        sessionStorage.setItem(key, "1");
+        download(parsed.value);
+    }
 } else {
     button.disabled = false;
 }
@@ -74,10 +80,29 @@ function parsePath() {
     return { value: raw, plausible: false };
 }
 
+function normalizeTikTokUrl(value) {
+    var trimmed = (value || "").trim();
+    if (!trimmed) {
+        return "";
+    }
+
+    var withScheme = /^https?:\/\//i.test(trimmed) ? trimmed : "https://" + trimmed;
+    var withoutScheme = withScheme.replace(/^https?:\/\//i, "");
+    var authority = withoutScheme.split(/[/?#]/)[0].toLowerCase();
+
+    if (!authority || authority.indexOf("@") !== -1 || authority.indexOf(":") !== -1) {
+        return "";
+    }
+    if (authority !== "tiktok.com" && !authority.endsWith(".tiktok.com")) {
+        return "";
+    }
+    return withScheme;
+}
+
 async function download(value) {
-    var url = (value || "").trim();
+    var url = normalizeTikTokUrl(value);
     if (!url) {
-        setStatus("Enter a TikTok share URL.", true);
+        setStatus("Enter a TikTok link.", true);
         return;
     }
     if (inFlight) {
@@ -97,11 +122,7 @@ async function download(value) {
 
         var downloadId = response.headers.get("x-download-id");
 
-        var size = Number(
-            response.headers.get("x-content-length") ||
-            response.headers.get("content-length") ||
-            0
-        );
+        var size = Number(response.headers.get("x-content-length") || response.headers.get("content-length") || 0);
         if (size > LARGE_FILE_BYTES) {
             if (response.body) {
                 response.body.cancel().catch(function () { });
@@ -217,7 +238,7 @@ function friendlyError(status, detail) {
     }
 
     if (status === 400) {
-        return "Invalid request.";
+        return "Only TikTok links are supported.";
     }
     if (status === 401 || status === 403) {
         return "Request was refused. Please retry later.";
@@ -227,9 +248,6 @@ function friendlyError(status, detail) {
     }
     if (status === 408) {
         return "Request timed out. Please retry.";
-    }
-    if (status === 410) {
-        return "Download link expired. Please retry.";
     }
     if (status === 429 || status >= 500) {
         return "Service temporarily unavailable. Please retry later.";

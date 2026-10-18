@@ -18,6 +18,8 @@ import kotlin.js.Promise
 
 private const val DEFAULT_FILE_NAME = "video.mp4"
 private const val HEADER_DOWNLOAD_ID = "x-download-id"
+private const val TIKTOK_HOST = "tiktok.com"
+private const val TIKTOK_HOST_SUFFIX = ".tiktok.com"
 
 private val httpClient: VideoHttpClient<Response> by lazy { createFetchVideoHttpClient() }
 
@@ -32,57 +34,54 @@ private fun newResolver() = TikTokVideoResolver(
  */
 @JsExport
 fun resolveVideo(url: String): Promise<Response> =
-    promise {
-        val resolved = newResolver().resolve(url)
-        val raw = resolved.videoResponse.body.raw()
-        val id = storeDownload(resolved.videoFileUrl, resolved.cookies)
-
-        raw.withHeaders {
-            set("content-type", raw.headers.get("content-type") ?: "video/mp4")
-            set("content-disposition", "attachment; filename=\"${fileNameFrom(url)}\"")
-            set("cache-control", "no-store")
-            if (id != null) {
-                set(HEADER_DOWNLOAD_ID, id)
-            }
-        }
-    }
+    promise { resolveVideoResponse(url, generateId = true) }
 
 /**
  * Downloads a video natively for the second pass.
  *
- * On an [id] cache hit it re-fetches the already-resolved file.
- * On a cache miss (or when no id was handed out) it resolves [url] end to end.
+ * On an [id] cache hit it re-fetches the already-resolved file. On a cache miss (or
+ * when no id was handed out) it resolves [url] end to end without generating an id.
  */
 @JsExport
 fun downloadVideo(id: String?, url: String?): Promise<Response> =
     promise {
         val cached = id?.let { loadDownload(it) }
 
-        val raw = if (cached != null) {
-            try {
+        if (cached != null) {
+            val raw = try {
                 fetchCached(cached)
             } catch (error: Throwable) {
-                if (url != null) {
-                    resolveFresh(url)
-                } else {
+                if (url == null) {
                     throw error
                 }
+                return@promise resolveVideoResponse(url, generateId = false)
             }
-        } else if (url != null) {
-            resolveFresh(url)
-        } else {
-            return@promise errorResponse(400, "Missing ?url= query parameter")
+
+            val nameSource = url?.let { normalizeTikTokUrl(it) } ?: cached.fileUrl
+            return@promise raw.asDownload(fileNameFrom(nameSource))
         }
 
-        val nameSource = url ?: cached?.fileUrl
-        val fileName = if (nameSource != null) fileNameFrom(nameSource) else DEFAULT_FILE_NAME
-
-        raw.withHeaders {
-            set("content-type", raw.headers.get("content-type") ?: "video/mp4")
-            set("content-disposition", "attachment; filename=\"${fileName}\"")
-            set("cache-control", "no-store")
+        if (url == null) {
+            return@promise errorResponse(400, "Missing or unsupported ?url= query parameter")
         }
+
+        resolveVideoResponse(url, generateId = false)
     }
+
+
+/**
+ * Resolves [url] and wraps the stream as a downloadable response.
+ */
+private suspend fun resolveVideoResponse(url: String, generateId: Boolean): Response {
+    val normalized = normalizeTikTokUrl(url)
+        ?: return errorResponse(400, "Only TikTok links are supported.")
+
+    val resolved = newResolver().resolve(normalized)
+    val raw = resolved.videoResponse.body.raw()
+    val id = if (generateId) storeDownload(resolved.videoFileUrl, resolved.cookies) else null
+
+    return raw.asDownload(fileNameFrom(normalized), id)
+}
 
 private suspend fun fetchCached(cached: ResolvedDownload): Response {
     val response = httpClient.get(cached.fileUrl, videoFileRequestHeaders(cached.cookieHeader))
@@ -91,9 +90,6 @@ private suspend fun fetchCached(cached: ResolvedDownload): Response {
     }
     return response.body.raw()
 }
-
-private suspend fun resolveFresh(url: String): Response =
-    newResolver().resolve(url).videoResponse.body.raw()
 
 private fun errorResponse(status: Int, message: String): Response {
     val payload: dynamic = js("({})")
@@ -106,8 +102,44 @@ private fun errorResponse(status: Int, message: String): Response {
 }
 
 /**
- * Last non-empty path segment of [url], mirroring the frontend's naming. Falls back
- * to [DEFAULT_FILE_NAME] when there is nothing usable.
+ * Accepts only TikTok links, with or without a scheme.
+ * Returns the normalized URL (`https://` added when missing) or null when the host is not TikTok.
+ */
+private fun normalizeTikTokUrl(value: String): String? {
+    val trimmed = value.trim()
+    if (trimmed.isEmpty()) {
+        return null
+    }
+
+    val withScheme = if (
+        trimmed.startsWith("http://", ignoreCase = true) ||
+        trimmed.startsWith("https://", ignoreCase = true)
+    ) {
+        trimmed
+    } else {
+        "https://$trimmed"
+    }
+
+    val afterScheme = withScheme.substringAfter("://", missingDelimiterValue = "")
+    if (afterScheme.isEmpty()) {
+        return null
+    }
+
+    val authority = afterScheme
+        .substringBefore('/')
+        .substringBefore('?')
+        .substringBefore('#')
+
+    if (authority.isEmpty() || '@' in authority || ':' in authority) {
+        return null
+    }
+
+    val host = authority.lowercase()
+    return if (host == TIKTOK_HOST || host.endsWith(TIKTOK_HOST_SUFFIX)) withScheme else null
+}
+
+/**
+ * Last non-empty path segment of [url].
  */
 private fun fileNameFrom(url: String): String {
     val segment = url
@@ -119,13 +151,20 @@ private fun fileNameFrom(url: String): String {
     return if (segment.isBlank()) DEFAULT_FILE_NAME else "$segment.mp4"
 }
 
-private inline fun Response.withHeaders(crossinline extra: Headers.() -> Unit): Response {
-    val newHeaders = Headers()
-    this.headers.get("content-length")?.let {
-        newHeaders.set("content-length", it)
-        newHeaders.set("x-content-length", it)
+private fun Response.asDownload(fileName: String, id: String? = null): Response {
+    val contentType = headers.get("content-type") ?: "video/mp4"
+    val newHeaders = Headers().apply {
+        headers.get("content-length")?.let {
+            set("content-length", it)
+            set("x-content-length", it)
+        }
+        set("content-type", contentType)
+        set("content-disposition", "attachment; filename=\"$fileName\"")
+        set("cache-control", "no-store")
+        if (id != null) {
+            set(HEADER_DOWNLOAD_ID, id)
+        }
     }
-    newHeaders.extra()
     return Response(body, ResponseInit(status = status, headers = newHeaders))
 }
 
