@@ -1,0 +1,20 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>TikTok Downloader</title>
+    <script type="module" src="/frontend.js"></script>
+</head>
+<body>
+    <main>
+        <h1>TikTok Downloader</h1>
+        <input id="url" type="text" placeholder="TikTok share URL" autocomplete="off" />
+    <button id="download" type="button">Download</button>
+        <p id="status" role="status"></p>
+        <a id="manual-download" hidden target="download">Download manually</a>
+    </main>
+    <iframe id="download-frame" name="download" hidden></iframe>
+    <a id="blob-download" hidden download></a>
+</body>
+</html>
