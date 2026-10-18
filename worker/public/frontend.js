@@ -34,7 +34,7 @@ downloadFrame.addEventListener("load", function () {
 const SHORT_CODE = /^[A-Za-z0-9_-]{3,}$/;
 const VIDEO_PATH = /^@.*\/video\/.*$/;
 const TIKTOK_URL_PATH = /^(?:[a-z0-9-]+\.)*tiktok\.com\/.+/i;
-const LARGE_FILE_BYTES = 3 * 1024 * 1024;
+const LARGE_FILE_BYTES = 12 * 1024 * 1024;
 
 let inFlight = false;
 
