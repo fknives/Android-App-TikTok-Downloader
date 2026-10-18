@@ -22,6 +22,20 @@ Click on the image for the demo video
 [![Usage within the App](https://img.youtube.com/vi/NXv3JpmwA8Y/0.jpg)](https://www.youtube.com/watch?v=NXv3JpmwA8Y)
 [![Usage within TikTok](https://img.youtube.com/vi/jxaxffE8c4c/0.jpg)](https://www.youtube.com/watch?v=jxaxffE8c4c)
 
+## Website
+
+A hosted version is available at [tt.fomevod.bid](https://tt.fomevod.bid) — paste a TikTok share link and download the video from the browser, no app install needed. The website source lives in `worker/`.
+
+## CLI
+
+A small Linux x64 CLI lives in `cli/` and writes the video straight to stdout:
+
+```sh
+./cli/build/bin/linuxX64/releaseExecutable/cli.kexe "https://vm.tiktok.com/ZN8SyMfnP/" > output.mp4
+```
+
+See [`cli/README.md`](cli/README.md) for building and running it via Docker.
+
 ## Secret
 
 Here is another Secret Video QR code just for the curious minded

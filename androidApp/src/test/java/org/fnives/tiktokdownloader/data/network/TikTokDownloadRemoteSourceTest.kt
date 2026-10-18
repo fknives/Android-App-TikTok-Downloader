@@ -45,7 +45,7 @@ class TikTokDownloadRemoteSourceTest {
 
     @Test
     fun GIVEN_request_finished_with_cookies_WHEN_request_is_called_THEN_cookieStore_is_clear_and_request_doesnt_contain_cookies() {
-        val cookieToSet = "that-is-a-cookie"
+        val cookieToSet = "that-is-a-cookie=yes"
         val shortenedUrlResponseBody = readResourceFileShortenedUrlResponse()
         mockWebServer.enqueue(MockResponse()
             .setResponseCode(200)
@@ -75,8 +75,8 @@ class TikTokDownloadRemoteSourceTest {
 
     @Test
     fun GIVEN_cookie_in_first_response_THEN_it_is_used_in_the_following_requests() {
-        val expectedCookie = "that-is-a-cookie"
-        val shortenedUrlResponseBody = readResourceFileShortenedUrlResponse()
+        val expectedCookie = "that-is-a-cookie=yes"
+        val shortenedUrlResponseBody = readResourceFileShareResponseWithoutVideoUrl()
         val mainPageVariant1Response = readResourceFileMainPageVariant1Response()
         mockWebServer.enqueue(
             MockResponse().setResponseCode(200).setHeader("Set-Cookie", expectedCookie).setBody(shortenedUrlResponseBody)
@@ -98,8 +98,8 @@ class TikTokDownloadRemoteSourceTest {
 
     @Test
     fun GIVEN_cookie_with_extra_info_in_first_response_THEN_it_is_used_in_the_following_request_without_the_extra() {
-        val cookieWithExtra = "that-is-a-cookie; and-some-extra-unnecessary; things"
-        val expectedCookie = "that-is-a-cookie"
+        val cookieWithExtra = "that-is-a-cookie=yes; and-some-extra-unnecessary; things"
+        val expectedCookie = "that-is-a-cookie=yes"
         val shortenedUrlResponseBody = readResourceFileShortenedUrlResponse()
         mockWebServer.enqueue(
             MockResponse().setResponseCode(200).setHeader("Set-Cookie", cookieWithExtra).setBody(shortenedUrlResponseBody)
@@ -124,7 +124,7 @@ class TikTokDownloadRemoteSourceTest {
         val expectedId = "alma"
         val expectedUrl = TEST_URL
         val expectedContentType = VideoInSavingIntoFile.ContentType("video", "mp4")
-        val shortenedUrlResponseBody = readResourceFileShortenedUrlResponse()
+        val shortenedUrlResponseBody = readResourceFileShareResponseWithoutVideoUrl()
         val mainPageVariant1Response = readResourceFileMainPageVariant1Response()
         mockWebServer.enqueue(MockResponse().setResponseCode(200).setBody(shortenedUrlResponseBody))
         mockWebServer.enqueue(MockResponse().setResponseCode(200).setBody(mainPageVariant1Response))
@@ -140,7 +140,7 @@ class TikTokDownloadRemoteSourceTest {
         mockWebServer.takeRequest()
         mockWebServer.takeRequest()
         val videoRequest = mockWebServer.takeRequest()
-        Assertions.assertEquals("http://localhost:8080/?a=a&b=b&c=c", videoRequest.requestUrl?.toUri()?.toString())
+        Assertions.assertEquals(VIDEO_REQUEST_TEST_URL, videoRequest.requestUrl?.toUri()?.toString())
     }
 
 
@@ -149,7 +149,7 @@ class TikTokDownloadRemoteSourceTest {
         val expectedId = "e-alma"
         val expectedUrl = TEST_URL
         val expectedContentType = VideoInSavingIntoFile.ContentType("citrom", "mp4")
-        val shortenedUrlResponseBody = readResourceFileShortenedUrlResponse()
+        val shortenedUrlResponseBody = readResourceFileShareResponseWithoutVideoUrl()
         val mainPageVariant1Response = readResourceFileMainPageVariant2Response()
         mockWebServer.enqueue(MockResponse().setResponseCode(200).setBody(shortenedUrlResponseBody))
         mockWebServer.enqueue(MockResponse().setResponseCode(200).setBody(mainPageVariant1Response))
@@ -165,7 +165,20 @@ class TikTokDownloadRemoteSourceTest {
         mockWebServer.takeRequest()
         mockWebServer.takeRequest()
         val videoRequest = mockWebServer.takeRequest()
-        Assertions.assertEquals("http://localhost:8080/?a=a&b=b&c=c", videoRequest.requestUrl?.toUri()?.toString())
+        Assertions.assertEquals(VIDEO_REQUEST_TEST_URL, videoRequest.requestUrl?.toUri()?.toString())
+    }
+
+    @Test
+    fun GIVEN_share_response_that_already_has_the_video_url_THEN_the_canonical_page_is_not_requested() = runBlocking {
+        mockWebServer.enqueue(MockResponse().setResponseCode(200).setBody(readResourceFileShortenedUrlResponse()))
+        mockWebServer.enqueue(
+            MockResponse().setResponseCode(200).setHeader("Content-Type", "video/mp4").setBody("banan")
+        )
+
+        val response = sut.getVideo(VideoInPending("alma", TEST_URL))
+
+        Assertions.assertEquals("banan", response.byteStream.reader().readText())
+        Assertions.assertEquals(2, mockWebServer.requestCount)
     }
 
     @Test
@@ -196,7 +209,7 @@ class TikTokDownloadRemoteSourceTest {
     fun GIVEN_proper_first_and_second_but_incorrect_video_response_THEN_NetworkException_is_thrown() {
         Assertions.assertThrows(NetworkException::class.java) {
             runBlocking {
-                val shortenedUrlResponseBody = readResourceFileShortenedUrlResponse()
+                val shortenedUrlResponseBody = readResourceFileShareResponseWithoutVideoUrl()
                 val mainPageVariant1Response = readResourceFileMainPageVariant2Response()
                 mockWebServer.enqueue(MockResponse().setResponseCode(200).setBody(shortenedUrlResponseBody))
                 mockWebServer.enqueue(MockResponse().setResponseCode(200).setBody(mainPageVariant1Response))
@@ -222,7 +235,7 @@ class TikTokDownloadRemoteSourceTest {
     fun GIVEN_proper_first_but_not_expected_response_body_as_second_THEN_ParsingException_is_thrown() {
         Assertions.assertThrows(ParsingException::class.java) {
             runBlocking {
-                val shortenedUrlResponseBody = readResourceFileShortenedUrlResponse()
+                val shortenedUrlResponseBody = readResourceFileShareResponseWithoutVideoUrl()
                 mockWebServer.enqueue(MockResponse().setResponseCode(200).setBody(shortenedUrlResponseBody))
                 mockWebServer.enqueue(MockResponse().setResponseCode(200).setBody("this cannot be parsed"))
 
@@ -254,7 +267,7 @@ class TikTokDownloadRemoteSourceTest {
     ) {
         Assertions.assertThrows(CaptchaRequiredException::class.java) {
             runBlocking {
-                val shortenedUrlResponseBody = readResourceFileShortenedUrlResponse()
+                val shortenedUrlResponseBody = readResourceFileShareResponseWithoutVideoUrl()
                 mockWebServer.enqueue(MockResponse().setResponseCode(200).setBody(shortenedUrlResponseBody))
                 mockWebServer.enqueue(MockResponse().setResponseCode(200).setBody(response))
 
@@ -295,15 +308,28 @@ class TikTokDownloadRemoteSourceTest {
         private const val CAPTCHA_REQUIRED_RESPONSE_TWO = "response/captcha_required_two.html"
         private const val MAIN_PAGE_VARIANT_1_RESPONSE = "response/main_page_v1.html"
         private const val MAIN_PAGE_VARIANT_2_RESPONSE = "response/main_page_v1.html"
-        private const val PORT = 8080
+        private const val PORT = 8081
         private const val TEST_URL = "http://127.0.0.1:$PORT"
         private const val SHORTENED_TEST_URL = "http://127.0.0.1:$PORT"
         private const val VIDEO_FILE_TEST_URL = "http:\\u002F/127.0.0.1:$PORT?a=a\\u0026b=b&c=c"
+
+        /** The video request URL as the server sees it: the fixture's bare `host?query` gains a `/`. */
+        private const val VIDEO_REQUEST_TEST_URL = "http://127.0.0.1:$PORT/?a=a&b=b&c=c"
         private const val CAPTCHA_TEST_URL = "http://127.0.0.1:$PORT"
+
+        private val PLAY_ADDR = Regex("\"playAddr\"\\s*:\\s*\"[^\"]*\"")
 
         private fun Any.readResourceFileShortenedUrlResponse() =
             readResourceFile(SHORTENED_URL_RESPONSE)
                 .replace("https://www.tiktok.com/@ieclauuu/video/6887614455967010049", SHORTENED_TEST_URL)
+                .withLocalVideoUrl()
+
+        private fun Any.readResourceFileShareResponseWithoutVideoUrl() =
+            readResourceFileShortenedUrlResponse().replace(PLAY_ADDR, "")
+
+        /** Points the fixture's `playAddr` at [VIDEO_FILE_TEST_URL] so the video request stays mocked. */
+        private fun String.withLocalVideoUrl(): String =
+            replace(PLAY_ADDR) { "\"playAddr\": \"$VIDEO_FILE_TEST_URL\"" }
 
         private fun Any.readResourceFileMainPageVariant1Response() =
             readResourceFile(MAIN_PAGE_VARIANT_1_RESPONSE)

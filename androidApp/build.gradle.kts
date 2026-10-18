@@ -82,6 +82,7 @@ android {
 
     testOptions.unitTests {
         isIncludeAndroidResources = true
+        isReturnDefaultValues = true
         all { test ->
             test.useJUnitPlatform()
             test.testLogging {
@@ -105,11 +106,11 @@ dependencies {
     implementation(libs.androidx.activity.compose)
     implementation(libs.androidx.compose.material3)
 
+    implementation(project(":shared"))
+    implementation(libs.kotlinx.coroutines.core)
     implementation(libs.androidx.lifecycle.viewmodelCompose)
     implementation(libs.gson)
 
-    implementation(libs.retrofit)
-    implementation(libs.okhttp.logging.interceptor)
     implementation(libs.youtube)
     implementation(libs.io.coil.compose)
     implementation(libs.io.coil.network)

@@ -30,3 +30,6 @@ dependencyResolutionManagement {
 }
 
 include(":androidApp")
+include(":shared")
+include(":worker")
+include(":cli")
