@@ -24,12 +24,12 @@ function syncButtonState() {
 input.addEventListener("input", syncButtonState);
 
 downloadFrame.addEventListener("load", function () {
-    var body = downloadFrame.contentDocument && downloadFrame.contentDocument.body;
+    const body = downloadFrame.contentDocument && downloadFrame.contentDocument.body;
     if (!body) {
         return;
     }
     try {
-        var payload = JSON.parse(body.textContent);
+        const payload = JSON.parse(body.textContent);
         if (payload && typeof payload.error === "string") {
             setStatus(friendlyError(0, payload.error), true);
         }
@@ -42,8 +42,27 @@ const SHORT_CODE = /^[A-Za-z0-9_-]{3,}$/;
 const VIDEO_PATH = /^@.*\/video\/.*$/;
 const TIKTOK_URL_PATH = /^(?:[a-z0-9-]+\.)*tiktok\.com\/.+/i;
 const LARGE_FILE_BYTES = 12 * 1024 * 1024;
+const L = {
+    status: {
+        downloadStarted: "Download started.",
+        downloadShouldStartSoon: "Download should start soon. If it didn't, use the manual link.",
+    },
+    error: {
+        captcha: "Ran into a captcha. Service is temporarily unavailable; please retry later.",
+        unavailableVideo: "Video unavailable.",
+        internalError: "Internal error. Please retry.",
+        internalNetworkError: "Internal network issue. Please retry.",
+        invalidLink: "Only TikTok links are supported.",
+        refused: "Request was refused. Please retry later.",
+        notFound: "Not found.",
+        timeout: "Request timed out. Please retry.",
+        serviceUnavailable: "Service temporarily unavailable. Please retry later.",
+        requestFailed: (status) => "Request failed (" + status + ").",
+        unexpected: (message) => "Something went wrong: " + message,
+    },
+};
 
-var parsed = parsePath();
+let parsed = parsePath();
 input.value = parsed.value;
 
 if (parsed.plausible) {
@@ -62,7 +81,7 @@ function setStatus(message, isError) {
 }
 
 function parsePath() {
-    var raw = decodeURIComponent(location.pathname).replace(/^\/+|\/+$/g, "");
+    const raw = decodeURIComponent(location.pathname).replace(/^\/+|\/+$/g, "");
     if (!raw) {
         return { value: "", plausible: false };
     }
@@ -83,14 +102,14 @@ function parsePath() {
 }
 
 function normalizeTikTokUrl(value) {
-    var trimmed = (value || "").trim();
+    const trimmed = (value || "").trim();
     if (!trimmed) {
         return "";
     }
 
-    var withScheme = /^https?:\/\//i.test(trimmed) ? trimmed : "https://" + trimmed;
-    var withoutScheme = withScheme.replace(/^https?:\/\//i, "");
-    var authority = withoutScheme.split(/[/?#]/)[0].toLowerCase();
+    const withScheme = /^https?:\/\//i.test(trimmed) ? trimmed : "https://" + trimmed;
+    const withoutScheme = withScheme.replace(/^https?:\/\//i, "");
+    const authority = withoutScheme.split(/[/?#]/)[0].toLowerCase();
 
     if (!authority || authority.indexOf("@") !== -1 || authority.indexOf(":") !== -1) {
         return "";
@@ -102,9 +121,9 @@ function normalizeTikTokUrl(value) {
 }
 
 async function download(value) {
-    var url = normalizeTikTokUrl(value);
+    const url = normalizeTikTokUrl(value);
     if (!url) {
-        setStatus("Enter a TikTok link.", true);
+        setStatus(L.error.invalidLink, true);
         return;
     }
     if (inFlight) {
@@ -114,17 +133,19 @@ async function download(value) {
     inFlight = true;
     syncButtonState();
     manualDownload.hidden = true;
-    setStatus("Resolving\u2026");
+    setStatus("", false);
 
     try {
-        var response = await fetch("/api/resolve?url=" + encodeURIComponent(url));
+        const response = await fetch("/api/resolve?url=" + encodeURIComponent(url));
         if (!response.ok) {
-            throw new Error(await friendlyErrorFrom(response));
+            const userError = new Error(await friendlyErrorFrom(response));
+            userError.userFacing = true;
+            throw userError;
         }
 
-        var downloadId = response.headers.get("x-download-id");
+        const downloadId = response.headers.get("x-download-id");
 
-        var size = Number(response.headers.get("x-content-length") || response.headers.get("content-length") || 0);
+        const size = Number(response.headers.get("x-content-length") || response.headers.get("content-length") || 0);
         if (size > LARGE_FILE_BYTES) {
             if (response.body) {
                 response.body.cancel().catch(function () { });
@@ -133,12 +154,12 @@ async function download(value) {
             return;
         }
 
-        var fallbackName = (url.split("/").filter(Boolean).pop() || "video") + ".mp4";
-        var fileName =
+        const fallbackName = (url.split("/").filter(Boolean).pop() || "video") + ".mp4";
+        const fileName =
             fileNameFromDisposition(response.headers.get("content-disposition")) ||
             fallbackName;
 
-        var blob;
+        let blob;
         try {
             blob = await readBlobWithinLimit(response, LARGE_FILE_BYTES);
         } catch (error) {
@@ -152,9 +173,10 @@ async function download(value) {
 
         triggerFileDownload({ blob: blob, fileName: fileName });
 
-        setStatus("Download started.");
+        setStatus(L.status.downloadStarted);
     } catch (error) {
-        setStatus(error && error.message ? error.message : String(error), true);
+        const message = error && error.message ? error.message : String(error);
+        setStatus(error && error.userFacing ? message : L.error.unexpected(message), true);
     } finally {
         inFlight = false;
         syncButtonState();
@@ -162,7 +184,7 @@ async function download(value) {
 }
 
 function startNativeDownload(url, id) {
-    var downloadUrl = "/api/download?url=" + encodeURIComponent(url);
+    let downloadUrl = "/api/download?url=" + encodeURIComponent(url);
     if (id) {
         downloadUrl += "&id=" + encodeURIComponent(id);
     }
@@ -172,7 +194,7 @@ function startNativeDownload(url, id) {
     manualDownload.href = downloadUrl;
     manualDownload.hidden = false;
 
-    setStatus("Download should start soon. If it didn't, use the manual link.");
+    setStatus(L.status.downloadShouldStartSoon);
 }
 
 async function readBlobWithinLimit(response, limit) {
@@ -180,12 +202,12 @@ async function readBlobWithinLimit(response, limit) {
         return response.blob();
     }
 
-    var reader = response.body.getReader();
-    var chunks = [];
-    var total = 0;
+    const reader = response.body.getReader();
+    const chunks = [];
+    let total = 0;
 
     while (true) {
-        var result = await reader.read();
+        const result = await reader.read();
         if (result.done) {
             break;
         }
@@ -193,7 +215,7 @@ async function readBlobWithinLimit(response, limit) {
         total += result.value.byteLength;
         if (total > limit) {
             reader.cancel().catch(function () { });
-            var tooLarge = new Error("Video is too large to buffer.");
+            const tooLarge = new Error("Video is too large to buffer.");
             tooLarge.code = "too_large";
             throw tooLarge;
         }
@@ -211,9 +233,9 @@ function triggerDownload(url) {
 }
 
 async function friendlyErrorFrom(response) {
-    var detail = "";
+    let detail = "";
     try {
-        var payload = await response.json();
+        const payload = await response.json();
         if (payload && typeof payload.error === "string") {
             detail = payload.error;
         }
@@ -224,50 +246,50 @@ async function friendlyErrorFrom(response) {
 }
 
 function friendlyError(status, detail) {
-    var text = (detail || "").toLowerCase();
+    const text = (detail || "").toLowerCase();
 
     if (text.indexOf("captcha") !== -1) {
-        return "Ran into a captcha. Service is temporarily unavailable; please retry later.";
+        return L.error.captcha;
     }
     if (text.indexOf("videoprivate") !== -1 || text.indexOf("videodeleted") !== -1) {
-        return "Video unavailable.";
+        return L.error.unavailableVideo;
     }
     if (text.indexOf("parsing") !== -1) {
-        return "Internal error. Please retry.";
+        return L.error.internalError;
     }
     if (text.indexOf("network") !== -1) {
-        return "Internal network issue. Please retry.";
+        return L.error.internalNetworkError;
     }
 
     if (status === 400) {
-        return "Only TikTok links are supported.";
+        return L.error.invalidLink;
     }
     if (status === 401 || status === 403) {
-        return "Request was refused. Please retry later.";
+        return L.error.refused;
     }
     if (status === 404) {
-        return "Not found.";
+        return L.error.notFound;
     }
     if (status === 408) {
-        return "Request timed out. Please retry.";
+        return L.error.timeout;
     }
     if (status === 429 || status >= 500) {
-        return "Service temporarily unavailable. Please retry later.";
+        return L.error.serviceUnavailable;
     }
 
-    return detail || "Request failed (" + status + ").";
+    return detail || L.error.requestFailed(status);
 }
 
 function fileNameFromDisposition(header) {
     if (!header) {
         return "";
     }
-    var match = /filename="?([^";]+)"?/i.exec(header);
+    const match = /filename="?([^";]+)"?/i.exec(header);
     return match ? match[1].trim() : "";
 }
 
 function triggerFileDownload({ blob, fileName }) {
-    var objectUrl = URL.createObjectURL(blob);
+    const objectUrl = URL.createObjectURL(blob);
     blobDownload.href = objectUrl;
     blobDownload.download = fileName;
     blobDownload.click();
