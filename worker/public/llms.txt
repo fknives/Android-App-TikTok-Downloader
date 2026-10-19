@@ -1,0 +1,23 @@
+# TikTok Downloader
+
+> TikTok Downloader is a free, open-source web tool that turns a TikTok share link into a downloadable video. No account or app install is required.
+
+## Usage
+
+Paste a TikTok share URL (for example `https://vm.tiktok.com/...` or `https://www.tiktok.com/@user/video/...`) into the input on the homepage. The video is resolved and saved directly in the browser.
+
+## Direct links
+
+A TikTok URL can also be passed as a path. Opening one of these starts the download immediately:
+
+- `https://tt.fomevod.bid/vm.tiktok.com/ZN8SyMfnP` — short share link
+- `https://tt.fomevod.bid/www.tiktok.com/@user/video/123` — full video URL
+- `https://tt.fomevod.bid/@user/video/123` — video URL without the domain
+- `https://tt.fomevod.bid/ZN8SyMfnP` — bare short code, resolved via `vm.tiktok.com`
+- `https://tt.fomevod.bid/https://vm.tiktok.com/ZN8SyMfnP` — scheme included; redirects once before loading
+
+## Links
+
+- [Website](https://tt.fomevod.bid/)
+- [Source code on GitHub](https://github.com/fknives/Android-App-TikTok-Downloader)
+- [Source code on Forgejo](https://git.fomevod.bid/android-apps/TikTok-Downloader)
