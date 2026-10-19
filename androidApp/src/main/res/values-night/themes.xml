@@ -1,8 +1,11 @@
-<resources>
+<resources xmlns:tools="http://schemas.android.com/tools">
 
     <style name="Theme.TikTokDownloader">
         <item name="colorPrimary">@color/purple_200</item>
+        <item name="android:statusBarColor">@color/close_to_black</item>
+        <item name="android:navigationBarColor">@color/navigation_bar</item>
         <item name="android:windowLightStatusBar">false</item>
+        <item name="android:windowLightNavigationBar" tools:targetApi="27">false</item>
     </style>
 
 </resources>

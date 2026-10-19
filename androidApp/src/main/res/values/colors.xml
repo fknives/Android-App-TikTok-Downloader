@@ -4,4 +4,8 @@
     <color name="purple_500">#FF6200EE</color>
     <color name="close_to_black">#FF0F0F0F</color>
     <color name="close_to_white">#FFF0F0F0</color>
+    <color name="light_surface">#FFFFFBFE</color>
+
+    <!-- Fallback for API 26, where windowLightNavigationBar is unavailable -->
+    <color name="navigation_bar">@color/close_to_black</color>
 </resources>

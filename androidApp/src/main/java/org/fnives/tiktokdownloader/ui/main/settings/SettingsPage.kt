@@ -66,7 +66,8 @@ fun SettingsPage(
                         .fillMaxWidth()
                         .defaultMinSize(minHeight = 48.dp)
                         .padding(horizontal = 16.dp, vertical = 8.dp),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.CenterVertically,
                 ) {
                     Text(
                         stringResource(R.string.user_preference_always_open_app),

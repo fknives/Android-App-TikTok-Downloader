@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- matches elevated surface color of BottomBar / NavigationBar in dark mode -->
+    <color name="navigation_bar">#FF211F24</color>
+</resources>
