@@ -1,4 +1,3 @@
-
 const input = document.getElementById("url");
 const form = document.querySelector(".download");
 const button = document.getElementById("download");
@@ -85,8 +84,10 @@ function setStatus(message, isError) {
     }
 }
 
-function parsePath() {
-    const raw = decodeURIComponent(location.pathname).replace(/^\/+|\/+$/g, "");
+export function parsePath(pathname = location.pathname) {
+    const raw = decodeURIComponent(pathname)
+        .replace(/^\/+|\/+$/g, "")
+        .replace(/^https?:\/*/i, "");
     if (!raw) {
         return { value: "", plausible: false };
     }
@@ -106,7 +107,7 @@ function parsePath() {
     return { value: raw, plausible: false };
 }
 
-function normalizeTikTokUrl(value) {
+export function normalizeTikTokUrl(value) {
     const trimmed = (value || "").trim();
     if (!trimmed) {
         return "";
