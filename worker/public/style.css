@@ -2,7 +2,7 @@
 *, *::before, *::after {
   box-sizing: border-box;
 }
-input, button, select, textarea {
+input, button {
   font: inherit;
 }
 
@@ -19,6 +19,7 @@ input, button, select, textarea {
   --shadow-card: 0 1px 2px color-mix(in srgb, var(--text) 6%, transparent),
                  0 12px 32px color-mix(in srgb, var(--text) 8%, transparent);
 
+  color-scheme: light;
   background-color: var(--surface-color);
   font-size: 1.25rem;
 }
@@ -35,27 +36,21 @@ input, button, select, textarea {
     --error: #FFB4AB;
     --shadow-card: none;
 
+    color-scheme: dark;
     background-color: var(--surface-color);
-    font-size: 1.25rem;
   }
 }
 
-input,
-textarea,
-select {
+input {
   color: var(--text);
 }
 
-input::placeholder,
-textarea::placeholder {
+input::placeholder {
   color: var(--text);
   opacity: 0.8;
 }
 
-a,
-a:visited,
-a:hover,
-a:active {
+a {
   color: var(--text-primary);
 }
 
@@ -72,7 +67,6 @@ main {
   margin-inline: auto;
   padding: clamp(1rem, 4vw, 1.75rem);
   background: var(--surface-container);
-  isolation: isolate;
 }
 
 .card h1 {
@@ -111,11 +105,10 @@ main {
   transition: outline-color 0.2s ease;
 }
 
-.download_input:not(:disabled):hover,
-.download_input:not(:disabled):focus,
-.download_input:not(:disabled):focus-visible,
-.download_input:not(:disabled):active {
-  outline-color: var(--primary-color);
+.download_input:hover,
+.download_input:focus,
+.download_input:active {
+  --outline-color: var(--primary-color);
 }
 
 @property --border-deg {
@@ -127,15 +120,15 @@ main {
 .download_cta {
   --border-width: 2px;
   --border-radius: 6rem;
-  --glow-size: 2.5px;
-  --glow-blur: 0.6px;
+  --glow-size: 8px;
+  --glow-blur: 2px;
   --glow-color: var(--primary-color);
   --background-color: var(--surface-color);
-  --animation-duration: 2s;
+  --animation-duration: 3s;
   --outline-color: transparent;
 
   --border-colors: var(--border-color), var(--glow-color), var(--border-color), var(--border-color);
-  --border-shadow-colors: var(--background-color), var(--glow-color), var(--background-color), var(--background-color);
+  --border-shadow-colors: transparent, var(--glow-color), transparent, transparent;
   
   padding: 0.5em 2em;
   color: var(--text-primary);
@@ -146,19 +139,11 @@ main {
   outline: calc(var(--border-width)*2) solid var(--outline-color);
   outline-offset: calc(var(--border-width)*-1);
 
-  --shine-angle: 0deg;
   transition: outline-color 0.2s ease;
 
   -webkit-tap-highlight-color: transparent;
   -webkit-touch-callout: none;
   user-select: none;
-}
-
-.download_cta::before {
-  content: "";
-  position: absolute;
-  border-radius: inherit;
-  z-index: -1;
 }
 
 .download_cta:not(:disabled){
@@ -171,19 +156,23 @@ main {
 }
 
 .download_cta:not(:disabled):hover,
-.download_cta:not(:disabled):focus-visible,
+.download_cta:not(:disabled):focus,
 .download_cta:not(:disabled):active {
-  outline-color: var(--primary-color);
+  --outline-color: var(--primary-color);
+}
+
+:has(> .download_cta) {
+  isolation: isolate;
 }
 
 .download_cta[data-state="loading"] {
   border: var(--border-width) solid transparent;
   background: 
     linear-gradient(var(--background-color) 0 0) padding-box,
-    conic-gradient(from var(--border-deg), var(--border-colors)) border-box;
+    conic-gradient(from var(--border-deg, 0deg), var(--border-colors)) border-box;
 
   cursor: not-allowed;
-  animation: border-rotate 4s infinite linear;
+  animation: border-rotate var(--animation-duration) infinite linear;
 }
 
 .download_cta[data-state="loading"]::before {
@@ -192,25 +181,15 @@ main {
   border-radius: inherit;
   z-index: -1;
 
-  inset: calc(var(--glow-size) * -1);
-  background: conic-gradient(from var(--border-deg), var(--border-shadow-colors)) border-box;
-  filter: blur(var(--glow-blur, 1rem));
+  inset: calc(var(--glow-size) * -1 - var(--border-width));
+  background: conic-gradient(from var(--border-deg, 0deg), var(--border-shadow-colors));
+  filter: blur(var(--glow-blur));
 }
 
 @keyframes border-rotate {
   100% {
     --border-deg: 360deg;
   }
-}
-
-.visually-hidden {
-  position: absolute;
-  width: 1px; height: 1px;
-  padding: 0; margin: -1px;
-  overflow: hidden;
-  clip: rect(0 0 0 0);
-  white-space: nowrap;
-  border: 0;
 }
 
 .download {
@@ -280,7 +259,8 @@ main {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .preview {
+  .preview,
+  .download_cta[data-state="loading"] {
     animation: none;
   }
 }
