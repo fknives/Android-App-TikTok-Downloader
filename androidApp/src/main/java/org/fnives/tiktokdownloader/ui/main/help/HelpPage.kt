@@ -34,8 +34,8 @@ import org.fnives.tiktokdownloader.R
 fun HelpPage() {
     Column(
         Modifier
-            .padding(horizontal = 24.dp, vertical = 16.dp)
-            .verticalScroll(rememberScrollState()),
+            .verticalScroll(rememberScrollState())
+            .padding(horizontal = 24.dp, vertical = 16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
         HelpCard {
